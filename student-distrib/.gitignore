@@ -1,0 +1,5 @@
+**.o
+bootimg
+debug.sh
+mp3.img
+Makefile.dep

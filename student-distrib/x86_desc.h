@@ -1,4 +1,4 @@
-/* x86_desc.h - Defines for various x86 descriptors, descriptor tables, 
+/* x86_desc.h - Defines for various x86 descriptors, descriptor tables,
  * and selectors
  * vim:ts=4 noexpandtab
  */
@@ -8,7 +8,7 @@
 
 #include "types.h"
 
-/* Segment selector values */
+ /* Segment selector values */
 #define KERNEL_CS 0x0010
 #define KERNEL_DS 0x0018
 #define USER_CS 0x0023
@@ -23,6 +23,13 @@
 #define NUM_VEC 256
 
 #ifndef ASM
+
+typedef struct isr_stack_t {
+	uint32_t gs, fs, es, ds;      /* pushed the segs last */
+	uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;  /* pushed by 'pusha' */
+	uint32_t int_no, err_code;    /* our 'push byte #' and ecodes do this */
+	uint32_t eip, cs, eflags, useresp, ss;   /* pushed by the processor automatically */
+} isr_stack_t;
 
 /* This structure is used to load descriptor base registers
  * like the GDTR and IDTR */
@@ -167,12 +174,57 @@ extern idt_desc_t idt[NUM_VEC];
 /* The descriptor used to load the IDTR */
 extern x86_desc_t idt_desc_ptr;
 
+void fault_handler(isr_stack_t *s);
+void isrs_install();
+
+extern void isr0();
+extern void isr1();
+extern void isr2();
+extern void isr3();
+extern void isr4();
+extern void isr5();
+extern void isr6();
+extern void isr7();
+extern void isr8();
+extern void isr9();
+extern void isr10();
+extern void isr11();
+extern void isr12();
+extern void isr13();
+extern void isr14();
+extern void isr15();
+extern void isr16();
+extern void isr17();
+extern void isr18();
+extern void isr19();
+extern void isr20();
+extern void isr21();
+extern void isr22();
+extern void isr23();
+extern void isr24();
+extern void isr25();
+extern void isr26();
+extern void isr27();
+extern void isr28();
+extern void isr29();
+extern void isr30();
+extern void isr31();
+
 /* Sets runtime parameters for an IDT entry */
 #define SET_IDT_ENTRY(str, handler) \
 do { \
 	str.offset_31_16 = ((uint32_t)(handler) & 0xFFFF0000) >> 16; \
-		str.offset_15_00 = ((uint32_t)(handler) & 0xFFFF); \
-} while(0)
+	str.offset_15_00 = ((uint32_t)(handler) & 0xFFFF); \
+	str.seg_selector = KERNEL_CS; \
+	str.reserved4 = 0; \
+	str.reserved3 = 0; \
+	str.reserved2 = 1; \
+	str.reserved1 = 1; \
+	str.size = 1; \
+	str.reserved0 = 0; \
+	str.dpl = 0; \
+	str.present = 1; \
+} while (0)
 
 /* Load task register.  This macro takes a 16-bit index into the GDT,
  * which points to the TSS entry.  x86 then reads the GDT's TSS
@@ -186,11 +238,11 @@ do {                                    \
 			: "memory", "cc" );         \
 } while(0)
 
-/* Load the interrupt descriptor table (IDT).  This macro takes a 32-bit
- * address which points to a 6-byte structure.  The 6-byte structure
- * (defined as "struct x86_desc" above) contains a 2-byte size field
- * specifying the size of the IDT, and a 4-byte address field specifying
- * the base address of the IDT. */
+ /* Load the interrupt descriptor table (IDT).  This macro takes a 32-bit
+  * address which points to a 6-byte structure.  The 6-byte structure
+  * (defined as "struct x86_desc" above) contains a 2-byte size field
+  * specifying the size of the IDT, and a 4-byte address field specifying
+  * the base address of the IDT. */
 #define lidt(desc)                      \
 do {                                    \
 	asm volatile("lidt (%0)"            \
@@ -199,10 +251,10 @@ do {                                    \
 			: "memory");                \
 } while(0)
 
-/* Load the local descriptor table (LDT) register.  This macro takes a
- * 16-bit index into the GDT, which points to the LDT entry.  x86 then
- * reads the GDT's LDT descriptor and loads the base address specified
- * in that descriptor into the LDT register */
+  /* Load the local descriptor table (LDT) register.  This macro takes a
+   * 16-bit index into the GDT, which points to the LDT entry.  x86 then
+   * reads the GDT's LDT descriptor and loads the base address specified
+   * in that descriptor into the LDT register */
 #define lldt(desc)                      \
 do {                                    \
 	asm volatile("lldt %%ax"            \

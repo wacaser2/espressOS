@@ -8,6 +8,7 @@
 #include "i8259.h"
 #include "debug.h"
 #include "rtc.h"
+#include "keyboard.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -146,7 +147,6 @@ entry (unsigned long magic, unsigned long addr)
 	printf("Installing isrs\n");
 	isrs_install();
 	printf("Enabling Interrupts\n");
-	sti();
 	clear();
 	printf("Initializing PIC\n");
 	/* Init the PIC */
@@ -154,6 +154,9 @@ entry (unsigned long magic, unsigned long addr)
 	printf("Initializing RTC\n");
 	rtc_init();
 	enable_irq(8);
+	//printf("Initializing keyboard\n");
+	//keyboard_init();
+	sti();
 
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */

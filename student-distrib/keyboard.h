@@ -1,6 +1,7 @@
 #ifndef _KEYBOARD_H
 #define _KEYBOARD_H
 
+#include "x86_desc.h"
 
 /* Ports that Keyboard sits on */
 #define KEYBOARD_PORT 0x60

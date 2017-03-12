@@ -12,6 +12,7 @@
 .globl isr10, isr11, isr12, isr13, isr14, isr15, isr16, isr17, isr18, isr19
 .globl isr20, isr21, isr22, isr23, isr24, isr25, isr26, isr27, isr28, isr29
 .globl isr30, isr31
+.globl sys_call
 
 isr0:
 	cli
@@ -190,4 +191,39 @@ isr_common:
     add $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
 
+# Dispatcher for the system calls
+sys_call:
+	pusha
+    push %ds
+    push %es
+    push %fs
+    push %gs
+	cmpl $10, %eax
+	jae sys_call_err # 0 or above 10 return error
+	pushl %edx
+	pushl %ecx
+	pushl %ebx
+	call *sys_call_jmp_table(,%eax,4)
 
+sys_call_ret:
+    pop %eax
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+    xorl %eax, %eax	# return 0
+	iret
+
+sys_call_err:
+    pop %eax
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+	movl $-1, %eax
+	iret
+
+sys_call_jmp_table:
+	.long halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn

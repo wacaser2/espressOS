@@ -3,3 +3,6 @@ bootimg
 debug.sh
 mp3.img
 Makefile.dep
+student-distrib/bootimg
+student-distrib/debug.sh
+student-distrib/mp3.img

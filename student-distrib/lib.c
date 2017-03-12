@@ -27,6 +27,7 @@ clear(void)
         *(uint8_t *)(video_mem + (i << 1)) = ' ';
         *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
     }
+    screen_x = screen_y = 0;
 }
 
 /* Standard printf().

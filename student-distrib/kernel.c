@@ -103,7 +103,6 @@ entry (unsigned long magic, unsigned long addr)
 					(unsigned) mmap->length_high,
 					(unsigned) mmap->length_low);
 	}
-
 	/* Construct an LDT entry in the GDT */
 	{
 		seg_desc_t the_ldt_desc;
@@ -144,6 +143,14 @@ entry (unsigned long magic, unsigned long addr)
 		tss.esp0 = 0x800000;
 		ltr(KERNEL_TSS);
 	}
+	clear();
+	printf("Installing isrs\n");
+	isrs_install();
+	printf("Enabling Interrupts\n");
+	sti();
+	printf("Dereferencing null\n");
+	int* x = NULL;
+	int y = *x;
 
 	/* Init the PIC */
 	i8259_init();

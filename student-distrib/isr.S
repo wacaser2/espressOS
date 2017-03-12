@@ -12,7 +12,7 @@
 .globl isr10, isr11, isr12, isr13, isr14, isr15, isr16, isr17, isr18, isr19
 .globl isr20, isr21, isr22, isr23, isr24, isr25, isr26, isr27, isr28, isr29
 .globl isr30, isr31
-.globl sys_call
+.globl rtc_handler_wrapper, sys_call, keyboard_handler_wrapper
 
 isr0:
 	cli
@@ -190,6 +190,53 @@ isr_common:
     popa
     add $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
+	
+keyboard_handler_wrapper:
+	cli
+	pusha
+    push %ds
+    push %es
+    push %fs
+    push %gs
+    mov $0x10, %ax	# Load the Kernel Data Segment descriptor!
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    mov %esp, %eax   # Push us the stack
+    push %eax
+    call keyboard_handler
+    pop %eax
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+    iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!	
+
+rtc_handler_wrapper:
+	cli
+	pusha
+    push %ds
+    push %es
+    push %fs
+    push %gs
+    mov $0x10, %ax	# Load the Kernel Data Segment descriptor!
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    mov %esp, %eax   # Push us the stack
+    push %eax
+    call rtc_handler
+    pop %eax
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+    iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
+
 
 # Dispatcher for the system calls
 sys_call:

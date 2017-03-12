@@ -22,8 +22,6 @@ i8259_init(void)
 	// master_mask = inb(MASTER_8259_PORT2);
 	// slave_mask = inb(SLAVE_8259_PORT2);
 
-	outb(FULL_MASK, MASTER_8259_PORT2);
-	outb(FULL_MASK, SLAVE_8259_PORT2);
 
 	outb(ICW1, MASTER_8259_PORT);
 	outb(ICW2_MASTER, MASTER_8259_PORT2);
@@ -33,13 +31,16 @@ i8259_init(void)
 	outb(ICW1, SLAVE_8259_PORT);
 	outb(ICW2_SLAVE, SLAVE_8259_PORT2);
 	outb(ICW3_SLAVE, SLAVE_8259_PORT2);
-	outb(ICW4, SLAVE_8259_PORT2;
+	outb(ICW4, SLAVE_8259_PORT2);
 
+	outb(FULL_MASK, MASTER_8259_PORT2);
+	outb(FULL_MASK, SLAVE_8259_PORT2);
+	enable_irq(2);
 	// outb(master_mask, MASTER_8259_PORT + 1);
 	// outb(slave_mask, SLAVE_8259_PORT + 1);
-
+/*
 	outb(FULL_UNMASK, MASTER_8259_PORT2);
-	outb(FULL_UNMASK, SLAVE_8259_PORT2);
+	outb(FULL_UNMASK, SLAVE_8259_PORT2);*/
 }
 
 /* Enable (unmask) the specified IRQ */

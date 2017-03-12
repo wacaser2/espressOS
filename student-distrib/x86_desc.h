@@ -223,10 +223,12 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+extern void keyboard_handler_wrapper();
+extern void rtc_handler_wrapper();
 extern void sys_call();
 
 /* Sets runtime parameters for an IDT entry */
-#define SET_IDT_ENTRY(str, handler) \
+#define SET_IDT_ENTRY(str, handler, priv) \
 do { \
 	str.offset_31_16 = ((uint32_t)(handler) & 0xFFFF0000) >> 16; \
 	str.offset_15_00 = ((uint32_t)(handler) & 0xFFFF); \
@@ -237,7 +239,7 @@ do { \
 	str.reserved1 = 1; \
 	str.size = 1; \
 	str.reserved0 = 0; \
-	str.dpl = 0; \
+	str.dpl = priv; \
 	str.present = 1; \
 } while (0)
 

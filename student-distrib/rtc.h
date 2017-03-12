@@ -4,7 +4,8 @@
 
 #include "i8259.h"
 #include "lib.h"
-#include "keyboard.h"
+// #include "keyboard.h"
+#include "x86_desc.h"
 
 #define RTC_PORT			0x70
 #define CMOS_PORT			0x71

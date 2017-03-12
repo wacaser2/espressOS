@@ -223,6 +223,7 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+extern void rtc_handler();
 extern void sys_call();
 
 /* Sets runtime parameters for an IDT entry */

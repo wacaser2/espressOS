@@ -33,7 +33,7 @@ i8259_init(void)
 	outb(ICW1, SLAVE_8259_PORT);
 	outb(ICW2_SLAVE, SLAVE_8259_PORT2);
 	outb(ICW3_SLAVE, SLAVE_8259_PORT2);
-	outb(ICW4, SLAVE_8259_PORT2;
+	outb(ICW4, SLAVE_8259_PORT2);
 
 	// outb(master_mask, MASTER_8259_PORT + 1);
 	// outb(slave_mask, SLAVE_8259_PORT + 1);

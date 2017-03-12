@@ -7,7 +7,7 @@
 #include "lib.h"
 #include "i8259.h"
 #include "debug.h"
-#include "idt.h"
+#include "rtc.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -143,17 +143,17 @@ entry (unsigned long magic, unsigned long addr)
 		tss.esp0 = 0x800000;
 		ltr(KERNEL_TSS);
 	}
-	clear();
 	printf("Installing isrs\n");
 	isrs_install();
 	printf("Enabling Interrupts\n");
 	sti();
-	printf("Dereferencing null\n");
-	int* x = NULL;
-	int y = *x;
-
+	clear();
+	printf("Initializing PIC\n");
 	/* Init the PIC */
 	i8259_init();
+	printf("Initializing RTC\n");
+	rtc_init();
+	enable_irq(8);
 
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */

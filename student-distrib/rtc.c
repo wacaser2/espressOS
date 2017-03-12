@@ -1,6 +1,7 @@
 
 #include "rtc.h"
 #include "lib.h"
+#include "x86_desc.h"
 
 void
 rtc_init(void)
@@ -22,9 +23,8 @@ rtc_init(void)
 void
 rtc_handler(void)
 {
-	cli();
 	outb(STATUS_REGISTER_C, RTC_PORT);
 	inb(CMOS_PORT);
-	test_interrupts();
-	sti();
+	puts("a");
+	// test_interrupts();
 }

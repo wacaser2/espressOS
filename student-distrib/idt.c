@@ -116,6 +116,6 @@ void isrs_install(){
 	SET_IDT_ENTRY(idt[30], (unsigned)isr30);
 	SET_IDT_ENTRY(idt[31], (unsigned)isr31);
 	//SET_IDT_ENTRY(idt[0x21], (unsigned)keyboard_handler);
-	SET_IDT_ENTRY(idt[0x28], (unsigned)rtc_handler);
+	SET_IDT_ENTRY(idt[0x28], (unsigned)rtc_handler_wrapper);
 	SET_IDT_ENTRY(idt[0x80], (unsigned)sys_call);
 }

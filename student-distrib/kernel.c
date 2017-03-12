@@ -150,14 +150,14 @@ entry (unsigned long magic, unsigned long addr)
 	clear();
 	printf("Initializing PIC\n");
 	/* Init the PIC */
-	i8259_init();
+	i8259_init();/*
 	printf("Initializing RTC\n");
 	rtc_init();
-	enable_irq(8);
-	//printf("Initializing keyboard\n");
-	//keyboard_init();
+	enable_irq(8);*/
+	printf("Initializing keyboard\n");
+	keyboard_init();
 	sti();
-
+	int a = 1 / 00;
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
 
@@ -169,6 +169,7 @@ entry (unsigned long magic, unsigned long addr)
 	sti();*/
 
 	/* Execute the first program (`shell') ... */
+
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

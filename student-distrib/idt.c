@@ -74,8 +74,18 @@ int32_t sigreturn(void){
 /* Function to print the exception messages */
 void fault_handler(isr_stack_t *s){
 	if(s->int_no < 32){
-		puts(exception_messages[s->int_no]);
+		int i, j;
+		for (i = 0; i < 25; i++) {
+			for (j = 0; j < 80; j++) {
+				putca(' ', 0x17);
+			}
+		}
+		printf("\n%s : %d\n", exception_messages[s->int_no], s->err_code);/*
 		puts("\n");
+		puts(exception_messages[s->int_no]);
+		puts(" : ");
+		puts(s->err_code);
+		puts("\n");*/
 		for(;;);
 	}
 }

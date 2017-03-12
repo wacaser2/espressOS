@@ -22,12 +22,12 @@ static char* video_mem = (char *)VIDEO;
 void
 clear(void)
 {
-    int32_t i;
-    for(i=0; i<NUM_ROWS*NUM_COLS; i++) {
-        *(uint8_t *)(video_mem + (i << 1)) = ' ';
-        *(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
-    }
-    screen_x = screen_y = 0;
+	int32_t i;
+	for (i = 0; i < NUM_ROWS*NUM_COLS; i++) {
+		*(uint8_t *)(video_mem + (i << 1)) = ' ';
+		*(uint8_t *)(video_mem + (i << 1) + 1) = ATTRIB;
+	}
+	screen_x = screen_y = 0;
 }
 
 /* Standard printf().
@@ -58,100 +58,102 @@ printf(int8_t *format, ...)
 	int32_t* esp = (void *)&format;
 	esp++;
 
-	while(*buf != '\0') {
-		switch(*buf) {
+	while (*buf != '\0') {
+		switch (*buf) {
+		case '%':
+		{
+			int32_t alternate = 0;
+			buf++;
+
+		format_char_switch:
+			/* Conversion specifiers */
+			switch (*buf) {
+				/* Print a literal '%' character */
 			case '%':
-				{
-					int32_t alternate = 0;
-					buf++;
+				putc('%');
+				break;
 
-format_char_switch:
-					/* Conversion specifiers */
-					switch(*buf) {
-						/* Print a literal '%' character */
-						case '%':
-							putc('%');
-							break;
+				/* Use alternate formatting */
+			case '#':
+				alternate = 1;
+				buf++;
+				/* Yes, I know gotos are bad.  This is the
+				 * most elegant and general way to do this,
+				 * IMHO. */
+				goto format_char_switch;
 
-						/* Use alternate formatting */
-						case '#':
-							alternate = 1;
-							buf++;
-							/* Yes, I know gotos are bad.  This is the
-							 * most elegant and general way to do this,
-							 * IMHO. */
-							goto format_char_switch;
-
-						/* Print a number in hexadecimal form */
-						case 'x':
-							{
-								int8_t conv_buf[64];
-								if(alternate == 0) {
-									itoa(*((uint32_t *)esp), conv_buf, 16);
-									puts(conv_buf);
-								} else {
-									int32_t starting_index;
-									int32_t i;
-									itoa(*((uint32_t *)esp), &conv_buf[8], 16);
-									i = starting_index = strlen(&conv_buf[8]);
-									while(i < 8) {
-										conv_buf[i] = '0';
-										i++;
-									}
-									puts(&conv_buf[starting_index]);
-								}
-								esp++;
-							}
-							break;
-
-						/* Print a number in unsigned int form */
-						case 'u':
-							{
-								int8_t conv_buf[36];
-								itoa(*((uint32_t *)esp), conv_buf, 10);
-								puts(conv_buf);
-								esp++;
-							}
-							break;
-
-						/* Print a number in signed int form */
-						case 'd':
-							{
-								int8_t conv_buf[36];
-								int32_t value = *((int32_t *)esp);
-								if(value < 0) {
-									conv_buf[0] = '-';
-									itoa(-value, &conv_buf[1], 10);
-								} else {
-									itoa(value, conv_buf, 10);
-								}
-								puts(conv_buf);
-								esp++;
-							}
-							break;
-
-						/* Print a single character */
-						case 'c':
-							putc( (uint8_t) *((int32_t *)esp) );
-							esp++;
-							break;
-
-						/* Print a NULL-terminated string */
-						case 's':
-							puts( *((int8_t **)esp) );
-							esp++;
-							break;
-
-						default:
-							break;
-					}
-
+				/* Print a number in hexadecimal form */
+			case 'x':
+			{
+				int8_t conv_buf[64];
+				if (alternate == 0) {
+					itoa(*((uint32_t *)esp), conv_buf, 16);
+					puts(conv_buf);
 				}
+				else {
+					int32_t starting_index;
+					int32_t i;
+					itoa(*((uint32_t *)esp), &conv_buf[8], 16);
+					i = starting_index = strlen(&conv_buf[8]);
+					while (i < 8) {
+						conv_buf[i] = '0';
+						i++;
+					}
+					puts(&conv_buf[starting_index]);
+				}
+				esp++;
+			}
+			break;
+
+			/* Print a number in unsigned int form */
+			case 'u':
+			{
+				int8_t conv_buf[36];
+				itoa(*((uint32_t *)esp), conv_buf, 10);
+				puts(conv_buf);
+				esp++;
+			}
+			break;
+
+			/* Print a number in signed int form */
+			case 'd':
+			{
+				int8_t conv_buf[36];
+				int32_t value = *((int32_t *)esp);
+				if (value < 0) {
+					conv_buf[0] = '-';
+					itoa(-value, &conv_buf[1], 10);
+				}
+				else {
+					itoa(value, conv_buf, 10);
+				}
+				puts(conv_buf);
+				esp++;
+			}
+			break;
+
+			/* Print a single character */
+			case 'c':
+				putc((uint8_t)*((int32_t *)esp));
+				esp++;
+				break;
+
+				/* Print a NULL-terminated string */
+			case 's':
+				puts(*((int8_t **)esp));
+				esp++;
 				break;
 
 			default:
-				putc(*buf);
 				break;
+			}
+
+		}
+		break;
+
+		default:
+			putc(*buf);
+			break;
 		}
 		buf++;
 	}
@@ -163,14 +165,14 @@ format_char_switch:
 * int32_t puts(int8_t* s);
 *   Inputs: int_8* s = pointer to a string of characters
 *   Return Value: Number of bytes written
-*	Function: Output a string to the console 
+*	Function: Output a string to the console
 */
 
 int32_t
 puts(int8_t* s)
 {
 	register int32_t index = 0;
-	while(s[index] != '\0') {
+	while (s[index] != '\0') {
 		putc(s[index]);
 		index++;
 	}
@@ -182,22 +184,33 @@ puts(int8_t* s)
 * void putc(uint8_t c);
 *   Inputs: uint_8* c = character to print
 *   Return Value: void
-*	Function: Output a character to the console 
+*	Function: Output a character to the console
 */
+void putc(uint8_t c) {
+	putca(c, ATTRIB);
+}
 
 void
-putc(uint8_t c)
+putca(uint8_t c, uint8_t att)
 {
-    if(c == '\n' || c == '\r') {
-        screen_y++;
-        screen_x=0;
-    } else {
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
-        *(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
-        screen_x++;
-        screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
-    }
+	if (c == '\n' || c == '\r') {
+		screen_y++;
+		screen_x = 0;
+	}
+	else if (c == '\b') {	//not done
+		if ((screen_x - 1) < 0)
+			screen_y = (screen_y - 1) % NUM_ROWS;
+		screen_x = (screen_x - 1) % NUM_COLS;
+		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = ' ';
+		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = att;
+	}
+	else {
+		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
+		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = att;
+		screen_x++;
+		screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+		screen_x %= NUM_COLS;
+	}
 }
 
 /*
@@ -219,9 +232,9 @@ itoa(uint32_t value, int8_t* buf, int32_t radix)
 	uint32_t newval = value;
 
 	/* Special case for zero */
-	if(value == 0) {
-		buf[0]='0';
-		buf[1]='\0';
+	if (value == 0) {
+		buf[0] = '0';
+		buf[1] = '\0';
 		return buf;
 	}
 
@@ -230,7 +243,7 @@ itoa(uint32_t value, int8_t* buf, int32_t radix)
 	 * ASCII string from lowest place value to highest, which is the
 	 * opposite of how the number should be printed.  We'll reverse the
 	 * characters later. */
-	while(newval > 0) {
+	while (newval > 0) {
 		i = newval % radix;
 		*newbuf = lookup[i];
 		newbuf++;
@@ -255,10 +268,10 @@ int8_t*
 strrev(int8_t* s)
 {
 	register int8_t tmp;
-	register int32_t beg=0;
-	register int32_t end=strlen(s) - 1;
+	register int32_t beg = 0;
+	register int32_t end = strlen(s) - 1;
 
-	while(beg < end) {
+	while (beg < end) {
 		tmp = s[end];
 		s[end] = s[beg];
 		s[beg] = tmp;
@@ -280,7 +293,7 @@ uint32_t
 strlen(const int8_t* s)
 {
 	register uint32_t len = 0;
-	while(s[len] != '\0')
+	while (s[len] != '\0')
 		len++;
 
 	return len;
@@ -326,10 +339,10 @@ memset(void* s, int32_t c, uint32_t n)
 			jmp     .memset_bottom  \n\
 			.memset_done:           \n\
 			"
-			:
-			: "a"(c << 24 | c << 16 | c << 8 | c), "D"(s), "c"(n)
-			: "edx", "memory", "cc"
-			);
+		:
+	: "a"(c << 24 | c << 16 | c << 8 | c), "D"(s), "c"(n)
+		: "edx", "memory", "cc"
+		);
 
 	return s;
 }
@@ -353,10 +366,10 @@ memset_word(void* s, int32_t c, uint32_t n)
 			cld                     \n\
 			rep     stosw           \n\
 			"
-			:
-			: "a"(c), "D"(s), "c"(n)
-			: "edx", "memory", "cc"
-			);
+		:
+	: "a"(c), "D"(s), "c"(n)
+		: "edx", "memory", "cc"
+		);
 
 	return s;
 }
@@ -379,10 +392,10 @@ memset_dword(void* s, int32_t c, uint32_t n)
 			cld                     \n\
 			rep     stosl           \n\
 			"
-			:
-			: "a"(c), "D"(s), "c"(n)
-			: "edx", "memory", "cc"
-			);
+		:
+	: "a"(c), "D"(s), "c"(n)
+		: "edx", "memory", "cc"
+		);
 
 	return s;
 }
@@ -430,10 +443,10 @@ memcpy(void* dest, const void* src, uint32_t n)
 			jmp     .memcpy_bottom  \n\
 			.memcpy_done:           \n\
 			"
-			:
-			: "S"(src), "D"(dest), "c"(n)
-			: "eax", "edx", "memory", "cc"
-			);
+		:
+	: "S"(src), "D"(dest), "c"(n)
+		: "eax", "edx", "memory", "cc"
+		);
 
 	return dest;
 }
@@ -463,10 +476,10 @@ memmove(void* dest, const void* src, uint32_t n)
 			.memmove_go:            \n\
 			rep     movsb           \n\
 			"
-			:
-			: "D"(dest), "S"(src), "c"(n)
-			: "edx", "memory", "cc"
-			);
+		:
+	: "D"(dest), "S"(src), "c"(n)
+		: "edx", "memory", "cc"
+		);
 
 	return dest;
 }
@@ -476,11 +489,11 @@ memmove(void* dest, const void* src, uint32_t n)
 *   Inputs: const int8_t* s1 = first string to compare
 *			const int8_t* s2 = second string to compare
 *			uint32_t n = number of bytes to compare
-*	Return Value: A zero value indicates that the characters compared 
+*	Return Value: A zero value indicates that the characters compared
 *					in both strings form the same string.
-*				A value greater than zero indicates that the first 
-*					character that does not match has a greater value 
-*					in str1 than in str2; And a value less than zero 
+*				A value greater than zero indicates that the first
+*					character that does not match has a greater value
+*					in str1 than in str2; And a value less than zero
 *					indicates the opposite.
 *	Function: compares string 1 and string 2 for equality
 */
@@ -489,9 +502,9 @@ int32_t
 strncmp(const int8_t* s1, const int8_t* s2, uint32_t n)
 {
 	int32_t i;
-	for(i=0; i<n; i++) {
-		if( (s1[i] != s2[i]) ||
-				(s1[i] == '\0') /* || s2[i] == '\0' */ ) {
+	for (i = 0; i < n; i++) {
+		if ((s1[i] != s2[i]) ||
+			(s1[i] == '\0') /* || s2[i] == '\0' */) {
 
 			/* The s2[i] == '\0' is unnecessary because of the short-circuit
 			 * semantics of 'if' expressions in C.  If the first expression
@@ -516,8 +529,8 @@ strncmp(const int8_t* s1, const int8_t* s2, uint32_t n)
 int8_t*
 strcpy(int8_t* dest, const int8_t* src)
 {
-	int32_t i=0;
-	while(src[i] != '\0') {
+	int32_t i = 0;
+	while (src[i] != '\0') {
 		dest[i] = src[i];
 		i++;
 	}
@@ -538,13 +551,13 @@ strcpy(int8_t* dest, const int8_t* src)
 int8_t*
 strncpy(int8_t* dest, const int8_t* src, uint32_t n)
 {
-	int32_t i=0;
-	while(src[i] != '\0' && i < n) {
+	int32_t i = 0;
+	while (src[i] != '\0' && i < n) {
 		dest[i] = src[i];
 		i++;
 	}
 
-	while(i < n) {
+	while (i < n) {
 		dest[i] = '\0';
 		i++;
 	}
@@ -563,7 +576,7 @@ void
 test_interrupts(void)
 {
 	int32_t i;
-	for (i=0; i < NUM_ROWS*NUM_COLS; i++) {
-		video_mem[i<<1]++;
+	for (i = 0; i < NUM_ROWS*NUM_COLS; i++) {
+		video_mem[i << 1]++;
 	}
 }

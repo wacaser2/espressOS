@@ -35,6 +35,7 @@ i8259_init(void)
 
 	outb(FULL_MASK, MASTER_8259_PORT2);
 	outb(FULL_MASK, SLAVE_8259_PORT2);
+	master_mask = slave_mask = FULL_MASK;
 	enable_irq(2);
 	// outb(master_mask, MASTER_8259_PORT + 1);
 	// outb(slave_mask, SLAVE_8259_PORT + 1);
@@ -49,25 +50,26 @@ enable_irq(uint32_t irq_num)
 {
 	uint8_t enable_mask = 0xFE;
 	if(irq_num >= 0 && irq_num <= 7)	// master IRQ
-	{
+	{/*
 		uint32_t i;
 		for(i = 0; i < irq_num; i++)
 		{
 			enable_mask <<= 1;
 			enable_mask += 1;
-		}
-		master_mask &= enable_mask;
+		}*/
+		master_mask &= FULL_MASK ^ (1 << (irq_num));
 		outb(master_mask, MASTER_8259_PORT2);
 	}
 	else if(irq_num >= 8 && irq_num <= 15)  // slave IRQ
-	{
+	{/*
 		uint32_t i;
 		for(i = 0; i < (irq_num - 8); i++)
 		{
 			enable_mask <<= 1;
 			enable_mask += 1;
 		}
-		slave_mask &= enable_mask;
+		enable_mask = FULL_MASK ^ (1 << (irq_num - 8));*/
+		slave_mask &= FULL_MASK ^ (1 << (irq_num - 8));
 		outb(slave_mask, SLAVE_8259_PORT2);
 	}
 }

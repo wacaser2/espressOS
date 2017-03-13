@@ -174,7 +174,7 @@ extern idt_desc_t idt[NUM_VEC];
 /* The descriptor used to load the IDTR */
 extern x86_desc_t idt_desc_ptr;
 
-/* System Calls: */
+/* System Calls: not currently implemented*/
 int32_t halt(uint8_t status);
 int32_t execute(const uint8_t* command);
 int32_t read(int32_t fd, void* buf, int32_t nbytes);
@@ -191,6 +191,7 @@ void fault_handler(isr_stack_t *s);
 /* Function to install the isr's */
 void isrs_install();
 
+/* External functions in isr.S for the exception handlers*/
 extern void isr0();
 extern void isr1();
 extern void isr2();

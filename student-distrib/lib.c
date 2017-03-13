@@ -3,10 +3,6 @@
  */
 
 #include "lib.h"
-#define VIDEO 0xB8000
-#define NUM_COLS 80
-#define NUM_ROWS 25
-#define ATTRIB 0x7
 
 static int screen_x;
 static int screen_y;
@@ -181,18 +177,29 @@ puts(int8_t* s)
 }
 
 /*
+* void setcolor(uint8_t c);
+*   Inputs: uint_8* c = attribute to set
+*   Return Value: void
+*	Function: changes the attribute of the screen
+*/
+void
+setcolor(uint8_t c)
+{
+	int i, j;
+	for (i = 0; i < 25; i++) {
+		for (j = 0; j < 80; j++) {
+			*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1) + 1) = c;
+		}
+	}
+}
+
+/*
 * void putc(uint8_t c);
 *   Inputs: uint_8* c = character to print
 *   Return Value: void
 *	Function: Output a character to the console
 */
 void putc(uint8_t c) {
-	putca(c, ATTRIB);
-}
-
-void
-putca(uint8_t c, uint8_t att)
-{
 	if (c == '\n' || c == '\r') {
 		screen_y++;
 		screen_x = 0;
@@ -202,11 +209,11 @@ putca(uint8_t c, uint8_t att)
 			screen_y = (screen_y - 1) % NUM_ROWS;
 		screen_x = (screen_x - 1) % NUM_COLS;
 		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = ' ';
-		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = att;
+		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
 	}
 	else {
 		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
-		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = att;
+		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
 		screen_x++;
 		screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
 		screen_x %= NUM_COLS;

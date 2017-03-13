@@ -9,6 +9,7 @@
 #include "debug.h"
 #include "rtc.h"
 #include "keyboard.h"
+#include "paging.h"
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
@@ -153,11 +154,15 @@ entry (unsigned long magic, unsigned long addr)
 	i8259_init();/*
 	printf("Initializing RTC\n");
 	rtc_init();
-	enable_irq(8);*/
+	*/
 	printf("Initializing keyboard\n");
 	keyboard_init();
 	sti();
-	int a = 1 / 00;
+	paging_init();
+	uint32_t *a = (int*)(VIDEO-1);
+	uint32_t b = *a;
+	printf("%u\n%u", b, -1);
+	
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
 

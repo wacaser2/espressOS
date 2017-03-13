@@ -39,7 +39,7 @@ char* exception_messages[32] = {
     "Reserved"
 };
 
-/* System Calls: */
+/* System Calls: empty currently*/
 int32_t halt(uint8_t status){
 	return 0;
 }
@@ -74,19 +74,9 @@ int32_t sigreturn(void){
 /* Function to print the exception messages */
 void fault_handler(isr_stack_t *s){
 	if(s->int_no < 32){
-		int i, j;
-		for (i = 0; i < 25; i++) {
-			for (j = 0; j < 80; j++) {
-				putca(' ', 0x17);
-			}
-		}
-		printf("\n%s : %d\n", exception_messages[s->int_no], s->err_code);/*
-		puts("\n");
-		puts(exception_messages[s->int_no]);
-		puts(" : ");
-		puts(s->err_code);
-		puts("\n");*/
-		for(;;);
+		printf("\n%s : %d\n", exception_messages[s->int_no], s->err_code);		//print error
+		setcolor(0x17);	//make screen blue
+		for(;;);	//halt loop
 	}
 }
 
@@ -126,6 +116,6 @@ void isrs_install(){
 	SET_IDT_ENTRY(idt[30], (unsigned)isr30, 0);
 	SET_IDT_ENTRY(idt[31], (unsigned)isr31, 0);
 	SET_IDT_ENTRY(idt[0x21], (unsigned)keyboard_handler_wrapper, 0);
-	SET_IDT_ENTRY(idt[0x28], (unsigned)rtc_handler_wrapper, 3);
+	SET_IDT_ENTRY(idt[0x28], (unsigned)rtc_handler_wrapper, 0);
 	SET_IDT_ENTRY(idt[0x80], (unsigned)sys_call, 0);
 }

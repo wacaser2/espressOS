@@ -65,9 +65,9 @@ enable_irq(uint32_t irq_num)
 		uint32_t i;
 		for(i = 0; i < (irq_num - 8); i++)
 		{
-			enable_mask <<= 1;
-			enable_mask += 1;
-		}
+			enable_mask <<= 1;11111111
+			enable_mask += 1; 00100000
+		}					  110
 		enable_mask = FULL_MASK ^ (1 << (irq_num - 8));*/
 		slave_mask &= FULL_MASK ^ (1 << (irq_num - 8));
 		outb(slave_mask, SLAVE_8259_PORT2);

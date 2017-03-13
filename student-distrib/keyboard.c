@@ -44,11 +44,23 @@ static unsigned char key[128] =
 };		
 
 
+/*
+* void keyboard_init()
+*   Inputs: none
+*   Return Value: void
+*	Function: inits the keyboard and enables the interrupts for it
+*/
 void keyboard_init()
 {
 	enable_irq(KEYBOARD_IRQ);	// enable keyboard interrupt
 }
 
+/*
+* void keyboard_handler()
+*   Inputs: none
+*   Return Value: void
+*	Function: Handles a keyboard interrupt by outputting the char
+*/
 void keyboard_handler()
 {
 	unsigned char scancode;
@@ -56,7 +68,7 @@ void keyboard_handler()
     /* Read from the keyboard's data buffer */
     scancode = inb((int)KEYBOARD_PORT);
     
-    send_eoi(KEYBOARD_IRQ);
+    send_eoi(KEYBOARD_IRQ);	//allow more interrupts to queue for the keyboard
     
     /* If the top bit of the byte we read from the keyboard is
     *  set, that means that a key has just been released */

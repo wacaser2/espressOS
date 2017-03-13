@@ -9,6 +9,8 @@
 #define oneUNIT 1024
 #define PAGE_SIZE_MULTIPLIER 4
 #define fourMBpage 0x0080
+/* number of bits before the index to the page table*/
+#define OFFSET 12
 
 #define KERNEL_ADDR 0x0400000	// starting addr of kernel code
 

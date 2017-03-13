@@ -21,11 +21,11 @@ paging_init() {
 	int i;
 	for (i = 0; i < oneUNIT; i++)
 	{
-		page_directory[i] = 0;	// sets r/wr to 1 of ea entry
-		first_page_table[i] = (i * 0x1000); // attributes: supervisor level ->0, read/write ->1, present ->1
+		page_directory[i] = 0;	// sets not present
+		first_page_table[i] = (i << OFFSET); // setting indexs
 	}
 
-	first_page_table[VIDEO >> 12] |= RW | PRESENT;
+	first_page_table[VIDEO >> OFFSET] |= RW | PRESENT;
 	page_directory[0] = ((uint32_t)first_page_table) | PRESENT;	// add page table to directory of 4kb pages
 	page_directory[1] = KERNEL_ADDR | PRESENT | fourMBpage | RW;	// 4mb page
 

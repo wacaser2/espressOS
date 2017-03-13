@@ -4,10 +4,6 @@
 #include "i8259.h"
 #include "lib.h"
 
-#define FULL_MASK 		0xFF
-#define FULL_UNMASK		0x00
-#define TWO_SLAVE		0x02
-
  /* Interrupt masks to determine which interrupts
   * are enabled and disabled */
 uint8_t master_mask; /* IRQs 0-7 */
@@ -42,7 +38,7 @@ i8259_init(void)
 	/* set our local masks to full*/
 	master_mask = slave_mask = FULL_MASK;
 	/* enable the slave's interrupt line on master*/
-	enable_irq(2);
+	enable_irq(ICW3_SLAVE);
 }
 
 /* Enable (unmask) the specified IRQ *//*
@@ -56,17 +52,17 @@ i8259_init(void)
 void
 enable_irq(uint32_t irq_num)
 {
-	if (irq_num >= 0 && irq_num <= 7)	// master IRQ
+	if (irq_num >= MASTER_START && irq_num < PIC_SIZE + MASTER_START)	// master IRQ
 	{
 		/* update our master mask*/
 		master_mask &= ~(1 << (irq_num));
 		/* send new mask to master*/
 		outb(master_mask, MASTER_8259_PORT2);
 	}
-	else if (irq_num >= 8 && irq_num <= 15)  // slave IRQ
+	else if (irq_num >= SLAVE_START && irq_num < SLAVE_START + PIC_SIZE)  // slave IRQ
 	{
 		/* update our slave mask*/
-		slave_mask &= ~(1 << (irq_num - 8));
+		slave_mask &= ~(1 << (irq_num - SLAVE_START));
 		/* send the new slave mask to the slave*/
 		outb(slave_mask, SLAVE_8259_PORT2);
 	}
@@ -83,17 +79,17 @@ enable_irq(uint32_t irq_num)
 void
 disable_irq(uint32_t irq_num)
 {
-	if (irq_num >= 0 && irq_num <= 7)	// master IRQ
+	if (irq_num >= MASTER_START && irq_num < PIC_SIZE + MASTER_START)	// master IRQ
 	{
 		/* update our master mask*/
 		master_mask |= (1 << irq_num);
 		/* send the new master mask to the master*/
 		outb(master_mask, MASTER_8259_PORT2);
 	}
-	else if (irq_num >= 8 && irq_num <= 15)  // slave IRQ
+	else if (irq_num >= SLAVE_START && irq_num < SLAVE_START + PIC_SIZE)  // slave IRQ
 	{
 		/* update our slave mask*/
-		slave_mask |= (1 << (irq_num - 8));
+		slave_mask |= (1 << (irq_num - SLAVE_START));
 		/* send the new slave mask to the slave*/
 		outb(slave_mask, SLAVE_8259_PORT2);
 	}
@@ -110,17 +106,15 @@ disable_irq(uint32_t irq_num)
 void
 send_eoi(uint32_t irq_num)
 {
-	if (irq_num >= 0 && irq_num <= 7)	// master IRQ
+	if (irq_num >= MASTER_START && irq_num < PIC_SIZE + MASTER_START)	// master IRQ
 	{
 		/* inform master of end of interrupt*/
 		outb((EOI | irq_num), MASTER_8259_PORT);
 	}
-	else if (irq_num >= 8 && irq_num <= 15)  // slave IRQ
+	else if (irq_num >= SLAVE_START && irq_num < SLAVE_START + PIC_SIZE)  // slave IRQ
 	{
 		/* inform master and slave of end of interrupt*/
-		outb((EOI | (irq_num - 8)), SLAVE_8259_PORT);
+		outb((EOI | (irq_num - SLAVE_START)), SLAVE_8259_PORT);
 		outb((EOI | TWO_SLAVE), MASTER_8259_PORT);
 	}
 }
-
-

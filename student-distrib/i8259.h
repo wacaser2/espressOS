@@ -12,6 +12,14 @@
 #define MASTER_8259_PORT2 0x21
 #define SLAVE_8259_PORT2  0xA1
 
+#define FULL_MASK 		0xFF
+#define FULL_UNMASK		0x00
+#define TWO_SLAVE		0x02
+
+#define MASTER_START    0
+#define SLAVE_START     8
+#define PIC_SIZE        8
+
 /* Initialization control words to init each PIC.
  * See the Intel manuals for details on the meaning
  * of each word */

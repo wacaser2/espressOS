@@ -145,24 +145,31 @@ entry (unsigned long magic, unsigned long addr)
 		tss.esp0 = 0x800000;
 		ltr(KERNEL_TSS);
 	}
+	clear();
+
+	/* Install ISR'S*/
 	printf("Installing isrs\n");
 	isrs_install();
-	printf("Enabling Interrupts\n");
-	clear();
-	printf("Initializing PIC\n");
+	
 	/* Init the PIC */
-	i8259_init();/*
+	printf("Initializing PIC\n");
+	i8259_init();
+	
+	/* Init rtc*/
 	printf("Initializing RTC\n");
 	rtc_init();
-	*/
+	
+	/* Init keyboard*/
 	printf("Initializing keyboard\n");
 	keyboard_init();
+
+	/* Enable interrupts*/
+	printf("Enabling Interrupts\n");
 	sti();
+
+	/* Init paging*/
 	paging_init();
-	uint32_t *a = (int*)(VIDEO-1);
-	uint32_t b = *a;
-	printf("%u\n%u", b, -1);
-	
+
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */
 
@@ -170,9 +177,21 @@ entry (unsigned long magic, unsigned long addr)
 	/* Do not enable the following until after you have set up your
 	 * IDT correctly otherwise QEMU will triple fault and simple close
 	 * without showing you any output */
-	/*printf("Enabling Interrupts\n");
-	sti();*/
 
+	/* Test zone*/
+	
+	/* Divide by Zero*/
+	/*
+	uint32_t a = 1 / 0;
+	*/
+
+	/* Dereference NULL*/
+	/*
+	uint32_t *a = NULL;
+	uint32_t b = *a;
+	printf("%u\n%u", b, -1);
+	*/
+	
 	/* Execute the first program (`shell') ... */
 
 

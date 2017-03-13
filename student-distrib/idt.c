@@ -71,7 +71,14 @@ int32_t sigreturn(void){
 	return 0;
 }
 
-/* Function to print the exception messages */
+/* Function to print the exception messages *//*
+ * fault_handler
+ *   DESCRIPTION: Handles each of the exceptions by printing the error and the error code
+ *   INPUTS: s - the state of the stack when this function is called
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: Will set the screen color blue and enter an infinite loop
+ */
 void fault_handler(isr_stack_t *s){
 	if(s->int_no < 32){
 		printf("\n%s : %d\n", exception_messages[s->int_no], s->err_code);		//print error
@@ -81,7 +88,14 @@ void fault_handler(isr_stack_t *s){
 }
 
 
-/* Function to install all of the Interrupt Service Routines */
+/* Function to install all of the Interrupt Service Routines *//*
+ * isrs_install()
+ *   DESCRIPTION: Sets up the idt entries which we have handlers for
+ *   INPUTS: none
+ *   OUTPUTS: none
+ *   RETURN VALUE: none
+ *   SIDE EFFECTS: Sets up the IDT
+ */
 void isrs_install(){
 	SET_IDT_ENTRY(idt[0], (unsigned)isr0, 0);
 	SET_IDT_ENTRY(idt[1], (unsigned)isr1, 0);

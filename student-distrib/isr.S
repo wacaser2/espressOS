@@ -14,6 +14,13 @@
 .globl isr30, isr31
 .globl rtc_handler_wrapper, sys_call, keyboard_handler_wrapper
 
+
+# isr0-31
+#   DESCRIPTION: Initializes paging
+#   INPUTS: none
+#   OUTPUTS: none
+#   RETURN VALUE: none
+#   SIDE EFFECTS: Pushes the an error code if one is not provided and then pushes isr # and jumps to the common handler
 isr0:
 	cli
 	pushl $0x00
@@ -167,30 +174,42 @@ isr31 :
 	pushl $0x1f
 	jmp isr_common
 
-# From osdev
+# Very similar to an examble from osdev
+# isr_common
+#   DESCRIPTION: Calls the exception handler
+#   INPUTS: none
+#   OUTPUTS: none
+#   RETURN VALUE: none
+#   SIDE EFFECTS: saves all the registers
 isr_common:
-	pusha
-    push %ds
+	pusha	# push the user regs
+    push %ds	# push the segment regs, just in case
     push %es
     push %fs
     push %gs
-    mov $0x10, %ax	# Load the Kernel Data Segment descriptor!
+    mov $KERNEL_CS, %ax	# Load the Kernel Code Segment descriptor, probably already was
     mov %ax, %ds
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
     mov %esp, %eax   # Push us the stack
     push %eax
-    call fault_handler
-    pop %eax
+    call fault_handler	# call the fault handler
+	pop %eax	# pop all of the segment regs
     pop %gs
     pop %fs
     pop %es
     pop %ds
-    popa
+    popa	# pop all the user regs
     add $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
 	
+# keyboard_handler_wrapper
+#   DESCRIPTION: Saves registers and call keyboard_handler
+#   INPUTS: none
+#   OUTPUTS: none
+#   RETURN VALUE: none
+#   SIDE EFFECTS: Calls keyboard_handler so anything that does
 keyboard_handler_wrapper:
 	cli
 	pusha
@@ -198,7 +217,7 @@ keyboard_handler_wrapper:
     push %es
     push %fs
     push %gs
-    mov $0x10, %ax	# Load the Kernel Data Segment descriptor!
+    mov $KERNEL_CS, %ax	# Load the Kernel Data Segment descriptor!
     mov %ax, %ds
     mov %ax, %es
     mov %ax, %fs
@@ -214,6 +233,12 @@ keyboard_handler_wrapper:
     popa
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!	
 
+# rtc_handler_wrapper
+#   DESCRIPTION: Saves the registers and call rtc_handler
+#   INPUTS: none
+#   OUTPUTS: none
+#   RETURN VALUE: none
+#   SIDE EFFECTS: Calls rtc_handler so anything that does
 rtc_handler_wrapper:
 	cli
 	pusha
@@ -221,7 +246,7 @@ rtc_handler_wrapper:
     push %es
     push %fs
     push %gs
-    mov $0x10, %ax	# Load the Kernel Data Segment descriptor!
+    mov $KERNEL_CS, %ax	# Load the Kernel Data Segment descriptor!
     mov %ax, %ds
     mov %ax, %es
     mov %ax, %fs
@@ -239,6 +264,12 @@ rtc_handler_wrapper:
 
 
 # Dispatcher for the system calls
+# sys_call
+#   DESCRIPTION: Takes the sys_call and jumps to the proper function
+#   INPUTS: %eax - the number of the function to call
+#   OUTPUTS: %eax
+#   RETURN VALUE: -1 for an error, 0 else
+#   SIDE EFFECTS: Calls system calls, so anything from system halt to opening a file
 sys_call:
 	pusha
     push %ds

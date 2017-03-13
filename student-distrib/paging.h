@@ -15,6 +15,7 @@
 #define RW 0x00000002
 #define PRESENT 0x00000001
 
+/* Function to initialize paging*/
 void paging_init(void);
 
 #endif

@@ -6,7 +6,7 @@
 #include "lib.h"
 // #include "keyboard.h"
 #include "x86_desc.h"
-/* Irq that the Keyboard sits on */
+/* Irq that the RTC sits on */
 #define RTC_IRQ 8
 
 /* Port for rtc */

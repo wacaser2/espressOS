@@ -26,6 +26,7 @@
  * to declare the interrupt finished */
 #define EOI             0x60
 /* Externally-visible functions */
+
 /* Initialize both PICs */
 void i8259_init(void);
 /* Enable (unmask) the specified IRQ */

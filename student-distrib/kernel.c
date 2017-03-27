@@ -157,8 +157,8 @@ entry(unsigned long magic, unsigned long addr)
 	i8259_init();
 
 	/* Init rtc*/
-	//printf("Initializing RTC\n");
-	//rtc_init();
+	printf("Initializing RTC\n");
+	rtc_init();
 
 	/* Init keyboard*/
 	printf("Initializing keyboard\n");
@@ -268,48 +268,62 @@ entry(unsigned long magic, unsigned long addr)
 	*/
 
 	/* Test Read Incremental File */
-	while (1) {
-#define BUF_SIZE 4096
-		char b[128];
-		terminal_read((void *)b, 128);
-		dentry_t d;
-		uint32_t i = 0, j, r;
-		if (!read_dentry_by_name(b, &d)) {
-			clear();
-			int8_t buf[BUF_SIZE];
-			if (d.file_type == 2) {
-				putc('\n');
-				while ((r = read_data(d.inode_index, BUF_SIZE*i, (uint8_t*)buf, BUF_SIZE)) != 0) {
-					for (j = 0; j < r; j++)
-						putc(buf[j]);
-					i++;
-				}
-				putc('\n');
-			}
-			puts("File Name: ");
-			for (j = 0; j < 32; j++)
-				putc(d.file_name[j]);
-			puts(" : File Type: ");
-			printf("%d", d.file_type);
-			puts(" : File Size: ");
-			printf("%d", get_inode_length(d.inode_index));
-			putc('\n');
-		}
-		for (i = 0; i < 128; i++)
-			b[i] = '\0';
-	}
+// 	while (1) {
+// #define BUF_SIZE 4096
+// 		char b[128];
+// 		terminal_read((void *)b, 128);
+// 		dentry_t d;
+// 		uint32_t i = 0, j, r;
+// 		if (!read_dentry_by_name(b, &d)) {
+// 			clear();
+// 			int8_t buf[BUF_SIZE];
+// 			if (d.file_type == 2) {
+// 				putc('\n');
+// 				while ((r = read_data(d.inode_index, BUF_SIZE*i, (uint8_t*)buf, BUF_SIZE)) != 0) {
+// 					for (j = 0; j < r; j++)
+// 						putc(buf[j]);
+// 					i++;
+// 				}
+// 				putc('\n');
+// 			}
+// 			puts("File Name: ");
+// 			for (j = 0; j < 32; j++)
+// 				putc(d.file_name[j]);
+// 			puts(" : File Type: ");
+// 			printf("%d", d.file_type);
+// 			puts(" : File Size: ");
+// 			printf("%d", get_inode_length(d.inode_index));
+// 			putc('\n');
+// 		}
+// 		for (i = 0; i < 128; i++)
+// 			b[i] = '\0';
+// 	}
 	/*
 	*/
 
-	/* Test terminal_write */
-	/*
-	while (1)
-	{
-		char b[128];
-		int a = terminal_read((void *)b, 128);
-		terminal_write((void *)b, a);
-	}
-	*/
+	/* ***********************************************************************************************************************
+                                                    TEST CASES for TERMINAL
+    *********************************************************************************************************************** */
+    while(1)
+    {
+        char b[128];
+        int a = terminal_read((void *)b, 128);
+        terminal_write((void *)b, a);
+    }
+
+   /* ***********************************************************************************************************************
+                                                    TEST CASES for RTC
+    *********************************************************************************************************************** */
+    int test_rate = 512;
+    int * ptr = &test_rate;
+    rtc_write(ptr, 4);
+    while(1)
+    {
+        if(rtc_read() == 0)
+            printf("1");
+        else
+            printf("0");
+    }
 
 	/* Initialize devices, memory, filesystem, enable device interrupts on the
 	 * PIC, any other initialization stuff... */

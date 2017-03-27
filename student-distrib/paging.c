@@ -1,5 +1,6 @@
 #include "paging.h"
 #include "lib.h"
+#include "multiboot.h"
 
 
 uint32_t page_directory[oneUNIT] __attribute__((aligned(oneUNIT * PAGE_SIZE_MULTIPLIER)));	// 1024 entries. all 4kB aligned
@@ -17,7 +18,7 @@ uint32_t first_page_table[oneUNIT] __attribute__((aligned(oneUNIT * PAGE_SIZE_MU
  *         		   multiple 4kb pages
  */
 void
-paging_init() {
+paging_init(unsigned long addr) {
 	int i;
 	for (i = 0; i < oneUNIT; i++)
 	{

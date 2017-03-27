@@ -10,15 +10,16 @@
 #include "rtc.h"
 #include "keyboard.h"
 #include "paging.h"
+#include "file.h"
 
-/* Macros. */
-/* Check if the bit BIT in FLAGS is set. */
+ /* Macros. */
+ /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags,bit)   ((flags) & (1 << (bit)))
 
 /* Check if MAGIC is valid and print the Multiboot information structure
    pointed by ADDR. */
 void
-entry (unsigned long magic, unsigned long addr)
+entry(unsigned long magic, unsigned long addr)
 {
 	multiboot_info_t *mbi;
 
@@ -28,39 +29,39 @@ entry (unsigned long magic, unsigned long addr)
 	/* Am I booted by a Multiboot-compliant boot loader? */
 	if (magic != MULTIBOOT_BOOTLOADER_MAGIC)
 	{
-		printf ("Invalid magic number: 0x%#x\n", (unsigned) magic);
+		printf("Invalid magic number: 0x%#x\n", (unsigned)magic);
 		return;
 	}
 
 	/* Set MBI to the address of the Multiboot information structure. */
-	mbi = (multiboot_info_t *) addr;
+	mbi = (multiboot_info_t *)addr;
 
 	/* Print out the flags. */
-	printf ("flags = 0x%#x\n", (unsigned) mbi->flags);
+	printf("flags = 0x%#x\n", (unsigned)mbi->flags);
 
 	/* Are mem_* valid? */
-	if (CHECK_FLAG (mbi->flags, 0))
-		printf ("mem_lower = %uKB, mem_upper = %uKB\n",
-				(unsigned) mbi->mem_lower, (unsigned) mbi->mem_upper);
+	if (CHECK_FLAG(mbi->flags, 0))
+		printf("mem_lower = %uKB, mem_upper = %uKB\n",
+			(unsigned)mbi->mem_lower, (unsigned)mbi->mem_upper);
 
 	/* Is boot_device valid? */
-	if (CHECK_FLAG (mbi->flags, 1))
-		printf ("boot_device = 0x%#x\n", (unsigned) mbi->boot_device);
+	if (CHECK_FLAG(mbi->flags, 1))
+		printf("boot_device = 0x%#x\n", (unsigned)mbi->boot_device);
 
 	/* Is the command line passed? */
-	if (CHECK_FLAG (mbi->flags, 2))
-		printf ("cmdline = %s\n", (char *) mbi->cmdline);
+	if (CHECK_FLAG(mbi->flags, 2))
+		printf("cmdline = %s\n", (char *)mbi->cmdline);
 
-	if (CHECK_FLAG (mbi->flags, 3)) {
+	if (CHECK_FLAG(mbi->flags, 3)) {
 		int mod_count = 0;
 		int i;
 		module_t* mod = (module_t*)mbi->mods_addr;
-		while(mod_count < mbi->mods_count) {
+		while (mod_count < mbi->mods_count) {
 			printf("Module %d loaded at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_start);
 			printf("Module %d ends at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_end);
 			printf("First few bytes of module:\n");
-			for(i = 0; i<16; i++) {
-				printf("0x%x ", *((char*)(mod->mod_start+i)));
+			for (i = 0; i < 16; i++) {
+				printf("0x%x ", *((char*)(mod->mod_start + i)));
 			}
 			printf("\n");
 			mod_count++;
@@ -68,54 +69,54 @@ entry (unsigned long magic, unsigned long addr)
 		}
 	}
 	/* Bits 4 and 5 are mutually exclusive! */
-	if (CHECK_FLAG (mbi->flags, 4) && CHECK_FLAG (mbi->flags, 5))
+	if (CHECK_FLAG(mbi->flags, 4) && CHECK_FLAG(mbi->flags, 5))
 	{
-		printf ("Both bits 4 and 5 are set.\n");
+		printf("Both bits 4 and 5 are set.\n");
 		return;
 	}
 
 	/* Is the section header table of ELF valid? */
-	if (CHECK_FLAG (mbi->flags, 5))
+	if (CHECK_FLAG(mbi->flags, 5))
 	{
 		elf_section_header_table_t *elf_sec = &(mbi->elf_sec);
 
-		printf ("elf_sec: num = %u, size = 0x%#x,"
-				" addr = 0x%#x, shndx = 0x%#x\n",
-				(unsigned) elf_sec->num, (unsigned) elf_sec->size,
-				(unsigned) elf_sec->addr, (unsigned) elf_sec->shndx);
+		printf("elf_sec: num = %u, size = 0x%#x,"
+			" addr = 0x%#x, shndx = 0x%#x\n",
+			(unsigned)elf_sec->num, (unsigned)elf_sec->size,
+			(unsigned)elf_sec->addr, (unsigned)elf_sec->shndx);
 	}
 
 	/* Are mmap_* valid? */
-	if (CHECK_FLAG (mbi->flags, 6))
+	if (CHECK_FLAG(mbi->flags, 6))
 	{
 		memory_map_t *mmap;
 
-		printf ("mmap_addr = 0x%#x, mmap_length = 0x%x\n",
-				(unsigned) mbi->mmap_addr, (unsigned) mbi->mmap_length);
-		for (mmap = (memory_map_t *) mbi->mmap_addr;
-				(unsigned long) mmap < mbi->mmap_addr + mbi->mmap_length;
-				mmap = (memory_map_t *) ((unsigned long) mmap
-					+ mmap->size + sizeof (mmap->size)))
-			printf (" size = 0x%x,     base_addr = 0x%#x%#x\n"
-					"     type = 0x%x,  length    = 0x%#x%#x\n",
-					(unsigned) mmap->size,
-					(unsigned) mmap->base_addr_high,
-					(unsigned) mmap->base_addr_low,
-					(unsigned) mmap->type,
-					(unsigned) mmap->length_high,
-					(unsigned) mmap->length_low);
+		printf("mmap_addr = 0x%#x, mmap_length = 0x%x\n",
+			(unsigned)mbi->mmap_addr, (unsigned)mbi->mmap_length);
+		for (mmap = (memory_map_t *)mbi->mmap_addr;
+		(unsigned long)mmap < mbi->mmap_addr + mbi->mmap_length;
+			mmap = (memory_map_t *)((unsigned long)mmap
+				+ mmap->size + sizeof(mmap->size)))
+			printf(" size = 0x%x,     base_addr = 0x%#x%#x\n"
+				"     type = 0x%x,  length    = 0x%#x%#x\n",
+				(unsigned)mmap->size,
+				(unsigned)mmap->base_addr_high,
+				(unsigned)mmap->base_addr_low,
+				(unsigned)mmap->type,
+				(unsigned)mmap->length_high,
+				(unsigned)mmap->length_low);
 	}
 	/* Construct an LDT entry in the GDT */
 	{
 		seg_desc_t the_ldt_desc;
-		the_ldt_desc.granularity    = 0;
-		the_ldt_desc.opsize         = 1;
-		the_ldt_desc.reserved       = 0;
-		the_ldt_desc.avail          = 0;
-		the_ldt_desc.present        = 1;
-		the_ldt_desc.dpl            = 0x0;
-		the_ldt_desc.sys            = 0;
-		the_ldt_desc.type           = 0x2;
+		the_ldt_desc.granularity = 0;
+		the_ldt_desc.opsize = 1;
+		the_ldt_desc.reserved = 0;
+		the_ldt_desc.avail = 0;
+		the_ldt_desc.present = 1;
+		the_ldt_desc.dpl = 0x0;
+		the_ldt_desc.sys = 0;
+		the_ldt_desc.type = 0x2;
 
 		SET_LDT_PARAMS(the_ldt_desc, &ldt, ldt_size);
 		ldt_desc_ptr = the_ldt_desc;
@@ -125,16 +126,16 @@ entry (unsigned long magic, unsigned long addr)
 	/* Construct a TSS entry in the GDT */
 	{
 		seg_desc_t the_tss_desc;
-		the_tss_desc.granularity    = 0;
-		the_tss_desc.opsize         = 0;
-		the_tss_desc.reserved       = 0;
-		the_tss_desc.avail          = 0;
-		the_tss_desc.seg_lim_19_16  = TSS_SIZE & 0x000F0000;
-		the_tss_desc.present        = 1;
-		the_tss_desc.dpl            = 0x0;
-		the_tss_desc.sys            = 0;
-		the_tss_desc.type           = 0x9;
-		the_tss_desc.seg_lim_15_00  = TSS_SIZE & 0x0000FFFF;
+		the_tss_desc.granularity = 0;
+		the_tss_desc.opsize = 0;
+		the_tss_desc.reserved = 0;
+		the_tss_desc.avail = 0;
+		the_tss_desc.seg_lim_19_16 = TSS_SIZE & 0x000F0000;
+		the_tss_desc.present = 1;
+		the_tss_desc.dpl = 0x0;
+		the_tss_desc.sys = 0;
+		the_tss_desc.type = 0x9;
+		the_tss_desc.seg_lim_15_00 = TSS_SIZE & 0x0000FFFF;
 
 		SET_TSS_PARAMS(the_tss_desc, &tss, tss_size);
 
@@ -150,15 +151,15 @@ entry (unsigned long magic, unsigned long addr)
 	/* Install ISR'S*/
 	printf("Installing isrs\n");
 	isrs_install();
-	
+
 	/* Init the PIC */
 	printf("Initializing PIC\n");
 	i8259_init();
-	
+
 	/* Init rtc*/
-	printf("Initializing RTC\n");
-	rtc_init();
-	
+	//printf("Initializing RTC\n");
+	//rtc_init();
+
 	/* Init keyboard*/
 	printf("Initializing keyboard\n");
 	keyboard_init();
@@ -167,40 +168,134 @@ entry (unsigned long magic, unsigned long addr)
 	printf("Enabling Interrupts\n");
 	sti();
 
+	/* Init file_sys*/
+	uint32_t a = ((module_t*)mbi->mods_addr)->mod_start;
+	init_file_sys(a);
+
 	/* Init paging*/
-	paging_init();
+	paging_init(0);
 
-	/* Initialize devices, memory, filesystem, enable device interrupts on the
-	 * PIC, any other initialization stuff... */
-
-	/* Enable interrupts */
-	/* Do not enable the following until after you have set up your
-	 * IDT correctly otherwise QEMU will triple fault and simple close
-	 * without showing you any output */
-
-	/* Test zone*/
-	
-	/* Divide by Zero*/
+	/* Test file system */
+	/* Test by index */
 	/*
-	uint32_t a = 1 / 0;
+	dentry_t d;
+	uint32_t i, j;
+	for (i = 0; i < *((uint32_t*)a); i++) {
+		if (!read_dentry_by_index(i, &d)) {
+			puts("File Name: ");
+			for (j = 0; j < 32; j++)
+				putc(d.file_name[j]);
+			puts(" : File Type: ");
+			printf("%d", d.file_type);
+			puts(" : File Size: ");
+			printf("%d", get_inode_length(d.inode_index));
+			putc('\n');
+		}
+	}
 	*/
 
-	/* Dereference NULL*/
+	/* Test by name */
 	/*
-	uint32_t *a = NULL;
-	uint32_t b = *a;
-	printf("%u\n%u", b, -1);
+	int8_t* arr[20] = {
+		".",
+		"sigtest",
+		"shell",
+		"grep",
+		"syserr",
+		"rtc",
+		"fish",
+		"counter",
+		"pingpong",
+		"cat",
+		"frame0.txt",
+		"verylargetextwithverylongname.tx",
+		"ls",
+		"testprint",
+		"created.txt",
+		"frame1.txt",
+		"hello",
+		"extra1",
+		"",
+		"extra  3"
+	};
+	dentry_t d;
+	uint32_t i, j;
+	for (i = 0; i < 20; i++) {
+		if (!read_dentry_by_name(arr[i], &d)) {
+			puts("File Name: ");
+			for (j = 0; j < 32; j++)
+				putc(d.file_name[j]);
+			puts(" : File Type: ");
+			printf("%d", d.file_type);
+			puts(" : File Size: ");
+			printf("%d", get_inode_length(d.inode_index));
+			putc('\n');
+		}
+	}
+	*/
+
+	/* Test Read Whole File */
+	clear();
+#define BUF_SIZE 50000
+	dentry_t d;
+	uint32_t j;
+	if (!read_dentry_by_name("shell", &d)) {
+		int8_t buf[BUF_SIZE];
+		if (d.file_type == 2) {
+			printf("%d\n", read_data(d.inode_index, 0, (uint8_t*)buf, BUF_SIZE));
+			putc('\n');
+			for (j = 0; j < get_inode_length(d.inode_index); j++)
+				putc(buf[j]);
+			putc('\n');
+		}
+		puts("File Name: ");
+		for (j = 0; j < 32; j++)
+			putc(d.file_name[j]);
+		puts(" : File Type: ");
+		printf("%d", d.file_type);
+		puts(" : File Size: ");
+		printf("%d", get_inode_length(d.inode_index));
+		putc('\n');
+	}
+	/*
 	*/
 	
 	/* Execute the first program (`shell') ... */
+	/*
 	while (1)
 	{
 		char b[128];
 		int a = terminal_read((void *)b, 128);
 		terminal_write((void *)b, a);
 	}
+	*/
 
-	/* Spin (nicely, so we don't chew up cycles) */
+	/* Initialize devices, memory, filesystem, enable device interrupts on the
+	 * PIC, any other initialization stuff... */
+
+	 /* Enable interrupts */
+	 /* Do not enable the following until after you have set up your
+	  * IDT correctly otherwise QEMU will triple fault and simple close
+	  * without showing you any output */
+
+	  /* Test zone*/
+
+	  /* Divide by Zero*/
+	  /*
+	  uint32_t a = 1 / 0;
+	  */
+
+	  /* Dereference NULL*/
+	  /*
+	  uint32_t *a = NULL;
+	  uint32_t b = *a;
+	  printf("%u\n%u", b, -1);
+	  */
+
+	  /* Execute the first program (`shell') ... */
+
+
+	  /* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
 }
 

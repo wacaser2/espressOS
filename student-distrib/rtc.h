@@ -1,4 +1,3 @@
-
 #ifndef _RTC_H
 #define _RTC_H
 
@@ -17,11 +16,23 @@
 #define STATUS_REGISTER_A	0x8A
 #define STATUS_REGISTER_B	0x8B
 #define STATUS_REGISTER_C	0x0C
+/*mask to insert rate into lower 4 bits of register A*/
+#define RATE_MASK			0xF0
+#define DEFAULT_FREQ		2
+
+#define FREQ_LIMIT			1024
+#define RATE_at_FREQ_LIMIT	0x06
 
 /* Function to init rtc*/
 void rtc_init(void);
 
 /* Function to handle an rtc interrupt*/
 void rtc_handler(void);
+
+int32_t rtc_open(void);
+int32_t rtc_read(void);
+int32_t rtc_write(const void* buf, int32_t nbytes);
+int32_t rtc_close(void);
+int32_t set_freq(int32_t freq);
 
 #endif

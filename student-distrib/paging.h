@@ -18,6 +18,6 @@
 #define PRESENT 0x00000001
 
 /* Function to initialize paging*/
-void paging_init(void);
+void paging_init(unsigned long addr);
 
 #endif

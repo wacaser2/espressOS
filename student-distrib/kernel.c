@@ -235,32 +235,73 @@ entry(unsigned long magic, unsigned long addr)
 	*/
 
 	/* Test Read Whole File */
-	clear();
-#define BUF_SIZE 50000
-	dentry_t d;
-	uint32_t j;
-	if (!read_dentry_by_name("shell", &d)) {
-		int8_t buf[BUF_SIZE];
-		if (d.file_type == 2) {
-			printf("%d\n", read_data(d.inode_index, 0, (uint8_t*)buf, BUF_SIZE));
-			putc('\n');
-			for (j = 0; j < get_inode_length(d.inode_index); j++)
-				putc(buf[j]);
+	/*
+	while (1) {
+#define BUF_SIZE 40000
+		char b[128];
+		terminal_read((void *)b, 128);
+		dentry_t d;
+		uint32_t j;
+		if (!read_dentry_by_name(b, &d)) {
+			clear();
+			int8_t buf[BUF_SIZE];
+			if (d.file_type == 2) {
+				printf("%d\n", read_data(d.inode_index, 0, (uint8_t*)buf, BUF_SIZE));
+				putc('\n');
+				for (j = 0; j < get_inode_length(d.inode_index); j++)
+					putc(buf[j]);
+				putc('\n');
+			}
+			puts("File Name: ");
+			for (j = 0; j < 32; j++)
+				putc(d.file_name[j]);
+			puts(" : File Type: ");
+			printf("%d", d.file_type);
+			puts(" : File Size: ");
+			printf("%d", get_inode_length(d.inode_index));
 			putc('\n');
 		}
-		puts("File Name: ");
-		for (j = 0; j < 32; j++)
-			putc(d.file_name[j]);
-		puts(" : File Type: ");
-		printf("%d", d.file_type);
-		puts(" : File Size: ");
-		printf("%d", get_inode_length(d.inode_index));
-		putc('\n');
+		int i;
+		for (i = 0; i < 128; i++)
+			b[i] = '\0';
+	}
+	*/
+
+	/* Test Read Incremental File */
+	while (1) {
+#define BUF_SIZE 4096
+		char b[128];
+		terminal_read((void *)b, 128);
+		dentry_t d;
+		uint32_t i = 0, j, r;
+		if (!read_dentry_by_name(b, &d)) {
+			clear();
+			int8_t buf[BUF_SIZE];
+			if (d.file_type == 2) {
+				putc('\n');
+				while ((r = read_data(d.inode_index, BUF_SIZE*i, (uint8_t*)buf, BUF_SIZE)) != 0) {
+					for (j = 0; j < r; j++)
+						putc(buf[j]);
+					i++;
+				}
+				putc('\n');
+			}
+			puts("File Name: ");
+			for (j = 0; j < 32; j++)
+				putc(d.file_name[j]);
+			puts(" : File Type: ");
+			printf("%d", d.file_type);
+			puts(" : File Size: ");
+			printf("%d", get_inode_length(d.inode_index));
+			putc('\n');
+		}
+		for (i = 0; i < 128; i++)
+			b[i] = '\0';
 	}
 	/*
 	*/
-	
-	/* Execute the first program (`shell') ... */
+
+	/* Test terminal_write */
 	/*
 	while (1)
 	{

@@ -118,8 +118,8 @@ int32_t file_write() {
 int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry) {
 	uint32_t i = 0;
 	/* filename too long? */
-	if (strlen(fname) > MAX_FILE_NAME)
-		return -1;
+	//if (strlen(fname) > MAX_FILE_NAME)
+		//return -1;
 	/* set up filename to compare */
 	int8_t tmp[MAX_FILE_NAME];
 	strncpy(tmp, fname, MAX_FILE_NAME);

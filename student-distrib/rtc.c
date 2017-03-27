@@ -40,8 +40,8 @@ rtc_handler(void)
 int32_t
 rtc_open(void)
 {
-	set_freq(DEFAULT_FREQ);
-	return 0;
+	set_freq(DEFAULT_FREQ); // set default frequency
+	return 0; // return zero
 }
 
 int32_t
@@ -56,24 +56,17 @@ int32_t
 rtc_write(const void* buf, int32_t nbytes)
 {
 	if(buf == NULL || nbytes != 4)
-	{
 		return -1;
-	}
-
 	int freq = *(int32_t*)buf;
-
-	int ret = set_freq(freq);
-
-	if(ret == -1) return ret;
-
-	return nbytes;
+	int ret = set_freq(freq); // ret gets return value of set_freq
+	if(ret == -1) return ret; // if ret == -1 return -1
+	return nbytes; // return nbytes value
 }
 
 int32_t
 rtc_close(void) //int32_t fd
 {
 	//if(fd <= 1) return -1;
-
 	return 0;
 }
 

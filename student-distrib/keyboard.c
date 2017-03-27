@@ -174,57 +174,53 @@ void keyboard_handler()
       }
       else if(scancode == CAPS_LOCK)
       {
-        // if(capslock_flag == 0)
-        //     capslock_flag = 1;
-        // else
-        //     capslock_flag = 0;
         capslock_flag = !capslock_flag; // change the caps flag
       }
       else
       {
-        if(ctrl_flag == 0 && key_idx < KEY_BUF_SIZE_ACTUAL)
+        if(ctrl_flag == 0 && key_idx < KEY_BUF_SIZE_ACTUAL) // if control released and buff size is less than 128
         {
           if((scancode >= 0x01 && scancode <= 0x37) || scancode == 0x4A || scancode == 0x4E || scancode == 0x39)
           {
-            if(shift_flag == 1 && capslock_flag == 1)
+            if(shift_flag == 1 && capslock_flag == 1) // if both caps lock and shift are pressed
             {
-                if(shift_key[scancode] >= 65 && shift_key[scancode] <= 90)
+                if(shift_key[scancode] >= 65 && shift_key[scancode] <= 90) // capital letters
                 {
                     key_buf[key_idx++] = key[scancode];
                     putc(key[scancode]);
                 }
-                else
+                else // else case for small letters
                 {
                     key_buf[key_idx++] = shift_key[scancode];
                     putc(shift_key[scancode]);
                 }
             }
-            else if(shift_flag == 1)
+            else if(shift_flag == 1) // only shift pressed
             {
                 key_buf[key_idx++] = shift_key[scancode];
                 putc(shift_key[scancode]);
             }
-            else if(capslock_flag == 1)
+            else if(capslock_flag == 1) // only capslock pressed
             {
-                if(key[scancode] >= 97 && key[scancode] <= 122)
+                if(key[scancode] >= 97 && key[scancode] <= 122) // for small ASCII chars
                 {
                     key_buf[key_idx++] = key[scancode] - 32;
                     putc(key[scancode] - 32);
                 }
-                else
+                else // for capital ASCII letters
                 {
                     key_buf[key_idx++] = key[scancode];
                     putc(key[scancode]);
                 }
             }
-            else
+            else // else case for spamming with other letters
             {
                 key_buf[key_idx++] = key[scancode];
                 putc(key[scancode]);  // put the char on the screen
             }
           }
         }
-        else if(ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L') )
+        else if(ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L') ) // clearing the screen
         {
           clear();  // clear the screen
         }
@@ -243,7 +239,7 @@ void keyboard_handler()
 
 int32_t terminal_open(void)
 {
-  return 0;
+  return 0; // just returning zero for opening term
 }
 
 int32_t terminal_read(void * buf, int32_t nbytes)
@@ -271,6 +267,7 @@ int32_t terminal_read(void * buf, int32_t nbytes)
       key_buf[j] = NULL_KEY;
     }
 
+    // return number of bytes taken from keyboard buff
     return i;
 }
 
@@ -278,16 +275,14 @@ int32_t terminal_write(const void * buf, int32_t nbytes)
 {
     int i;
     for(i=0; i< nbytes; i++)
-    {
         putc(((int8_t *)buf)[i]);
-        ((int8_t *)buf)[i] = NULL_KEY;
-    }    
     putc(NEW_LINE);
 
+    // return number of bytes written
     return i;
 }
 
 int32_t terminal_close(void)
 {
-  return 0;
+  return 0; // return zero when closing term
 }

@@ -177,6 +177,7 @@ entry(unsigned long magic, unsigned long addr)
 
 	/* Test file system */
 	/* Test by index */
+	/*
 	dentry_t d;
 	uint32_t i, j;
 	for (i = 0; i < *((uint32_t*)a); i++) {
@@ -191,7 +192,6 @@ entry(unsigned long magic, unsigned long addr)
 			putc('\n');
 		}
 	}
-	/*
 	*/
 
 	/* Test by name */
@@ -235,11 +235,10 @@ entry(unsigned long magic, unsigned long addr)
 	*/
 
 	/* Test Read File */
-	/*
 	clear();
 	dentry_t d;
 	uint32_t i = 16, j;
-	if (!read_dentry_by_index(i, &d)) {
+	if (!read_dentry_by_name("ls", &d)) {
 		int8_t buf[920];
 		puts("File Name: ");
 		for (j = 0; j < 32; j++)
@@ -251,16 +250,17 @@ entry(unsigned long magic, unsigned long addr)
 		putc('\n');
 		if (d.file_type == 2) {
 			puts("Text: ");
-			if (get_inode_length(d.inode_index) < 920)
+			//if (get_inode_length(d.inode_index) < 2000)
 				printf("%d\n", read_data(d.inode_index, 0, (uint8_t*)buf, 920));
-			else
-				printf("%d\n", read_data(d.inode_index, get_inode_length(d.inode_index) - 920, (uint8_t*)buf, 920));
+			//else
+				//printf("%d\n", read_data(d.inode_index, get_inode_length(d.inode_index) - 2000, (uint8_t*)buf, 2000));
 			putc('\n');
 			for (j = 0; j < 920; j++)
 				putc(buf[j]);
 			putc('\n');
 		}
 	}
+	/*
 	*/
 
 

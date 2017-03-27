@@ -258,7 +258,7 @@ int32_t terminal_read(void * buf, int32_t nbytes)
   int i;
   for(i = 0; i < nbytes; i++)
   {
-      if(key_buf == NULL_KEY)
+      if(key_buf[i] == NULL_KEY)
       {
         break;
       }

@@ -200,7 +200,7 @@ setcolor(uint8_t c)
 *	Function: Output a character to the console
 */
 void putc(uint8_t c) {
-	if (c == '\n' || c == '\r') {
+	/*if (c == '\n' || c == '\r') {
 		screen_y++;
 		screen_x = 0;
 	}
@@ -210,14 +210,32 @@ void putc(uint8_t c) {
 		screen_x = (screen_x - 1) % NUM_COLS;
 		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = ' ';
 		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
+	}*/
+
+	*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
+	*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
+	screen_x++;
+	screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+	screen_x %= NUM_COLS;
+}
+
+
+void backspace_put(void)
+{
+	if ((screen_x - 1) < 0)
+	{
+		screen_y = (screen_y - 1) % NUM_ROWS;
 	}
-	else {
-		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
-		*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
-		screen_x++;
-		screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
-		screen_x %= NUM_COLS;
-	}
+	screen_x = (screen_x - 1) % NUM_COLS;
+	*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = ' ';
+	*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = ATTRIB;
+}
+
+
+void enter_put(void)
+{
+	screen_y++;
+	screen_x = 0;
 }
 
 /*

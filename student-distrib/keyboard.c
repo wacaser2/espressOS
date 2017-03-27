@@ -116,7 +116,7 @@ void keyboard_handler()
     /* Read from the keyboard's data buffer */
     //scancode = inb((int)KEYBOARD_PORT);
 
-    char scancode = 0;
+    unsigned char scancode = 0;
     do
     {
       if(inb((int)KEYBOARD_PORT) != scancode)
@@ -144,10 +144,6 @@ void keyboard_handler()
       {
         shift_flag = 0;
       }
-      if(scancode == CAPS_LOCK_REL)
-      {
-        capslock_flag = 0;
-      }
     }
     else
     {
@@ -155,75 +151,77 @@ void keyboard_handler()
       {
         if(key_idx > 0)
         {
-          //key_idx--;
           key_buf[--key_idx] = NULL_KEY;
-          backspace_put();
+          backspace_put(key_idx);
         }
       }
-      else if(scancode == ENTER)
+      else if(scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
       {
         enter_flag = 1;
-        //key_idx++;
         key_buf[key_idx++] = NEW_LINE;
-        enter_put();
+        key_idx = 0;    // because its a new line
+        putc(key[scancode]);
       }
       else if(scancode == LEFT_CTRL)
       {
         ctrl_flag = 1;
       }
-      else if(scancode == LEFT_SHIFT || scancode == RIGHT_SHFT)
+      else if(scancode == LEFT_SHIFT || scancode == RIGHT_SHIFT)
       {
         shift_flag = 1;
       }
       else if(scancode == CAPS_LOCK)
       {
-        capslock_flag = 1;
+        if(capslock_flag == 0)
+            capslock_flag = 1;
+        else
+            capslock_flag = 0;
       }
       else
       {
         if(ctrl_flag == 0 && key_idx < KEY_BUF_SIZE)
         {
-          if((scancode >= 0x01 && scancode <= 0x37) || scancode == 0x4A || scancode == 0x4E)
+          if((scancode >= 0x01 && scancode <= 0x37) || scancode == 0x4A || scancode == 0x4E || scancode == 0x39)
           {
             if(shift_flag == 1 && capslock_flag == 1)
             {
-              if(shift_key[scancode] >= 65 && shift_key[scancode] <= 90)
-              {
-                key_buf[key_idx++] = key[scancode];
-                putc(key[scancode]);
-              }
-              else
-              {
-                key_buf[key_idx++] = shift_key[scancode];
-                putc(shift_key[scancode]);
-              }
+                if(shift_key[scancode] >= 65 && shift_key[scancode] <= 90)
+                {
+                    key_buf[key_idx++] = key[scancode];
+                    putc(key[scancode]);
+                }
+                else
+                {
+                    key_buf[key_idx++] = shift_key[scancode];
+                    putc(shift_key[scancode]);
+                }
             }
             else if(shift_flag == 1)
             {
-              key_buf[key_idx++] = shift_key[scancode];
-              putc(shift_key[scancode]);
+                key_buf[key_idx++] = shift_key[scancode];
+                putc(shift_key[scancode]);
             }
-            else if(capslock_flag = 1)
+            else if(capslock_flag == 1)
             {
-              if(key[scancode] >= 97 && shift_key[scancode] <= 122)
-              {
-                key_buf[key_idx++] = key[scancode];
-                putc(key[scancode] - 32);
-              }
-              else
-              {
-                key_buf[key_idx++] = key[scancode];
-                putc(key[scancode]);
-              }
+                if(key[scancode] >= 97 && key[scancode] <= 122)
+                {
+                    key_buf[key_idx++] = key[scancode] - 32;
+                    putc(key[scancode] - 32);
+                }
+                else
+                {
+                    key_buf[key_idx++] = key[scancode];
+                    putc(key[scancode]);
+                }
             }
             else
             {
-              key_buf[key_idx++] = key[scancode];
-              putc(key[scancode]);  // put the char on the screen
+                key_buf[key_idx++] = key[scancode];
+                putc(key[scancode]);  // put the char on the screen
             }
           }
         }
-        else if(ctrl_flag == 1 && scancode == 'l')
+        else if(ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L') )
         {
           clear();  // clear the screen
         }
@@ -231,7 +229,6 @@ void keyboard_handler()
     }
     
     send_eoi(KEYBOARD_IRQ);	//allow more interrupts to queue for the keyboard
-    
     
     /*else
     {
@@ -248,48 +245,43 @@ int32_t terminal_open(void)
 
 int32_t terminal_read(void * buf, int32_t nbytes)
 {
-  enter_flag = 0;
-  while(enter_flag == 0)
-  {
+    enter_flag = 0;
+    while(enter_flag == 0)
+    {
     // nothing, keeping looping till enter is pressed
+    }
 
-  }
+    int i,j;
 
-  int i;
-  for(i = 0; i < nbytes; i++)
-  {
-      if(key_buf[i] == NULL_KEY)
+    for(i = 0; i < nbytes; i++) // copy over all relevant info from key_buf to buf passed in
+    {
+      if(key_buf[i] == NEW_LINE)
       {
         break;
       }
-      buf[i] = key_buf[i];
-  }
+      ((int8_t *)buf)[i] = key_buf[i];
+    }
 
-  /* clear the key buffer */
-  for(i = 0; i < KEY_BUF_SIZE; i++)
-  {
-      key_buf[i] = NULL_KEY;
-  }
+    /* clear the key buffer */
+    for(j = 0; j < KEY_BUF_SIZE; j++)
+    {
+      key_buf[j] = NULL_KEY;
+    }
 
+    return i;
 }
 
 int32_t terminal_write(const void * buf, int32_t nbytes)
 {
-  /*int i = 0;
-  int32_t byte_count = 0;
-  for(i = 0; i < nbytes; i++)
-  {
-    putc((uint8_t *)buf[i]);
-    byte_count++;
-  }
-   
-  if(byte_count != nbytes)
-  {
-    return -1;
-  } */
-  printf("%s\n", (char *)buf);
+    int i;
+    for(i=0; i< nbytes; i++)
+    {
+        putc(((int8_t *)buf)[i]);
+        ((int8_t *)buf)[i] = NULL_KEY;
+    }    
+    putc(NEW_LINE);
 
-  return nbytes;
+    return i;
 }
 
 int32_t terminal_close(void)

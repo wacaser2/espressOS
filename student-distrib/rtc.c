@@ -31,7 +31,7 @@ rtc_handler(void)
 {
 	outb(STATUS_REGISTER_C, RTC_PORT);
 	inb(CMOS_PORT);
-	test_interrupts();
+	//test_interrupts();
 	send_eoi(RTC_IRQ);		//informs pic that we got the interrupt
 	// test_interrupts();
 }

@@ -27,6 +27,7 @@
 
 #define NULL_KEY	'\0'
 #define NEW_LINE	'\n'
+#define CARRIAGE_RETURN '\r'
 
 
 /* Initialize both Keyboard */

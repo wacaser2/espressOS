@@ -10,7 +10,7 @@ volatile int capslock_flag = 0;
 volatile int8_t key_buf[KEY_BUF_SIZE];
 volatile int key_idx = 0;
 
-static unsigned char key[128] =
+static unsigned char key[KEY_BUF_SIZE_ACTUAL] =
 {
     0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	/* 9 */
   '9', '0', '-', '=', '\b',	/* Backspace */
@@ -51,7 +51,7 @@ static unsigned char key[128] =
 };		
 
 
-static unsigned char shift_key[128] =
+static unsigned char shift_key[KEY_BUF_SIZE_ACTUAL] =
 {
     0,  27, '!', '@', '#', '$', '%', '^', '&', '*', /* 9 */
   '(', ')', '_', '+', '\b', /* Backspace */
@@ -138,21 +138,23 @@ void keyboard_handler()
       //return; // for now
       if(scancode == LEFT_CTRL_REL)
       {
+        /* set control flag to zero when key is released */
         ctrl_flag = 0;
       }
       if(scancode == LEFT_SHIFT_REL || scancode == RIGHT_SHIFT_REL)
       {
+        /* set shift flag to zero when key is released */
         shift_flag = 0;
       }
     }
     else
     {
-      if(scancode == BACKSPACE)
+      if(scancode == BACKSPACE) // case for backspace
       {
         if(key_idx > 0)
         {
           key_buf[--key_idx] = NULL_KEY;
-          backspace_put(key_idx);
+          backspace_put(key_idx); // call backspace_put func
         }
       }
       else if(scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
@@ -160,26 +162,27 @@ void keyboard_handler()
         enter_flag = 1;
         key_buf[key_idx++] = NEW_LINE;
         key_idx = 0;    // because its a new line
-        putc(key[scancode]);
+        putc(key[scancode]); // put newline character
       }
       else if(scancode == LEFT_CTRL)
       {
-        ctrl_flag = 1;
+        ctrl_flag = 1; // control pressed; set flag to one
       }
       else if(scancode == LEFT_SHIFT || scancode == RIGHT_SHIFT)
       {
-        shift_flag = 1;
+        shift_flag = 1; // shift used; set flag to one
       }
       else if(scancode == CAPS_LOCK)
       {
-        if(capslock_flag == 0)
-            capslock_flag = 1;
-        else
-            capslock_flag = 0;
+        // if(capslock_flag == 0)
+        //     capslock_flag = 1;
+        // else
+        //     capslock_flag = 0;
+        capslock_flag = !capslock_flag; // change the caps flag
       }
       else
       {
-        if(ctrl_flag == 0 && key_idx < KEY_BUF_SIZE)
+        if(ctrl_flag == 0 && key_idx < KEY_BUF_SIZE_ACTUAL)
         {
           if((scancode >= 0x01 && scancode <= 0x37) || scancode == 0x4A || scancode == 0x4E || scancode == 0x39)
           {

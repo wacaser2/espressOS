@@ -10,7 +10,9 @@
 /* Irq that the Keyboard sits on */
 #define KEYBOARD_IRQ 1
 
+/* keyboard buffer size */
 #define KEY_BUF_SIZE 130
+#define KEY_BUF_SIZE_ACTUAL 128
 
 #define BACKSPACE 	0x0E
 #define ENTER 		0x1C

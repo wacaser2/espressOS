@@ -177,7 +177,6 @@ entry(unsigned long magic, unsigned long addr)
 
 	/* Test file system */
 	/* Test by index */
-	/*
 	dentry_t d;
 	uint32_t i, j;
 	for (i = 0; i < *((uint32_t*)a); i++) {
@@ -192,6 +191,7 @@ entry(unsigned long magic, unsigned long addr)
 			putc('\n');
 		}
 	}
+	/*
 	*/
 
 	/* Test by name */
@@ -238,8 +238,7 @@ entry(unsigned long magic, unsigned long addr)
 	/*
 	clear();
 	dentry_t d;
-	uint32_t i = 6, j;
-	//for (i = 0; i < 20; i++) {
+	uint32_t i = 16, j;
 	if (!read_dentry_by_index(i, &d)) {
 		int8_t buf[920];
 		puts("File Name: ");
@@ -262,7 +261,6 @@ entry(unsigned long magic, unsigned long addr)
 			putc('\n');
 		}
 	}
-	//}
 	*/
 
 

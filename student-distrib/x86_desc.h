@@ -231,8 +231,8 @@ extern void sys_call();
 /* Sets runtime parameters for an IDT entry */
 #define SET_IDT_ENTRY(str, handler, priv) \
 do { \
-	str.offset_31_16 = ((uint32_t)(handler) & 0xFFFF0000) >> 16; \
-	str.offset_15_00 = ((uint32_t)(handler) & 0xFFFF); \
+	str.offset_31_16 = (((uint32_t)(handler)) & 0xFFFF0000) >> 16; \
+	str.offset_15_00 = (((uint32_t)(handler)) & 0xFFFF); \
 	str.seg_selector = KERNEL_CS; \
 	str.reserved4 = 0; \
 	str.reserved3 = 0; \

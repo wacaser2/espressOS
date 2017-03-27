@@ -159,8 +159,8 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t* dentry) {
 *			offset = location of file to start reading from
 *			buf = location to copy to
 *			length = number of bytes to move
-*   Return Value: pointer to dest
-*	Function: move n bytes of src to dest
+*   Return Value: number of bytes read
+*	Function: move n bytes of the file starting at offset to the buffer
 */
 int32_t read_data(uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length) {
 	if (inode >= file_sys->num_inode)

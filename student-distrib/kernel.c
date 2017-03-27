@@ -234,12 +234,20 @@ entry(unsigned long magic, unsigned long addr)
 	}
 	*/
 
-	/* Test Read File */
+	/* Test Read Whole File */
 	clear();
+#define BUF_SIZE 50000
 	dentry_t d;
-	uint32_t i = 16, j;
+	uint32_t j;
 	if (!read_dentry_by_name("ls", &d)) {
-		int8_t buf[920];
+		int8_t buf[BUF_SIZE];
+		if (d.file_type == 2) {
+			printf("%d\n", read_data(d.inode_index, 0, (uint8_t*)buf, BUF_SIZE));
+			putc('\n');
+			for (j = 0; j < get_inode_length(d.inode_index); j++)
+				putc(buf[j]);
+			putc('\n');
+		}
 		puts("File Name: ");
 		for (j = 0; j < 32; j++)
 			putc(d.file_name[j]);
@@ -248,17 +256,6 @@ entry(unsigned long magic, unsigned long addr)
 		puts(" : File Size: ");
 		printf("%d", get_inode_length(d.inode_index));
 		putc('\n');
-		if (d.file_type == 2) {
-			puts("Text: ");
-			//if (get_inode_length(d.inode_index) < 2000)
-				printf("%d\n", read_data(d.inode_index, 0, (uint8_t*)buf, 920));
-			//else
-				//printf("%d\n", read_data(d.inode_index, get_inode_length(d.inode_index) - 2000, (uint8_t*)buf, 2000));
-			putc('\n');
-			for (j = 0; j < 920; j++)
-				putc(buf[j]);
-			putc('\n');
-		}
 	}
 	/*
 	*/

@@ -193,7 +193,12 @@ entry (unsigned long magic, unsigned long addr)
 	*/
 	
 	/* Execute the first program (`shell') ... */
-
+	while (1)
+	{
+		char b[128];
+		int a = terminal_read((void *)b, 128);
+		terminal_write((void *)b, a);
+	}
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

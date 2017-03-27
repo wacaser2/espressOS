@@ -179,7 +179,7 @@ void keyboard_handler()
       }
       else
       {
-        if(ctrl_flag == 0 && key_idx < KEY_BUF_SIZE)
+        if(ctrl_flag == 0 && key_idx < KEY_BUF_SIZE-2)
         {
           if((scancode >= 0x01 && scancode <= 0x37) || scancode == 0x4A || scancode == 0x4E || scancode == 0x39)
           {

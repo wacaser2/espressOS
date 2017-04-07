@@ -111,41 +111,23 @@ void keyboard_init()
 */
 void keyboard_handler()
 {
-	//unsigned char scancode;
+	unsigned char scancode = 0;
 
     /* Read from the keyboard's data buffer */
-    //scancode = inb((int)KEYBOARD_PORT);
-
-    unsigned char scancode = 0;
-    do
-    {
-      if(inb((int)KEYBOARD_PORT) != scancode)
-      {
-        scancode = inb((int)KEYBOARD_PORT);
-        if(scancode >= 0x01)
-        {
-          break;
-        }
-      }
-    }while(1);
+    scancode = inb((int)KEYBOARD_PORT);
     
+    send_eoi(KEYBOARD_IRQ); //allow more interrupts to queue for the keyboard
     /* If the top bit of the byte we read from the keyboard is
     *  set, that means that a key has just been released */
     if(scancode & 0x80)
     {
-      /* You can use this one to see if the user released the
+       /* You can use this one to see if the user released the
         *  shift, alt, or control keys... */
-      //return; // for now
-      if(scancode == LEFT_CTRL_REL)
-      {
-        /* set control flag to zero when key is released */
-        ctrl_flag = 0;
-      }
-      if(scancode == LEFT_SHIFT_REL || scancode == RIGHT_SHIFT_REL)
-      {
-        /* set shift flag to zero when key is released */
-        shift_flag = 0;
-      }
+        if(scancode == LEFT_CTRL_REL)
+            ctrl_flag = 0; /* set control flag to zero when key is released */
+        
+        if(scancode == LEFT_SHIFT_REL || scancode == RIGHT_SHIFT_REL)        
+            shift_flag = 0; /* set shift flag to zero when key is released */
     }
     else
     {
@@ -178,10 +160,9 @@ void keyboard_handler()
       }
       else
       {
-        if(ctrl_flag == 0 && key_idx < KEY_BUF_SIZE_ACTUAL) // if control released and buff size is less than 128
+        if(ctrl_flag == 0 && key_idx < KEY_BUF_SIZE_ACTUAL && 
+        ((scancode >= 0x01 && scancode <= 0x37) || scancode == 0x4A || scancode == 0x4E || scancode == 0x39) ) // if control released and buff size is less than 128 in index
         {
-          if((scancode >= 0x01 && scancode <= 0x37) || scancode == 0x4A || scancode == 0x4E || scancode == 0x39)
-          {
             if(shift_flag == 1 && capslock_flag == 1) // if both caps lock and shift are pressed
             {
                 if(shift_key[scancode] >= 65 && shift_key[scancode] <= 90) // capital letters
@@ -218,21 +199,15 @@ void keyboard_handler()
                 key_buf[key_idx++] = key[scancode];
                 putc(key[scancode]);  // put the char on the screen
             }
-          }
+
         }
         else if(ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L') ) // clearing the screen
         {
           clear();  // clear the screen
+          key_idx = 0; // reset buffer as everything on screen was cleared
         }
       }
     }
-    
-    send_eoi(KEYBOARD_IRQ);	//allow more interrupts to queue for the keyboard
-    
-    /*else
-    {
-        putc(key[scancode]);	// put the char on the screen
-    }*/
 
 }
 

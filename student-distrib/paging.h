@@ -16,8 +16,11 @@
 
 #define RW 0x00000002
 #define PRESENT 0x00000001
+#define USER	0x00000004
 
 /* Function to initialize paging*/
 void paging_init(unsigned long addr);
+
+void VtoPmap(uint32_t vaddr, uint32_t paddr);
 
 #endif

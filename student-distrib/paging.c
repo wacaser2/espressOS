@@ -23,7 +23,7 @@ paging_init(unsigned long addr) {
 	for (i = 0; i < oneUNIT; i++)
 	{
 		page_directory[i] = 0;	// sets not present
-		first_page_table[i] = (i << OFFSET); // setting indexs
+		first_page_table[i] = (i << OFFSET); // setting indexes
 	}
 
 	first_page_table[VIDEO >> OFFSET] |= RW | PRESENT;
@@ -43,7 +43,21 @@ paging_init(unsigned long addr) {
 		"orl  $0x80000000,%%eax; \n \t"
 		"movl %%eax,%%cr0; \n \t"
 		: /* no outputs */
-	: "r"(page_directory)
-		: "eax"
+		: "r"(page_directory)		// input operands
+		: "eax"						// clobbers
+		);
+}
+
+
+void VtoPmap(uint32_t vaddr, uint32_t paddr){
+	int vidx = vaddr >> 22;		// vidx = 32
+	page_directory[vidx] = paddr | PRESENT | fourMBpage | RW | USER; 
+
+	asm volatile (
+		"movl %%cr3,%%eax; \n \t"
+		"movl %%eax,%%cr3; \n \t"
+		: /* no outputs */
+		: /* no inputs  */
+		: "eax"					// clobbers
 		);
 }

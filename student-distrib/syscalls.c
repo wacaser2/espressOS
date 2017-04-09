@@ -81,7 +81,15 @@ int32_t execute(const uint8_t* command){
 	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);	// top of the 8KB stack
 	block->process = process;
 
-	block->parent_process = process;
+	if(process == 0){						// first process, so set parent to itself
+		block->parent_block->process = process;
+		
+	}
+	else{
+
+	}
+
+	strcpy(block->buf, restarg);
 
 	/* STDIN */
 	block->fdarray[ZERO].fops_tbl_pointer = stdin_ops;		

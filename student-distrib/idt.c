@@ -68,7 +68,7 @@ void fault_handler(isr_stack_t *s){
  */
 void isrs_install(){
 	SET_IDT_ENTRY(idt[0], (unsigned)isr0, 0);
-	SETIDT_ENTRY(idt[1], (unsigned)isr1, 0);
+	SET_IDT_ENTRY(idt[1], (unsigned)isr1, 0);
 	SET_IDT_ENTRY(idt[2], (unsigned)isr2, 0);
 	SET_IDT_ENTRY(idt[3], (unsigned)isr3, 0);
 	SET_IDT_ENTRY(idt[4], (unsigned)isr4, 0);
@@ -101,5 +101,5 @@ void isrs_install(){
 	SET_IDT_ENTRY(idt[31], (unsigned)isr31, 0);
 	SET_IDT_ENTRY(idt[0x21], (unsigned)keyboard_handler_wrapper, 0);
 	SET_IDT_ENTRY(idt[0x28], (unsigned)rtc_handler_wrapper, 0);
-	SET_IDT_ENTRY(idt[0x80], (unsigned)sys_call, 0);
+	SET_IDT_ENTRY(idt[0x80], (unsigned)sys_call, 3);
 }

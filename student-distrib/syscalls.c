@@ -4,13 +4,14 @@
 #include "syscalls.h"
 
 uint8_t process_num[6] = {0, 0, 0, 0, 0, 0}; 
+int process = -1;
 
-uint32_t stdin_ops[4] = {(uint32_t)null_ops, (uint32_t)null_ops, (uint32_t)terminal_read, (uint32_t)null_ops, (uint32_t)null_ops};
-uint32_t stdout_ops[4] = {(uint32_t)null_ops, (uint32_t)null_ops, (uint32_t)terminal_write, (uint32_t)null_ops};
-uint32_t rtc_ops[4] = {(uint32_t)rtc_open, (uint32_t)rtc_read, (uint32_t)rtc_write, (uint32_t)rtc_close};
-uint32_t file_ops[4] = {(uint32_t)file_open, (uint32_t)file_read, (uint32_t)file_write, (uint32_t)file_close};
-uint32_t dir_ops[4] = {(uint32_t)dir_open, (uint32_t)dir_read, (uint32_t)dir_write, (uint32_t)dir_close};
-uint32_t default_ops[4] = {(uint32_t)null_ops, (uint32_t)null_ops, (uint32_t)null_ops, (uint32_t)null_ops, (uint32_t)null_ops};
+fops_tbl_t stdin_ops = {null_ops, terminal_read, null_ops, null_ops};
+fops_tbl_t stdout_ops = {null_ops, null_ops, terminal_write, null_ops};
+fops_tbl_t rtc_ops = {rtc_open, rtc_read, rtc_write, rtc_close};
+fops_tbl_t file_ops = {file_open, file_read, file_write, file_close};
+fops_tbl_t dir_ops = {dir_open, dir_read, dir_write, dir_close};
+fops_tbl_t default_ops[4] = {null_ops, null_ops, null_ops, null_ops};
 
 /* System Calls*/
 
@@ -25,16 +26,16 @@ int32_t execute(const uint8_t* command){
 	}
 	int end = start;
 	while(command[end] != ' '){
-		end++;
+		end++;				
 	}
 	uint8_t name[32];
 	uint8_t restarg[128];
 	int i, j;
 	for(i = 0, j = start; i < (end - start), j < end; i++, j++)
 	{
-		name[i] = command[j];
+		name[i] = command[j];				// extract name of file
 	}
-	name[i] = '\0';
+	name[i] = '\0';			// null-terminated
 	end++;
 	start = end;
 	while(command[end] != '\0'){
@@ -42,9 +43,9 @@ int32_t execute(const uint8_t* command){
 	}
 	for(i = 0, j = start; i < (end - start), j < end; i++, j++)
 	{
-		restarg[i] = command[j];;
+		restarg[i] = command[j];			// extract the rest of the argument
 	}
-	restarg[i] = '\0';
+	restarg[i] = '\0';		// null-terminated
 
 
 	dentry_t * dentry;
@@ -59,10 +60,9 @@ int32_t execute(const uint8_t* command){
 		return -1
 	}
 
-	uint32_t * entry_point;
+	uint32_t * entry_point;									// entry point to read from
 	read_data(dentry->inode_index, 24, entry_point, 4);
-
-	int process = -1;	
+	
 	for(i = 0; i < MAXPROCESSES; i++){
 		if(process_num[i] == 0){
 			process_num[i] = 1;
@@ -92,19 +92,19 @@ int32_t execute(const uint8_t* command){
 	strcpy(block->buf, restarg);
 
 	/* STDIN */
-	block->fdarray[ZERO].fops_tbl_pointer = stdin_ops;		
+	block->fdarray[ZERO]->fops_tbl_pointer = stdin_ops;		
 	block->fdarray[ZERO].inode = -1;					// or 0?
 	block->fdarray[ZERO].file_pos = FILE_START_POS;
 	block->fdarray[ZERO].flags = ONE;					// in use
 	/* STDOUT */
-	block->fdarray[ONE].fops_tbl_pointer = stdout_ops;
+	block->fdarray[ONE]->fops_tbl_pointer = stdout_ops;
 	block->fdarray[ONE].inode = -1;
 	block->fdarray[ONE].file_pos = FILE_START_POS;
 	block->fdarray[ONE].flags = ONE;
 
 	/* Intialize the remaining files to the default values */
 	for(i = 2; i < MAXFILES; i++){		
-		block->fdarray[i].fops_tbl_pointer = default_ops;		
+		block->fdarray[i]->fops_tbl_pointer = default_ops;		
 		block->fdarray[i].inode = -1;
 		block->fdarray[i].file_pos = FILE_START_POS;
 		block->fdarray[i].flags = ZERO;					// not in use
@@ -113,23 +113,32 @@ int32_t execute(const uint8_t* command){
 	tss.ss0 = KERNEL_DS;
 	tss.esp0 = eightMB - (process * eightKB) - 4;
 
-	asm volatile (
-		"movw ; \n \t"
-		: /* no outputs */
-		: "r"(page_directory)		// input operands
-		: "eax"						// clobbers
-		);
+	
 
 
 	return 0;
 }
 
 int32_t read(int32_t fd, void* buf, int32_t nbytes){
-	return 0;
+	if(fd < 0 || fd >= MAXFILE || buf == NULL){
+		return -1;
+	}
+	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
+	if(block->fdarray[fd]->flags = ZERO){
+		return -1;
+	}
+	return block->fdarray[fd]->fops_tbl_pointer->read(fd, buf, nbytes);
 }
 
 int32_t write(int32_t fd, const void* buf, int32_t nbytes){
-	return 0;
+	if(fd < 0 || fd >= MAXFILE || buf == NULL){
+		return -1;
+	}
+	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
+	if(block->fdarray[fd]->flags = ZERO){
+		return -1;
+	}
+	return block->fdarray[fd]->fops_tbl_pointer->write(fd, buf, nbytes);
 }
 
 int32_t open(const uint8_t* filename){

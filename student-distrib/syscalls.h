@@ -3,6 +3,7 @@
 #define _SYSCALLS_H
 
 #include "file.h"
+#include "keyboard.h"
 
 #define onetwentyeightMB	0x8000000
 #define eightMB				0x800000
@@ -14,15 +15,15 @@
 #define MAXPROCESSES		6
 #define MAXFILES			8
 
-/*typedef struct fops_table_t {
-	int32_t open(const uint8_t* filename);
-	int32_t read(int32_t fd, void* buf, int32_t nbytes);
-	int32_t write(int32_t fd, const void* buf, int32_t nbytes);
-	int32_t close(int32_t fd);
-} fops_tbl_t;*/
+typedef struct fops_table_t {
+	int32_t (* open)(const uint8_t* filename);
+	int32_t (* read)(int32_t fd, void* buf, int32_t nbytes);
+	int32_t (* write)(int32_t fd, const void* buf, int32_t nbytes);
+	int32_t (* close)(int32_t fd);
+} fops_tbl_t;
 
 typedef struct fd_t {
-	uint32_t fops_tbl_pointer[4];
+	fops_tbl_t * fops_tbl_pointer;
 	uint32_t inode;
 	uint32_t file_pos;
 	uint32_t flags;

@@ -4,7 +4,7 @@
 #include "syscalls.h"
 
 uint8_t process_num[6] = {0, 0, 0, 0, 0, 0}; 
-int process = -1;
+volatile int process = -1;
 
 fops_tbl_t stdin_ops = {null_ops, terminal_read, null_ops, null_ops};
 fops_tbl_t stdout_ops = {null_ops, null_ops, terminal_write, null_ops};
@@ -142,7 +142,36 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes){
 }
 
 int32_t open(const uint8_t* filename){
-	return 0;
+	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
+	dentry_t * dentry;
+	if(read_dentry_by_name(filename, dentry)){
+		return -1;
+	}
+
+	int i;
+	for(i = 2; i < MAXFILES; i++){
+		if(block->fdarray[]->flags = ZERO){
+			block->fdarray[]->flags = ONE;
+			break;
+		}
+	}
+	/* Check if we ran out of descriptors*/
+	if(i == MAXFILES){			
+		return -1;
+	}
+
+	block->fdarray[i]->file_pos = FILE_START_POS;
+	if({dentry->file_type == RTC_TYPE){
+		block->fdarray[i]->fops_tbl_pointer = rtc_ops;
+	}
+	else if(dentry->file_type == DIR_TYPE){
+		block->fdarray[i]->fops_tbl_pointer = dir_ops;		
+	}
+	else if(dentry->file_type == FILE_TYPE){	
+        block->fdarray[i]->fops_tbl_pointer = file_ops;
+	}
+
+	return i;
 }
 
 int32_t close(int32_t fd){

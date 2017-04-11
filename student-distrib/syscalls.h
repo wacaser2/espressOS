@@ -14,6 +14,9 @@
 #define ONE 				0x0001
 #define MAXPROCESSES		6
 #define MAXFILES			8
+#define RTC_TYPE			0
+#define DIR_TYPE			1
+#define FILE_TYPE			2
 
 typedef struct fops_table_t {
 	int32_t (* open)(const uint8_t* filename);

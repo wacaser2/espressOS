@@ -16,6 +16,8 @@ fops_tbl_t default_ops[4] = {null_ops, null_ops, null_ops, null_ops};
 /* System Calls*/
 
 int32_t halt(uint8_t status){
+
+
 	return 0;
 }
 
@@ -183,7 +185,7 @@ int32_t close(int32_t fd){
 		return -1;
 	}
 
-	return block->fdarray[i]->fops_tbl_pointer->open(fd);
+	return block->fdarray[fd]->fops_tbl_pointer->close(fd);
 }
 
 int32_t getargs(uint8_t* buf, int32_t nbytes){

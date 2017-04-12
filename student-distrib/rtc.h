@@ -29,10 +29,10 @@ void rtc_init(void);
 /* Function to handle an rtc interrupt*/
 void rtc_handler(void);
 
-int32_t rtc_open(void);
-int32_t rtc_read(void);
-int32_t rtc_write(const void* buf, int32_t nbytes);
-int32_t rtc_close(void);
+int32_t rtc_open(const uint8_t* filename);
+int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes);
+int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes);
+int32_t rtc_close(int32_t fd);
 int32_t set_freq(int32_t freq);
 
 #endif

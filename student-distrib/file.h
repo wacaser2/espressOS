@@ -41,16 +41,16 @@ int32_t init_file_sys(uint32_t addr);
 int32_t get_inode_length(uint32_t index);
 
 /* Currently stubs for dir_o,c,r,w */
-int32_t dir_open();
-int32_t dir_close();
-int32_t dir_read();
-int32_t dir_write();
+int32_t dir_open(const uint8_t* filename);
+int32_t dir_close(int32_t fd);
+int32_t dir_read(int32_t fd, void* buf, int32_t nbytes);
+int32_t dir_write(int32_t fd, const void* buf, int32_t nbytes);
 
 /* Currently stubs for file_o,c,r,w */
-int32_t file_open();
-int32_t file_close();
-int32_t file_read();
-int32_t file_write();
+int32_t file_open(const uint8_t* filename);
+int32_t file_close(int32_t fd);
+int32_t file_read(int32_t fd, void* buf, int32_t nbytes);
+int32_t file_write(int32_t fd, const void* buf, int32_t nbytes);
 
 /* Functions for accessing the file system */
 int32_t read_dentry_by_name(const int8_t* fname, dentry_t* dentry);

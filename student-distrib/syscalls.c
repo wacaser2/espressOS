@@ -110,7 +110,7 @@ int32_t execute(const uint8_t* command){
 		block->fdarray[i].flags = ZERO;					// not in use
 	}
 
-	tss.ss0 = KERNEL_DS;
+	//tss.ss0 = KERNEL_DS;
 	tss.esp0 = eightMB - (process * eightKB) - 4;
 
 	
@@ -150,8 +150,8 @@ int32_t open(const uint8_t* filename){
 
 	int i;
 	for(i = 2; i < MAXFILES; i++){
-		if(block->fdarray[]->flags = ZERO){
-			block->fdarray[]->flags = ONE;
+		if(block->fdarray[i]->flags == ZERO){
+			block->fdarray[i]->flags = ONE;
 			break;
 		}
 	}
@@ -171,11 +171,19 @@ int32_t open(const uint8_t* filename){
         block->fdarray[i]->fops_tbl_pointer = file_ops;
 	}
 
-	return i;
+	return block->fdarray[i]->fops_tbl_pointer->open(filename);
 }
 
 int32_t close(int32_t fd){
-	return 0;
+	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
+	if(fd >= 2 && fd < MAXFILES && block->fdarray[fd]->flags == ONE){
+		block->fdarray[fd]->flags = ZERO;
+	}
+	else{
+		return -1;
+	}
+
+	return block->fdarray[i]->fops_tbl_pointer->open(fd);
 }
 
 int32_t getargs(uint8_t* buf, int32_t nbytes){

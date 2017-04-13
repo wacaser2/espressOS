@@ -18,14 +18,20 @@ fops_tbl_t default_ops[4] = {null_ops, null_ops, null_ops, null_ops};
 int32_t halt(uint8_t status){
 	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
 	block->parent_block
+	process_num[process] = ZERO;
+	block
+	process = parent_block->process;
+
+	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
+	tss.esp0 = block->parent_ksp;
 
 	int i;
 	for(i = 0; i < MAXFILES; i++){
 		block->fdarray[i]->fops_tbl_pointer = null_ops;
 		block->fdarray[i].flags = ZERO;
 	}
-	process_num[process] = ZERO;
-	block->process = parent_block->process;
+	
+
 
 	return 0;
 }
@@ -90,17 +96,18 @@ int32_t execute(const uint8_t* command){
 	read_data(dentry->inode_index, 0, 0x8048000, 8192000);
 
 	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);	// top of the 8KB stack
-	block->process = process;
+	block->process_id = process;
 
 	if(process == 0){						// first process, so set parent to itself
-		block->parent_block->process = process;
-		
+		block->parent_block = (pcb_t *) (eightMB - (process + 1) * eightKB);
+		block->parent_block->process_id = process;
 	}
 	else{
 
 	}
 
-	strcpy(block->buf, restarg);
+	/* Save the kernel stack pointer and kernel base pointer of the parent process control block here as members of the pcb struct because we will need it for the halt function */
+
 
 	/* STDIN */
 	block->fdarray[ZERO]->fops_tbl_pointer = stdin_ops;		

@@ -34,8 +34,9 @@ typedef struct fd_t {
 
 typedef struct pcb_t {
 	fd_t fdarray[8];
-	uint8_t process;
-	uint8_t buf;
+	uint8_t process_id;
+	uint32_t parent_kbp;
+	uint32_t parent_ksp;
 	pcb_t * parent_block;
 } pcb_t;
 

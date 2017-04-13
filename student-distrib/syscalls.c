@@ -16,7 +16,16 @@ fops_tbl_t default_ops[4] = {null_ops, null_ops, null_ops, null_ops};
 /* System Calls*/
 
 int32_t halt(uint8_t status){
+	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
+	block->parent_block
 
+	int i;
+	for(i = 0; i < MAXFILES; i++){
+		block->fdarray[i]->fops_tbl_pointer = null_ops;
+		block->fdarray[i].flags = ZERO;
+	}
+	process_num[process] = ZERO;
+	block->process = parent_block->process;
 
 	return 0;
 }
@@ -66,8 +75,8 @@ int32_t execute(const uint8_t* command){
 	read_data(dentry->inode_index, 24, entry_point, 4);
 	
 	for(i = 0; i < MAXPROCESSES; i++){
-		if(process_num[i] == 0){
-			process_num[i] = 1;
+		if(process_num[i] == ZERO){
+			process_num[i] = ONE;
 			process = i;
 			break;
 		}
@@ -126,7 +135,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes){
 		return -1;
 	}
 	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
-	if(block->fdarray[fd]->flags = ZERO){
+	if(block->fdarray[fd].flags = ZERO){
 		return -1;
 	}
 	return block->fdarray[fd]->fops_tbl_pointer->read(fd, buf, nbytes);
@@ -137,7 +146,7 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes){
 		return -1;
 	}
 	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
-	if(block->fdarray[fd]->flags = ZERO){
+	if(block->fdarray[fd].flags = ZERO){
 		return -1;
 	}
 	return block->fdarray[fd]->fops_tbl_pointer->write(fd, buf, nbytes);
@@ -152,8 +161,8 @@ int32_t open(const uint8_t* filename){
 
 	int i;
 	for(i = 2; i < MAXFILES; i++){
-		if(block->fdarray[i]->flags == ZERO){
-			block->fdarray[i]->flags = ONE;
+		if(block->fdarray[i].flags == ZERO){
+			block->fdarray[i].flags = ONE;
 			break;
 		}
 	}
@@ -162,7 +171,7 @@ int32_t open(const uint8_t* filename){
 		return -1;
 	}
 
-	block->fdarray[i]->file_pos = FILE_START_POS;
+	block->fdarray[i].file_pos = FILE_START_POS;
 	if({dentry->file_type == RTC_TYPE){
 		block->fdarray[i]->fops_tbl_pointer = rtc_ops;
 	}
@@ -179,7 +188,7 @@ int32_t open(const uint8_t* filename){
 int32_t close(int32_t fd){
 	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
 	if(fd >= 2 && fd < MAXFILES && block->fdarray[fd]->flags == ONE){
-		block->fdarray[fd]->flags = ZERO;
+		block->fdarray[fd].flags = ZERO;
 	}
 	else{
 		return -1;

@@ -19,7 +19,7 @@ int32_t halt(uint8_t status){
 	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
 	block->parent_block
 	process_num[process] = ZERO;
-	block
+	block // not sure what this is doing 
 	process = parent_block->process;
 
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
@@ -30,9 +30,6 @@ int32_t halt(uint8_t status){
 		block->fdarray[i].fops_tbl_pointer = null_ops;
 		block->fdarray[i].flags = ZERO;
 	}
-	
-
-
 	return 0;
 }
 

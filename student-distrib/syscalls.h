@@ -33,7 +33,7 @@ typedef struct fd_t {
 } fd_t;
 
 typedef struct pcb_t {
-	fd_t fdarray[8];
+	fd_t fdarray[MAXFILES];
 	uint8_t process_id;
 	uint32_t parent_kbp;
 	uint32_t parent_ksp;

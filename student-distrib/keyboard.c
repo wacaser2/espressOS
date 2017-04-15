@@ -111,23 +111,10 @@ void keyboard_init()
 */
 void keyboard_handler()
 {
-	//unsigned char scancode;
+	unsigned char scancode = 0;
 
     /* Read from the keyboard's data buffer */
-    //scancode = inb((int)KEYBOARD_PORT);
-
-    unsigned char scancode = 0;
-    do
-    {
-      if(inb((int)KEYBOARD_PORT) != scancode)
-      {
-        scancode = inb((int)KEYBOARD_PORT);
-        if(scancode >= 0x01)
-        {
-          break;
-        }
-      }
-    }while(1);
+    scancode = inb((int)KEYBOARD_PORT);    
     
     /* If the top bit of the byte we read from the keyboard is
     *  set, that means that a key has just been released */
@@ -223,6 +210,8 @@ void keyboard_handler()
         else if(ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L') ) // clearing the screen
         {
           clear();  // clear the screen
+          key_idx = 0; // reset buffer as everything on screen was cleared
+          puts("[user@espressOS:/ ]$ ");
         }
       }
     }
@@ -237,13 +226,15 @@ void keyboard_handler()
 }
 
 
-int32_t terminal_open(void)
+int32_t terminal_open(const uint8_t* filename)
 {
   return 0; // just returning zero for opening term
 }
 
-int32_t terminal_read(void * buf, int32_t nbytes)
+int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 {
+  puts("[user@espressOS:/ ]$ ");
+
     enter_flag = 0;
     while(enter_flag == 0)
     {
@@ -271,8 +262,10 @@ int32_t terminal_read(void * buf, int32_t nbytes)
     return i;
 }
 
-int32_t terminal_write(const void * buf, int32_t nbytes)
+int32_t terminal_write(int32_t fd, const void * buf, int32_t nbytes)
 {
+  puts("[user@espressOS:/ ]$ ");
+
     int i;
     for(i=0; i< nbytes; i++)
         putc(((int8_t *)buf)[i]);
@@ -282,7 +275,7 @@ int32_t terminal_write(const void * buf, int32_t nbytes)
     return i;
 }
 
-int32_t terminal_close(void)
+int32_t terminal_close(int32_t fd)
 {
   return 0; // return zero when closing term
 }

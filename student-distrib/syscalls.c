@@ -27,7 +27,7 @@ int32_t halt(uint8_t status){
 
 	int i;
 	for(i = 0; i < MAXFILES; i++){
-		block->fdarray[i]->fops_tbl_pointer = null_ops;
+		block->fdarray[i].fops_tbl_pointer = null_ops;
 		block->fdarray[i].flags = ZERO;
 	}
 	
@@ -74,7 +74,7 @@ int32_t execute(const uint8_t* command){
 	uint8_t magic_number[4] = {0x7f, 0x45, 0x4c, 0x46};		// DEL, E, L, F
 	read_data(dentry->inode_index, 0, buffer, 4);
 	if(strcmp(buffer, magic_number) != 0){					// if you don't get the magic numbers in the first four bytes
-		return -1
+		return -1;
 	}
 
 	uint32_t * entry_point;									// entry point to read from
@@ -110,19 +110,19 @@ int32_t execute(const uint8_t* command){
 
 
 	/* STDIN */
-	block->fdarray[ZERO]->fops_tbl_pointer = stdin_ops;		
+	block->fdarray[ZERO].fops_tbl_pointer = stdin_ops;		
 	block->fdarray[ZERO].inode = -1;					// or 0?
 	block->fdarray[ZERO].file_pos = FILE_START_POS;
 	block->fdarray[ZERO].flags = ONE;					// in use
 	/* STDOUT */
-	block->fdarray[ONE]->fops_tbl_pointer = stdout_ops;
+	block->fdarray[ONE].fops_tbl_pointer = stdout_ops;
 	block->fdarray[ONE].inode = -1;
 	block->fdarray[ONE].file_pos = FILE_START_POS;
 	block->fdarray[ONE].flags = ONE;
 
 	/* Intialize the remaining files to the default values */
 	for(i = 2; i < MAXFILES; i++){		
-		block->fdarray[i]->fops_tbl_pointer = default_ops;		
+		block->fdarray[i].fops_tbl_pointer = default_ops;		
 		block->fdarray[i].inode = -1;
 		block->fdarray[i].file_pos = FILE_START_POS;
 		block->fdarray[i].flags = ZERO;					// not in use
@@ -145,7 +145,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes){
 	if(block->fdarray[fd].flags = ZERO){
 		return -1;
 	}
-	return block->fdarray[fd]->fops_tbl_pointer->read(fd, buf, nbytes);
+	return block->fdarray[fd].fops_tbl_pointer->read(fd, buf, nbytes);
 }
 
 int32_t write(int32_t fd, const void* buf, int32_t nbytes){
@@ -156,7 +156,7 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes){
 	if(block->fdarray[fd].flags = ZERO){
 		return -1;
 	}
-	return block->fdarray[fd]->fops_tbl_pointer->write(fd, buf, nbytes);
+	return block->fdarray[fd].fops_tbl_pointer->write(fd, buf, nbytes);
 }
 
 int32_t open(const uint8_t* filename){
@@ -179,17 +179,18 @@ int32_t open(const uint8_t* filename){
 	}
 
 	block->fdarray[i].file_pos = FILE_START_POS;
-	if({dentry->file_type == RTC_TYPE){
-		block->fdarray[i]->fops_tbl_pointer = rtc_ops;
+	if(dentry->file_type == RTC_TYPE){
+		block->fdarray[i].fops_tbl_pointer = rtc_ops;
 	}
 	else if(dentry->file_type == DIR_TYPE){
-		block->fdarray[i]->fops_tbl_pointer = dir_ops;		
+		block->fdarray[i].fops_tbl_pointer = dir_ops;		
 	}
 	else if(dentry->file_type == FILE_TYPE){	
-        block->fdarray[i]->fops_tbl_pointer = file_ops;
+        block->fdarray[i].fops_tbl_pointer = file_ops;
 	}
 
-	return block->fdarray[i]->fops_tbl_pointer->open(filename);
+	//return block->fdarray[i]->fops_tbl_pointer->open(filename);
+	return i; // file descriptor is returned
 }
 
 int32_t close(int32_t fd){
@@ -201,7 +202,7 @@ int32_t close(int32_t fd){
 		return -1;
 	}
 
-	return block->fdarray[fd]->fops_tbl_pointer->close(fd);
+	return block->fdarray[fd].fops_tbl_pointer->close(fd);
 }
 
 int32_t getargs(uint8_t* buf, int32_t nbytes){

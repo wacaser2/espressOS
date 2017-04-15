@@ -304,4 +304,4 @@ sys_call_err:
 	iret
 
 sys_call_jmp_table:
-	.long halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn
+	.long 0, halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn

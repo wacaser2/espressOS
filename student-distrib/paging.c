@@ -43,21 +43,21 @@ paging_init(unsigned long addr) {
 		"orl  $0x80000000,%%eax; \n \t"
 		"movl %%eax,%%cr0; \n \t"
 		: /* no outputs */
-		: "r"(page_directory)		// input operands
+	: "r"(page_directory)		// input operands
 		: "eax"						// clobbers
 		);
 }
 
 
-void VtoPmap(uint32_t vaddr, uint32_t paddr){
-	int vidx = vaddr >> 22;		// vidx = 32
-	page_directory[vidx] = paddr | PRESENT | fourMBpage | RW | USER; 
+void VtoPmap(uint32_t vaddr, uint32_t paddr) {
+	int vidx = (vaddr >> 22) & 0x000003FF;		// vidx = 32
+	page_directory[vidx] = paddr | PRESENT | fourMBpage | RW | USER;
 
 	asm volatile (
 		"movl %%cr3,%%eax; \n \t"
 		"movl %%eax,%%cr3; \n \t"
 		: /* no outputs */
-		: /* no inputs  */
+	: /* no inputs  */
 		: "eax"					// clobbers
 		);
 }

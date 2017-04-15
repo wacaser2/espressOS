@@ -4,6 +4,7 @@
 
 #include "file.h"
 #include "keyboard.h"
+#include "rtc.h"
 
 #define onetwentyeightMB	0x8000000
 #define eightMB				0x800000
@@ -37,7 +38,7 @@ typedef struct pcb_t {
 	uint8_t process_id;
 	uint32_t parent_kbp;
 	uint32_t parent_ksp;
-	pcb_t * parent_block;
+	struct pcb_t * parent_block;
 } pcb_t;
 
 int32_t halt(uint8_t status);
@@ -60,6 +61,6 @@ int32_t set_handler(int32_t signum, void* handler_address);
 
 int32_t sigreturn(void);
 
-int32_t null_ops(void)
+int32_t null_ops(void);
 
 #endif	/* _SYSCALLS_H*/

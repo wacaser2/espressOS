@@ -19,7 +19,7 @@ int32_t halt(uint8_t status){
 	pcb_t * block = (pcb_t *) (eightMB - (process + 1) * eightKB);
 	block->parent_block
 	process_num[process] = ZERO;
-	block
+	block // not sure what this is doing 
 	process = parent_block->process;
 
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
@@ -30,9 +30,6 @@ int32_t halt(uint8_t status){
 		block->fdarray[i]->fops_tbl_pointer = null_ops;
 		block->fdarray[i].flags = ZERO;
 	}
-	
-
-
 	return 0;
 }
 
@@ -74,7 +71,7 @@ int32_t execute(const uint8_t* command){
 	uint8_t magic_number[4] = {0x7f, 0x45, 0x4c, 0x46};		// DEL, E, L, F
 	read_data(dentry->inode_index, 0, buffer, 4);
 	if(strcmp(buffer, magic_number) != 0){					// if you don't get the magic numbers in the first four bytes
-		return -1
+		return -1;
 	}
 
 	uint32_t * entry_point;									// entry point to read from
@@ -179,7 +176,7 @@ int32_t open(const uint8_t* filename){
 	}
 
 	block->fdarray[i].file_pos = FILE_START_POS;
-	if({dentry->file_type == RTC_TYPE){
+	if(dentry->file_type == RTC_TYPE){
 		block->fdarray[i]->fops_tbl_pointer = rtc_ops;
 	}
 	else if(dentry->file_type == DIR_TYPE){

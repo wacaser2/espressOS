@@ -20,10 +20,10 @@
 #define FILE_TYPE			2
 
 typedef struct fops_table_t {
-	int32_t (* open)(const uint8_t* filename);
-	int32_t (* read)(int32_t fd, void* buf, int32_t nbytes);
-	int32_t (* write)(int32_t fd, const void* buf, int32_t nbytes);
-	int32_t (* close)(int32_t fd);
+	int32_t(*open)(const uint8_t* filename);
+	int32_t(*read)(int32_t fd, void* buf, int32_t nbytes);
+	int32_t(*write)(int32_t fd, const void* buf, int32_t nbytes);
+	int32_t(*close)(int32_t fd);
 } fops_tbl_t;
 
 typedef struct fd_t {
@@ -62,5 +62,9 @@ int32_t set_handler(int32_t signum, void* handler_address);
 int32_t sigreturn(void);
 
 int32_t null_ops(void);
+
+pcb_t* get_pcb();
+
+void implicit_proc();
 
 #endif	/* _SYSCALLS_H*/

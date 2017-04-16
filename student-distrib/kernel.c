@@ -11,6 +11,7 @@
 #include "keyboard.h"
 #include "paging.h"
 #include "file.h"
+#include "syscalls.h"
 
  /* Macros. */
  /* Check if the bit BIT in FLAGS is set. */
@@ -305,11 +306,12 @@ entry(unsigned long magic, unsigned long addr)
 													TEST CASES for TERMINAL
 	*********************************************************************************************************************** */
 	/*
-	while(1)
+	while (1)
 	{
 		char b[128];
-		int a = terminal_read((void *)b, 128);
-		terminal_write((void *)b, a);
+		int a = terminal_read(0, (void *)b, 128);
+		execute((uint8_t*)b);
+		terminal_write(1, (void *)b, a);
 	}
 	*/
 
@@ -361,12 +363,24 @@ entry(unsigned long magic, unsigned long addr)
 	//: "r" (&com)
 	//	: "eax", "ebx"
 	//	);
+implicit_proc();
+	while (1) {
+		char b[128];
+		read(0, (void*)b, 128);
+		int f = open(b);
+		while (read(f, b, 128) != 0) {
+			write(1, b, 128);
+		}
+	/*
+	*/
+		puts("done\n");
+	}
 
 	VtoPmap(0x8000000, 0x800000);
 	uint32_t s = *(uint32_t *)(0x8000000);
 	puts("all good");
 
-	execute("shell");
+	//execute("shell");
 
 		/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

@@ -173,8 +173,8 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
 
 int32_t open(const uint8_t* filename) {
 	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);
-	dentry_t * dentry;
-	if (read_dentry_by_name((int8_t*)filename, dentry)) {
+	dentry_t dentry;
+	if (read_dentry_by_name((int8_t*)filename, &dentry)) {
 		return -1;
 	}
 
@@ -191,14 +191,15 @@ int32_t open(const uint8_t* filename) {
 	}
 
 	block->fdarray[i].file_pos = FILE_START_POS;
-	if (dentry->file_type == RTC_TYPE) {
+	if (dentry.file_type == RTC_TYPE) {
 		block->fdarray[i].fops_tbl_pointer = &rtc_ops;
 	}
-	else if (dentry->file_type == DIR_TYPE) {
+	else if (dentry.file_type == DIR_TYPE) {
 		block->fdarray[i].fops_tbl_pointer = &dir_ops;
 	}
-	else if (dentry->file_type == FILE_TYPE) {
+	else if (dentry.file_type == FILE_TYPE) {
 		block->fdarray[i].fops_tbl_pointer = &file_ops;
+		block->fdarray[i].inode = dentry.inode_index;
 	}
 
 	//return block->fdarray[i]->fops_tbl_pointer->open(filename);
@@ -235,4 +236,28 @@ int32_t sigreturn(void) {
 
 int32_t null_ops(void) {
 	return -1;
+}
+
+pcb_t* get_pcb() {
+	return (pcb_t *)(eightMB - (process + 1) * eightKB);
+}
+
+/* For debugging */
+void implicit_proc() {
+	process = 0;
+	process_num[0] = ONE;
+
+	pcb_t* block = (pcb_t*)(eightMB - eightKB);
+
+	/* STDIN */
+	block->fdarray[ZERO].fops_tbl_pointer = &stdin_ops;
+	block->fdarray[ZERO].inode = -1;					// or 0?
+	block->fdarray[ZERO].file_pos = FILE_START_POS;
+	block->fdarray[ZERO].flags = ONE;					// in use
+														/* STDOUT */
+	block->fdarray[ONE].fops_tbl_pointer = &stdout_ops;
+	block->fdarray[ONE].inode = -1;
+	block->fdarray[ONE].file_pos = FILE_START_POS;
+	block->fdarray[ONE].flags = ONE;
+
 }

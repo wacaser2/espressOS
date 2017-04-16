@@ -48,6 +48,8 @@ int32_t execute(const uint8_t* command) {
 	{
 		name[i] = command[j];				// extract name of file
 	}
+	
+
 	name[i] = '\0';			// null-terminated
 	end++;
 	start = end;
@@ -60,6 +62,10 @@ int32_t execute(const uint8_t* command) {
 	}
 	restarg[i] = '\0';		// null-terminated
 
+	puts(name);
+	putc('\n');
+	puts(restarg);
+	putc('\n');
 
 	dentry_t * dentry;
 	if (read_dentry_by_name((int8_t*)name, dentry) == -1) {
@@ -103,7 +109,7 @@ int32_t execute(const uint8_t* command) {
 		block->parent_kbp = tss.ebp;
 	}
 
-	/* Save the kernel stack pointer and kernel base pointer of the parent process control block here as members of the pcb struct because we will need it for the halt function */
+	// /* Save the kernel stack pointer and kernel base pointer of the parent process control block here as members of the pcb struct because we will need it for the halt function */
 
 
 	/* STDIN */
@@ -128,15 +134,16 @@ int32_t execute(const uint8_t* command) {
 	//tss.ss0 = KERNEL_DS;
 	tss.esp0 = eightMB - (process * eightKB) - 4;
 
-	uint32_t tmp = 0x83FFFFFC/*(eightMB + ((process + 1) * fourMB) - 4)*/;
+	uint32_t tmp = 0x83FFFFC/*(eightMB + ((process + 1) * fourMB) - 4)*/;
 	asm volatile (
-		"pushl 0x2b; \n"
+		"pushl $0x2B; \n"
+		//"movw 0x2B, %%ds \n"
 		"pushl %0; \n"
 		"pushfl; \n"
 		"popl %%ecx; \n"
-		"orl %%ecx, 0x0200; \n"
+		"orl $0x0200, %%ecx; \n"
 		"pushl %%ecx; \n"
-		"pushl 0x23; \n"
+		"pushl $0x23; \n"
 		"pushl %1; \n"
 		"iret; \n"
 		: /* outputs */
@@ -145,6 +152,21 @@ int32_t execute(const uint8_t* command) {
 		);
 
 
+	// asm volatile (
+	//  mov ax,0x23
+ //     mov ds,ax
+ //     mov es,ax 
+ //     mov fs,ax 
+ //     mov gs,ax ;we don't need to worry about SS. it's handled by iret
+ 
+ //     mov eax,esp
+ //     push 0x23 ;user data segment with bottom 2 bits set for ring 3
+ //     push eax ;push our current stack just for the heck of it
+ //     pushf
+ //     push 0x1B; ;user code segment with bottom 2 bits set for ring 3
+ //     push _test_user_function ;may need to remove the _ for this to work right 
+ //     iret
+ //     );
 
 	return 0;
 }

@@ -282,9 +282,10 @@ sys_call:
 	pushl %ecx
 	pushl %ebx
 	call *sys_call_jmp_table(,%eax,4)
+	addl $12, %esp
 
 sys_call_ret:
-    pop %eax
+    # pop %eax
     pop %gs
     pop %fs
     pop %es
@@ -294,7 +295,7 @@ sys_call_ret:
 	iret
 
 sys_call_err:
-    pop %eax
+    # pop %eax
     pop %gs
     pop %fs
     pop %es

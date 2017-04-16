@@ -23,11 +23,11 @@ paging_init(unsigned long addr) {
 	for (i = 0; i < oneUNIT; i++)
 	{
 		page_directory[i] = 0;	// sets not present
-		first_page_table[i] = (i << OFFSET); // setting indexes
+		first_page_table[i] = (i << OFFSET) | RW | PRESENT; // setting indexes
 	}
 
 	first_page_table[VIDEO >> OFFSET] |= RW | PRESENT;
-	page_directory[0] = ((uint32_t)first_page_table) | PRESENT;	// add page table to directory of 4kb pages
+	page_directory[0] = ((uint32_t)first_page_table) | PRESENT | RW;	// add page table to directory of 4kb pages
 	page_directory[1] = KERNEL_ADDR | PRESENT | fourMBpage | RW;	// 4mb page
 	first_page_table[(int32_t)page_directory >> OFFSET] |= RW | PRESENT;
 

@@ -376,12 +376,18 @@ implicit_proc();
 		puts("done\n");
 	}
 
-	VtoPmap(0x8000000, 0x800000);
-	uint32_t s = *(uint32_t *)(0x8000000);
-	puts("all good");
+	//VtoPmap(0x8000000, 0x800000);
+	//uint32_t s = *(uint32_t *)(0x8000000);
+	//puts("all good");
 
 	//execute("shell");
-
+	/*
+	while(1){
+		char command[128];
+		int bytes_read_from_terminal = terminal_read(0, (void *)command, 128);
+		execute((void *)command);
+	}
+	*/
 		/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
 }

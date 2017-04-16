@@ -281,6 +281,7 @@ sys_call:
 	pushl %edx
 	pushl %ecx
 	pushl %ebx
+	# sti # enable interrupts
 	call *sys_call_jmp_table(,%eax,4)
 	addl $12, %esp
 

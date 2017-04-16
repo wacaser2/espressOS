@@ -361,9 +361,14 @@ entry(unsigned long magic, unsigned long addr)
 	//: "r" (&com)
 	//	: "eax", "ebx"
 	//	);
-execute("shell");
 
-	/* Spin (nicely, so we don't chew up cycles) */
+	VtoPmap(0x8000000, 0x800000);
+	uint32_t s = *(uint32_t *)(0x8000000);
+	puts("all good");
+
+	execute("shell");
+
+		/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");
 }
 

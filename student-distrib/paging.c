@@ -29,6 +29,7 @@ paging_init(unsigned long addr) {
 	first_page_table[VIDEO >> OFFSET] |= RW | PRESENT;
 	page_directory[0] = ((uint32_t)first_page_table) | PRESENT;	// add page table to directory of 4kb pages
 	page_directory[1] = KERNEL_ADDR | PRESENT | fourMBpage | RW;	// 4mb page
+	first_page_table[(int32_t)page_directory >> OFFSET] |= RW | PRESENT;
 
 	// cr3 - PDBR register, holds page directory location
 	// cr4 - 0 for 4kb and 1 for 4mb
@@ -51,7 +52,7 @@ paging_init(unsigned long addr) {
 
 void VtoPmap(uint32_t vaddr, uint32_t paddr) {
 	int vidx = (vaddr >> 22) & 0x000003FF;		// vidx = 32
-	page_directory[vidx] = paddr | PRESENT | fourMBpage | RW | USER;
+	page_directory[vidx] = (paddr & 0xFFC00000) | PRESENT | fourMBpage | RW | USER;
 
 	asm volatile (
 		"movl %%cr3,%%eax; \n \t"

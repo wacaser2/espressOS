@@ -17,11 +17,28 @@ fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*
 /* System Calls*/
 
 int32_t halt(uint8_t status) {
+
+	// puts("In Halt now\n");
+	puts("Process number: ");
+	putc('0' + process);
+	// puts("\nStatus: ");
+	// putc(status);
+	putc('\n');
+
 	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);
 	process_num[process] = ZERO;
 
-	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
+	
 	process = block->parent_block->process_id;
+	if(process == 0) execute("shell");
+
+
+	VtoPmap(onetwentyeightMB, (eightMB + ((process+1) * fourMB)));
+
+	puts("Parent Process number: ");
+	putc('0' + process);
+	putc('\n');
+
 	tss.esp0 = block->parent_ksp;
 
 	int i;
@@ -29,6 +46,7 @@ int32_t halt(uint8_t status) {
 		block->fdarray[i].fops_tbl_pointer = (void*)null_ops;
 		block->fdarray[i].flags = ZERO;
 	}
+
 	return 0;
 }
 
@@ -62,10 +80,10 @@ int32_t execute(const uint8_t* command) {
 	}
 	restarg[i] = '\0';		// null-terminated
 
-	puts(name);
-	putc('\n');
-	puts(restarg);
-	putc('\n');
+	// puts(name);
+	// putc('\n');
+	// puts(restarg);
+	// putc('\n');
 
 	dentry_t * dentry;
 	if (read_dentry_by_name((int8_t*)name, dentry) == -1) {
@@ -151,23 +169,6 @@ int32_t execute(const uint8_t* command) {
 		: "ecx" // clobbers
 		);
 
-
-	// asm volatile (
-	//  mov ax,0x23
- //     mov ds,ax
- //     mov es,ax 
- //     mov fs,ax 
- //     mov gs,ax ;we don't need to worry about SS. it's handled by iret
- 
- //     mov eax,esp
- //     push 0x23 ;user data segment with bottom 2 bits set for ring 3
- //     push eax ;push our current stack just for the heck of it
- //     pushf
- //     push 0x1B; ;user code segment with bottom 2 bits set for ring 3
- //     push _test_user_function ;may need to remove the _ for this to work right 
- //     iret
- //     );
-
 	return 0;
 }
 
@@ -180,6 +181,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes) {
 		return -1;
 	}
 	return block->fdarray[fd].fops_tbl_pointer->read(fd, buf, nbytes);
+
 }
 
 int32_t write(int32_t fd, const void* buf, int32_t nbytes) {

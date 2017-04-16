@@ -211,7 +211,7 @@ void keyboard_handler()
         {
           clear();  // clear the screen
           key_idx = 0; // reset buffer as everything on screen was cleared
-          puts("[user@espressOS:/ ]$ ");
+          //puts("[user@espressOS:/ ]$ ");
         }
       }
     }
@@ -233,14 +233,15 @@ int32_t terminal_open(const uint8_t* filename)
 
 int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 {
-  puts("[user@espressOS:/ ]$ ");
+  //puts("[user@espressOS:/ ]$ ");
+  sti();
 
     enter_flag = 0;
     while(enter_flag == 0)
     {
     // nothing, keeping looping till enter is pressed
     }
-
+cli();
     int i,j;
 
     for(i = 0; i < nbytes; i++) // copy over all relevant info from key_buf to buf passed in
@@ -264,7 +265,7 @@ int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 
 int32_t terminal_write(int32_t fd, const void * buf, int32_t nbytes)
 {
-  puts("[user@espressOS:/ ]$ ");
+  //puts("[user@espressOS:/ ]$ ");
 
     int i;
     for(i=0; i< nbytes; i++)

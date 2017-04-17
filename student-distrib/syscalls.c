@@ -32,7 +32,7 @@ int32_t halt(uint8_t status) {
 
 	process = block->parent_block->process_id;
 
-	VtoPmap(onetwentyeightMB, (eightMB + ((process+1) * fourMB)));
+	VtoPmap(onetwentyeightMB, (eightMB + ((process)* fourMB)));
 
 	// puts("Parent Process number: ");
 	// putc('0' + process);
@@ -45,7 +45,11 @@ int32_t halt(uint8_t status) {
 		block->fdarray[i].fops_tbl_pointer = (void*)null_ops;
 		block->fdarray[i].flags = ZERO;
 	}
-
+	asm volatile(
+		"movl %0, (%%ebp) \n"
+		"movl %1, 4(%%ebp) \n"
+		:
+	: "r" (block->parent_kbp), "r" (block->parent_ksp));
 	return 0;
 }
 
@@ -65,7 +69,7 @@ int32_t execute(const uint8_t* command) {
 	{
 		name[i] = command[j];				// extract name of file
 	}
-	
+
 
 	name[i] = '\0';			// null-terminated
 	end++;
@@ -126,8 +130,12 @@ int32_t execute(const uint8_t* command) {
 	}
 	else {
 		block->parent_block = (pcb_t *)(eightMB - process*eightKB);
-		block->parent_ksp = tss.esp0;
-		block->parent_kbp = tss.ebp;
+		asm volatile(
+			"movl (%%ebp), %0 \n"
+			"movl 4(%%ebp), %1 \n"
+			:"=r"(block->parent_kbp), "=r"(block->parent_ksp));
+		//block->parent_ksp = tss.esp0;
+		//block->parent_kbp = tss.ebp;
 	}
 
 	// /* Save the kernel stack pointer and kernel base pointer of the parent process control block here as members of the pcb struct because we will need it for the halt function */

@@ -8,12 +8,13 @@
 #define VIDEO 0xB8000
 #define NUM_COLS 80
 #define NUM_ROWS 25
-#define ATTRIB 0x7
+#define ATTRIB 0xf
 #include "types.h"
 
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
 void setcolor(uint8_t c);
+void setlinecolor(uint8_t c);
 int32_t puts(int8_t *s);
 int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);

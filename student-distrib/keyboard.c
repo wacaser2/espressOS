@@ -116,7 +116,7 @@ void keyboard_handler()
 	/* Read from the keyboard's data buffer */
 	scancode = inb((int)KEYBOARD_PORT);
 
-	send_eoi(KEYBOARD_IRQ); //allow more interrupts to queue for the keyboard
+	send_eoi(KEYBOARD_IRQ);	//allow more interrupts to queue for the keyboard
 	/* If the top bit of the byte we read from the keyboard is
 	*  set, that means that a key has just been released */
 	if (scancode & 0x80)
@@ -227,7 +227,6 @@ int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 	}
 	cli();
 	int32_t i, j;
-
 	for (i = 0; i < nbytes; i++) // copy over all relevant info from key_buf to buf passed in
 	{
 		((int8_t *)buf)[i] = key_buf[i];

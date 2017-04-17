@@ -2,6 +2,7 @@
 
 #include "x86_desc.h"
 #include "lib.h"
+#include "syscalls.h"
 
 /* Array of exception messages */
 char* exception_messages[32] = {
@@ -50,10 +51,10 @@ char* exception_messages[32] = {
  */
 void fault_handler(isr_stack_t *s){
 	if(s->int_no < 32){
-		clear();
-		printf("\n%s : %d\n", exception_messages[s->int_no], s->err_code);		//print error
-		setcolor(0x17);	//make screen blue
-		for(;;);	//halt loop
+		printf("%s : %d\n", exception_messages[s->int_no], s->err_code);		//print error
+		setlinecolor(0x10);
+		//setcolor(0x17);	//make screen blue
+		halt(0);
 	}
 }
 

@@ -2,6 +2,7 @@
 
 #include "x86_desc.h"
 #include "lib.h"
+#include "syscalls.h"
 
 /* Array of exception messages */
 char* exception_messages[32] = {

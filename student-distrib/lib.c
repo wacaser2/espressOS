@@ -189,7 +189,7 @@ setcolor(uint8_t c)
 	int i, j;
 	for (i = 0; i < 25; i++) {
 		for (j = 0; j < 80; j++) {
-			*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1) + 1) = c;
+			*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1) + 1) |= c;
 		}
 	}
 }
@@ -205,7 +205,7 @@ setlinecolor(uint8_t c)
 {
 	int j;
 	for (j = 0; j < 80; j++) {
-		*(uint8_t *)(video_mem + ((NUM_COLS*(screen_y - 1) + j) << 1) + 1) = c;
+		*(uint8_t *)(video_mem + ((NUM_COLS*(screen_y - 1) + j) << 1) + 1) |= c;
 	}
 }
 

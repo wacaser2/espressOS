@@ -53,6 +53,7 @@ int32_t halt(uint8_t status) {
 
 int32_t execute(const uint8_t* command) {
 
+
 	/* Extract name */
 	int32_t start = 0;
 	while (command[start] == ' ')
@@ -92,16 +93,6 @@ int32_t execute(const uint8_t* command) {
 		return -1;
 	}
 
-	/* Set up paging */
-	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
-
-	/* Find entry point to program */
-	uint32_t entry_point;									// entry point to read from
-	read_data(dentry.inode_index, 24, (uint8_t*)&entry_point, INT_BYTES);
-
-	/* Load program */
-	read_data(dentry.inode_index, 0, (void*)PROG_START, get_inode_length(dentry.inode_index));
-
 	/* Set up PCB */
 	pcb_t * block = get_pcb();	// top of the 8KB stack
 	block->process_id = process;
@@ -109,13 +100,6 @@ int32_t execute(const uint8_t* command) {
 		block->parent_block = block;
 	else
 		block->parent_block = (pcb_t *)(eightMB - process * eightKB);
-	/* Save the kernel stack pointer and kernel base pointer of the parent process control block
-	here as members of the pcb struct because we will need it for the halt function */
-	asm volatile(
-		"movl %%ebp, %0 \n"
-		"movl %%esp, %1 \n"
-		:"=r"(block->parent_kbp), "=r"(block->parent_ksp)
-		);
 	/* STDIN */
 	block->fdarray[ZERO].fops_tbl_pointer = &stdin_ops;
 	block->fdarray[ZERO].inode = -1;					// or 0?
@@ -143,12 +127,25 @@ int32_t execute(const uint8_t* command) {
 	while (command[end] != '\0')
 		end++;
 	strncpy((int8_t*)block->args, (int8_t*)(command + start), end - start + 1);
-	
-	/*putc('\n');
-	puts(command + start);
-	putc('\n');
-	puts(block->args);
-*/
+
+	/* Set up paging */
+	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
+
+	/* Find entry point to program */
+	uint32_t entry_point;									// entry point to read from
+	read_data(dentry.inode_index, 24, (uint8_t*)&entry_point, INT_BYTES);
+
+	/* Load program */
+	read_data(dentry.inode_index, 0, (void*)PROG_START, get_inode_length(dentry.inode_index));
+
+	/* Save the kernel stack pointer and kernel base pointer of the parent process control block
+	here as members of the pcb struct because we will need it for the halt function */
+	asm volatile(
+		"movl %%ebp, %0 \n"
+		"movl %%esp, %1 \n"
+		:"=r"(block->parent_kbp), "=r"(block->parent_ksp)
+		);
+
 	/* Update tss */
 	tss.esp0 = eightMB - (process * eightKB) - 4;
 
@@ -247,7 +244,6 @@ int32_t close(int32_t fd) {
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
 
 	pcb_t* block = get_pcb();
-	puts(block->args);
 
 	/* Check if enough space in buf */
 	if (nbytes < strlen((int8_t*)block->args))

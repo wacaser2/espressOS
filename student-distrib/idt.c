@@ -51,10 +51,9 @@ char* exception_messages[32] = {
  */
 void fault_handler(isr_stack_t *s){
 	if(s->int_no < 32){
-		//clear();
-		printf("\n%s : %d\n", exception_messages[s->int_no], s->err_code);		//print error
+		printf("%s : %d\n", exception_messages[s->int_no], s->err_code);		//print error
+		setlinecolor(0x17);
 		//setcolor(0x17);	//make screen blue
-		//for(;;);	//halt loop
 		halt(0);
 	}
 }

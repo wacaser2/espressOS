@@ -195,6 +195,21 @@ setcolor(uint8_t c)
 }
 
 /*
+* void setlinecolor(uint8_t c);
+*   Inputs: uint_8* c = attribute to set
+*   Return Value: void
+*	Function: changes the attribute of the screen
+*/
+void
+setlinecolor(uint8_t c)
+{
+	int j;
+	for (j = 0; j < 80; j++) {
+		*(uint8_t *)(video_mem + ((NUM_COLS*(screen_y - 1) + j) << 1) + 1) = c;
+	}
+}
+
+/*
 * void putc(uint8_t c);
 *   Inputs: uint_8* c = character to print
 *   Return Value: void
@@ -217,7 +232,7 @@ void putc(uint8_t c) {
 				if (i < NUM_ROWS*NUM_COLS)
 				{
 					*(uint8_t *)(video_mem + (j << 1)) = *(uint8_t *)(video_mem + (i << 1));
-					*(uint8_t *)(video_mem + (j << 1) + 1) = ATTRIB;
+					*(uint8_t *)(video_mem + (j << 1) + 1) = *(uint8_t *)(video_mem + (i << 1) + 1);
 				}
 				else
 				{
@@ -237,7 +252,7 @@ void putc(uint8_t c) {
 				if (i < NUM_ROWS*NUM_COLS)
 				{
 					*(uint8_t *)(video_mem + (j << 1)) = *(uint8_t *)(video_mem + (i << 1));
-					*(uint8_t *)(video_mem + (j << 1) + 1) = ATTRIB;
+					*(uint8_t *)(video_mem + (j << 1) + 1) = *(uint8_t *)(video_mem + (i << 1) + 1);
 				}
 				else
 				{

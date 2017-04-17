@@ -2,6 +2,7 @@
 #include "lib.h"
 #include "x86_desc.h"
 #include "keyboard.h"
+#include "syscalls.h"
 
 volatile int enter_flag = 0;
 volatile int ctrl_flag = 0;
@@ -206,6 +207,8 @@ void keyboard_handler()
 				clear();  // clear the screen
 				key_idx = 0; // reset buffer as everything on screen was cleared
 			}
+			else if (ctrl_flag == 1 && (key[scancode] == 'c' || shift_key[scancode] == 'C'))	//halt current program
+				halt(0);
 		}
 	}
 }

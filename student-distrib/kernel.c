@@ -147,7 +147,6 @@ entry(unsigned long magic, unsigned long addr)
 		tss.esp0 = 0x800000;
 		ltr(KERNEL_TSS);
 	}
-	clear();
 
 	/* Install ISR'S*/
 	printf("Installing isrs\n");
@@ -176,6 +175,7 @@ entry(unsigned long magic, unsigned long addr)
 	/* Init paging*/
 	paging_init(0);
 
+	clear();
 	execute((uint8_t *)"shell");
 
 	/* Spin (nicely, so we don't chew up cycles) */

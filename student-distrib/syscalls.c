@@ -22,8 +22,10 @@ int32_t halt(uint8_t status) {
 	process_num[process] = ZERO;
 
 	/* If this process is the top shell, restart */
-	if (process == 0) execute((uint8_t *)"shell");
-
+	if (process == 0) {
+		clear();
+		execute((uint8_t *)"shell");
+	}
 	/* Reset process to parent */
 	pcb_t * block = get_pcb();
 	process = block->parent_block->process_id;

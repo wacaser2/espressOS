@@ -286,14 +286,18 @@ sys_call:
 	addl $12, %esp
 
 sys_call_ret:
-    # pop %eax
+    mov %eax, return_value
     pop %gs
     pop %fs
     pop %es
     pop %ds
     popa
-    xorl %eax, %eax	# return 0
+    # xorl %eax, %eax	# return 0
+	mov return_value, %eax
 	iret
+
+return_value:
+	.long	
 
 sys_call_err:
     # pop %eax

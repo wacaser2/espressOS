@@ -18,26 +18,25 @@ fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*
 
 int32_t halt(uint8_t status) {
 
-	// puts("In Halt now\n");
-	puts("Process number: ");
-	putc('0' + process);
-	// puts("\nStatus: ");
-	// putc(status);
-	putc('\n');
+	// // puts("In Halt now\n");
+	// puts("Process number: ");
+	// putc('0' + process);
+	// // puts("\nStatus: ");
+	// // putc(status);
+	// putc('\n');
+
+	// while(1){}
 
 	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);
 	process_num[process] = ZERO;
 
-	
 	process = block->parent_block->process_id;
-	if(process == 0) execute("shell");
-
 
 	VtoPmap(onetwentyeightMB, (eightMB + ((process+1) * fourMB)));
 
-	puts("Parent Process number: ");
-	putc('0' + process);
-	putc('\n');
+	// puts("Parent Process number: ");
+	// putc('0' + process);
+	// putc('\n');
 
 	tss.esp0 = block->parent_ksp;
 
@@ -56,7 +55,7 @@ int32_t execute(const uint8_t* command) {
 		start++;
 	}
 	int end = start;
-	while (command[end] != ' ') {
+	while (command[end] != ' ' && command[end] != '\0') {
 		end++;
 	}
 	uint8_t name[32];
@@ -110,6 +109,10 @@ int32_t execute(const uint8_t* command) {
 	if (process < 0) {
 		return -1;
 	}
+
+	puts("Process id: ");
+	putc('0' + process);
+	putc('\n');
 
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
 

@@ -381,10 +381,12 @@ entry(unsigned long magic, unsigned long addr)
 	//puts("all good");
 
 	//execute("shell");
-	
+		
+
 	while(1){
 		char command[128];
 		int bytes_read_from_terminal = terminal_read(0, (void *)command, 128);
+		command[bytes_read_from_terminal-1] = '\0'; 
 		execute((void *)command);
 	}
 	

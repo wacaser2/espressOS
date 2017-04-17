@@ -217,11 +217,6 @@ void keyboard_handler()
     }
     
     send_eoi(KEYBOARD_IRQ);	//allow more interrupts to queue for the keyboard
-    
-    /*else
-    {
-        putc(key[scancode]);	// put the char on the screen
-    }*/
 
 }
 
@@ -246,11 +241,10 @@ cli();
 
     for(i = 0; i < nbytes; i++) // copy over all relevant info from key_buf to buf passed in
     {
-      if(key_buf[i] == NEW_LINE)
-      {
-        break;
-      }
       ((int8_t *)buf)[i] = key_buf[i];
+
+      if(key_buf[i] == NEW_LINE)
+        break;
     }
 
     /* clear the key buffer */
@@ -260,7 +254,7 @@ cli();
     }
 
     // return number of bytes taken from keyboard buff
-    return i;
+    return i+1;
 }
 
 int32_t terminal_write(int32_t fd, const void * buf, int32_t nbytes)
@@ -270,7 +264,6 @@ int32_t terminal_write(int32_t fd, const void * buf, int32_t nbytes)
     int i;
     for(i=0; i< nbytes; i++)
         putc(((int8_t *)buf)[i]);
-    putc(NEW_LINE);
 
     // return number of bytes written
     return i;

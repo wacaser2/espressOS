@@ -276,6 +276,7 @@ sys_call:
     push %es
     push %fs
     push %gs
+	subl $1, %eax	# zero index
 	cmpl $10, %eax
 	jae sys_call_err # 0 or above 10 return error
 	pushl %edx
@@ -297,7 +298,7 @@ sys_call_ret:
 	iret
 
 return_value:
-	.long	
+	.long	0
 
 sys_call_err:
     # pop %eax
@@ -310,4 +311,4 @@ sys_call_err:
 	iret
 
 sys_call_jmp_table:
-	.long 0, halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn
+	.long halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn

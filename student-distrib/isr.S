@@ -281,20 +281,26 @@ sys_call:
 	pushl %edx
 	pushl %ecx
 	pushl %ebx
+	# sti # enable interrupts
 	call *sys_call_jmp_table(,%eax,4)
+	addl $12, %esp
 
 sys_call_ret:
-    pop %eax
+    mov %eax, return_value
     pop %gs
     pop %fs
     pop %es
     pop %ds
     popa
-    xorl %eax, %eax	# return 0
+    # xorl %eax, %eax	# return 0
+	mov return_value, %eax
 	iret
 
+return_value:
+	.long	
+
 sys_call_err:
-    pop %eax
+    # pop %eax
     pop %gs
     pop %fs
     pop %es
@@ -304,4 +310,4 @@ sys_call_err:
 	iret
 
 sys_call_jmp_table:
-	.long halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn
+	.long 0, halt, execute, read, write, open, close, getargs, vidmap, set_handler, sigreturn

@@ -1,5 +1,6 @@
 #include "file.h"
 #include "lib.h"
+#include "syscalls.h"
 
 boot_block_t* file_sys;
 inode_t* inodes;
@@ -34,7 +35,8 @@ int32_t get_inode_length(uint32_t index) {
 *   Return Value: success / failure
 *	Function: open the directory to be accessed
 */
-int32_t dir_open() {
+int32_t dir_open(const uint8_t* filename) {
+
 	return 0;
 }
 
@@ -44,7 +46,7 @@ int32_t dir_open() {
 *   Return Value: success / failure
 *	Function: close the directory from access
 */
-int32_t dir_close() {
+int32_t dir_close(int32_t fd) {
 	return  0;
 }
 
@@ -54,7 +56,15 @@ int32_t dir_close() {
 *   Return Value: success / failure
 *	Function: read from the dir
 */
-int32_t dir_read() {
+int32_t dir_read(int32_t fd, void* buf, int32_t nbytes) {
+	int pos = get_pcb()->fdarray[fd].file_pos;
+	if (pos < file_sys->num_dentry) {
+		dentry_t d;
+		read_dentry_by_index(pos, &d);
+		strncpy(buf, d.file_name, (nbytes < 32) ? nbytes : 32);
+		get_pcb()->fdarray[fd].file_pos++;
+		return (nbytes < 32) ? nbytes : 32;
+	}
 	return 0;
 }
 
@@ -64,7 +74,7 @@ int32_t dir_read() {
 *   Return Value: success / failure
 *	Function: return error
 */
-int32_t dir_write() {
+int32_t dir_write(int32_t fd, const void* buf, int32_t nbytes) {
 	return -1;
 }
 
@@ -74,7 +84,7 @@ int32_t dir_write() {
 *   Return Value: success / failure
 *	Function: open a file to be read
 */
-int32_t file_open() {
+int32_t file_open(const uint8_t* filename) {
 	return 0;
 }
 
@@ -84,7 +94,7 @@ int32_t file_open() {
 *   Return Value: success / failure
 *	Function: close a file instance
 */
-int32_t file_close() {
+int32_t file_close(int32_t fd) {
 	return 0;
 }
 
@@ -94,8 +104,10 @@ int32_t file_close() {
 *   Return Value: success / failure
 *	Function: read from file
 */
-int32_t file_read() {
-	return 0;
+int32_t file_read(int32_t fd, void* buf, int32_t nbytes) {
+	int32_t readbytes = read_data(get_pcb()->fdarray[fd].inode, get_pcb()->fdarray[fd].file_pos, buf, nbytes);
+	get_pcb()->fdarray[fd].file_pos += readbytes;
+	return readbytes;
 }
 
 /*
@@ -104,7 +116,7 @@ int32_t file_read() {
 *   Return Value: success / failure
 *	Function: return error
 */
-int32_t file_write() {
+int32_t file_write(int32_t fd, const void* buf, int32_t nbytes) {
 	return -1;
 }
 

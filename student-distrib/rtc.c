@@ -38,14 +38,14 @@ rtc_handler(void)
 
 
 int32_t
-rtc_open(void)
+rtc_open(const uint8_t* filename)
 {
 	set_freq(DEFAULT_FREQ); // set default frequency
 	return 0; // return zero
 }
 
 int32_t
-rtc_read(void)
+rtc_read(int32_t fd, void* buf, int32_t nbytes)
 {
 	interrupt_flag = 0;
 	while(interrupt_flag == 0) {} //  do nothing, keeping looping till an interrupt occurs
@@ -53,7 +53,7 @@ rtc_read(void)
 }
 
 int32_t
-rtc_write(const void* buf, int32_t nbytes)
+rtc_write(int32_t fd, const void* buf, int32_t nbytes)
 {
 	if(buf == NULL || nbytes != 4)
 		return -1;
@@ -64,7 +64,7 @@ rtc_write(const void* buf, int32_t nbytes)
 }
 
 int32_t
-rtc_close(void) //int32_t fd
+rtc_close(int32_t fd) //int32_t fd
 {
 	//if(fd <= 1) return -1;
 	return 0;

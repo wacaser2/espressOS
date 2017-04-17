@@ -23,12 +23,13 @@ paging_init(unsigned long addr) {
 	for (i = 0; i < oneUNIT; i++)
 	{
 		page_directory[i] = 0;	// sets not present
-		first_page_table[i] = (i << OFFSET); // setting indexs
+		first_page_table[i] = (i << OFFSET) | RW | PRESENT; // setting indexes
 	}
 
 	first_page_table[VIDEO >> OFFSET] |= RW | PRESENT;
-	page_directory[0] = ((uint32_t)first_page_table) | PRESENT;	// add page table to directory of 4kb pages
+	page_directory[0] = ((uint32_t)first_page_table) | PRESENT | RW;	// add page table to directory of 4kb pages
 	page_directory[1] = KERNEL_ADDR | PRESENT | fourMBpage | RW;	// 4mb page
+	first_page_table[(int32_t)page_directory >> OFFSET] |= RW | PRESENT;
 
 	// cr3 - PDBR register, holds page directory location
 	// cr4 - 0 for 4kb and 1 for 4mb
@@ -43,7 +44,21 @@ paging_init(unsigned long addr) {
 		"orl  $0x80000000,%%eax; \n \t"
 		"movl %%eax,%%cr0; \n \t"
 		: /* no outputs */
-	: "r"(page_directory)
-		: "eax"
+	: "r"(page_directory)		// input operands
+		: "eax"						// clobbers
+		);
+}
+
+
+void VtoPmap(uint32_t vaddr, uint32_t paddr) {
+	int vidx = (vaddr >> 22) & 0x000003FF;		// vidx = 32
+	page_directory[vidx] = (paddr & 0xFFC00000) | PRESENT | fourMBpage | RW | USER;
+
+	asm volatile (
+		"movl %%cr3,%%eax; \n \t"
+		"movl %%eax,%%cr3; \n \t"
+		: /* no outputs */
+	: /* no inputs  */
+		: "eax"					// clobbers
 		);
 }

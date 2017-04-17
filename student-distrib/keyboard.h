@@ -38,9 +38,9 @@ void keyboard_init();
 /* handles keyboard input by echoing char pressed to the screen */
 void keyboard_handler();
 
-int32_t terminal_open(void);
-int32_t terminal_read(void * buf, int32_t nbytes);
-int32_t terminal_write(const void * buf, int32_t nbytes);
-int32_t terminal_close(void);
+int32_t terminal_open(const uint8_t* filename);
+int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes);
+int32_t terminal_write(int32_t fd, const void * buf, int32_t nbytes);
+int32_t terminal_close(int32_t fd);
 
 #endif	/* _KEYBOARD_H*/

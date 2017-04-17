@@ -380,15 +380,15 @@ entry(unsigned long magic, unsigned long addr)
 	//uint32_t s = *(uint32_t *)(0x8000000);
 	//puts("all good");
 
-	//execute("shell");
+	execute((uint8_t *)"shell");
 		
 
-	while(1){
-		char command[128];
-		int bytes_read_from_terminal = terminal_read(0, (void *)command, 128);
-		command[bytes_read_from_terminal-1] = '\0'; 
-		execute((void *)command);
-	}
+	// while(1){
+	// 	char command[128];
+	// 	int bytes_read_from_terminal = terminal_read(0, (void *)command, 128);
+	// 	command[bytes_read_from_terminal-1] = '\0'; 
+	// 	execute((void *)command);
+	// }
 	
 		/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

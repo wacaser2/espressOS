@@ -18,23 +18,15 @@ fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*
 
 int32_t halt(uint8_t status) {
 
-	// // puts("In Halt now\n");
-	// puts("Process number: ");
-	// putc('0' + process);
-	// // puts("\nStatus: ");
-	// // putc(status);
-	// putc('\n');
-
-	// while(1){}
-
 	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);
 	process_num[process] = ZERO;
 
+	if(process == 0) execute((uint8_t *)"shell");
 	process = block->parent_block->process_id;
-
+	
 	VtoPmap(onetwentyeightMB, (eightMB + ((process)* fourMB)));
 
-	// puts("Parent Process number: ");
+	// puts("After halt, Parent Process number: ");
 	// putc('0' + process);
 	// putc('\n');
 
@@ -46,10 +38,12 @@ int32_t halt(uint8_t status) {
 		block->fdarray[i].flags = ZERO;
 	}
 	asm volatile(
-		"movl %0, (%%ebp) \n"
-		"movl %1, 4(%%ebp) \n"
+		"movl %0, %%ebp \n"
+		"movl %1, %%esp \n"
 		:
-	: "r" (block->parent_kbp), "r" (block->parent_ksp));
+	: "r" (block->parent_kbp), "r" (block->parent_ksp)
+	);
+
 	return 0;
 }
 
@@ -59,10 +53,10 @@ int32_t execute(const uint8_t* command) {
 		start++;
 	}
 	int end = start;
-	while (command[end] != ' ' && command[end] != '\0') {
+	while (command[end] != ' ' && command[end] != '\0' && end < (32+start) ) {
 		end++;
 	}
-	uint8_t name[32];
+	uint8_t name[33];
 	uint8_t restarg[128];
 	int i, j;
 	for (i = 0, j = start; (i < (end - start)) || (j < end); i++, j++)
@@ -82,6 +76,10 @@ int32_t execute(const uint8_t* command) {
 		restarg[i] = command[j];			// extract the rest of the argument
 	}
 	restarg[i] = '\0';		// null-terminated
+
+	// for(i=0; i<; i++)
+	// 	command[i] = 
+
 
 	// puts(name);
 	// putc('\n');
@@ -103,6 +101,7 @@ int32_t execute(const uint8_t* command) {
 	uint32_t entry_point;									// entry point to read from
 	read_data(dentry.inode_index, 24, (uint8_t*)&entry_point, 4);
 
+	process = -1;
 	for (i = 0; i < MAXPROCESSES; i++) {
 		if (process_num[i] == ZERO) {
 			process_num[i] = ONE;
@@ -110,13 +109,17 @@ int32_t execute(const uint8_t* command) {
 			break;
 		}
 	}
+	
+	// puts("\nAfter exec, Process id: ");
+	// putc('0' + process);
+	// putc('\n');
+
 	if (process < 0) {
+		process = MAXPROCESSES - 1;	// so it doesnt exceed 
+		puts("Maximum number of processess running\n");
 		return -1;
 	}
 
-	puts("Process id: ");
-	putc('0' + process);
-	putc('\n');
 
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
 
@@ -130,13 +133,13 @@ int32_t execute(const uint8_t* command) {
 	}
 	else {
 		block->parent_block = (pcb_t *)(eightMB - process*eightKB);
-		asm volatile(
-			"movl (%%ebp), %0 \n"
-			"movl 4(%%ebp), %1 \n"
-			:"=r"(block->parent_kbp), "=r"(block->parent_ksp));
-		//block->parent_ksp = tss.esp0;
-		//block->parent_kbp = tss.ebp;
 	}
+
+	asm volatile(
+			"movl %%ebp, %0 \n"
+			"movl %%esp, %1 \n"
+			:"=r"(block->parent_kbp), "=r"(block->parent_ksp)
+			);
 
 	// /* Save the kernel stack pointer and kernel base pointer of the parent process control block here as members of the pcb struct because we will need it for the halt function */
 

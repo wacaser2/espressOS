@@ -18,91 +18,67 @@ fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*
 
 int32_t halt(uint8_t status) {
 
-	// // puts("In Halt now\n");
-	// puts("Process number: ");
-	// putc('0' + process);
-	// // puts("\nStatus: ");
-	// // putc(status);
-	// putc('\n');
-
-	// while(1){}
-
-	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);
+	/* Clear this program's process number */
 	process_num[process] = ZERO;
 
+	/* If this process is the top shell, restart */
+	if (process == 0) execute((uint8_t *)"shell");
+
+	/* Reset process to parent */
+	pcb_t * block = get_pcb();
 	process = block->parent_block->process_id;
 
+	/* Reset page mapping to parent process */
 	VtoPmap(onetwentyeightMB, (eightMB + ((process)* fourMB)));
 
-	// puts("Parent Process number: ");
-	// putc('0' + process);
-	// putc('\n');
-
+	/* Update tss */
 	tss.esp0 = block->parent_ksp;
 
-	int i;
+	/* Clear out fdarray */
+	int32_t i;
 	for (i = 0; i < MAXFILES; i++) {
 		block->fdarray[i].fops_tbl_pointer = (void*)null_ops;
 		block->fdarray[i].flags = ZERO;
 	}
+
+	/* Reset ebp and esp to the execute for this function to return to parent */
 	asm volatile(
-		"movl %0, (%%ebp) \n"
-		"movl %1, 4(%%ebp) \n"
-		:
-	: "r" (block->parent_kbp), "r" (block->parent_ksp));
+		"movl %0, %%ebp \n"
+		"movl %1, %%esp \n"
+		: : "r" (block->parent_kbp), "r" (block->parent_ksp)
+		);
+
 	return 0;
 }
 
 int32_t execute(const uint8_t* command) {
-	int start = 0;
-	while (command[start] == ' ') {
+
+	/* Extract name */
+	int32_t start = 0;
+	while (command[start] == ' ')
 		start++;
-	}
-	int end = start;
-	while (command[end] != ' ' && command[end] != '\0') {
+	int32_t end = start;
+	while (command[end] != ' ' && command[end] != '\0' && end < (NAME_SIZE + start))
 		end++;
-	}
-	uint8_t name[32];
-	uint8_t restarg[128];
-	int i, j;
-	for (i = 0, j = start; (i < (end - start)) || (j < end); i++, j++)
-	{
-		name[i] = command[j];				// extract name of file
-	}
+	uint8_t name[NAME_SIZE + 1];
+	strncpy((int8_t*)name, (int8_t*)(command + start), end - start);
+	name[end] = '\0';
 
-
-	name[i] = '\0';			// null-terminated
-	end++;
-	start = end;
-	while (command[end] != '\0') {
-		end++;
-	}
-	for (i = 0, j = start; (i < (end - start)) || (j < end); i++, j++)
-	{
-		restarg[i] = command[j];			// extract the rest of the argument
-	}
-	restarg[i] = '\0';		// null-terminated
-
-	// puts(name);
-	// putc('\n');
-	// puts(restarg);
-	// putc('\n');
-
+	/* Find file */
 	dentry_t dentry;
-	if (read_dentry_by_name((int8_t*)name, &dentry) == -1) {
+	if (read_dentry_by_name((int8_t*)name, &dentry) == -1)
 		return -1;
-	}
 
-	int8_t buffer[4];
-	int8_t magic_number[4] = { 0x7f, 0x45, 0x4c, 0x46 };		// DEL, E, L, F
-	read_data(dentry.inode_index, 0, (uint8_t*)buffer, 4);
-	if (strncmp(buffer, magic_number, 4) != 0) {					// if you don't get the magic numbers in the first four bytes
+	/* Check for executable */
+	int8_t buffer[INT_BYTES];
+	int8_t magic_number[INT_BYTES] = { 0x7f, 0x45, 0x4c, 0x46 };		// DEL, E, L, F
+	read_data(dentry.inode_index, 0, (uint8_t*)buffer, INT_BYTES);
+	if (strncmp(buffer, magic_number, INT_BYTES) != 0) 					// if you don't get the magic numbers in the first four bytes
 		return -1;
-	}
 
-	uint32_t entry_point;									// entry point to read from
-	read_data(dentry.inode_index, 24, (uint8_t*)&entry_point, 4);
-
+	/* Find process number */
+	process = -1;
+	int32_t i;
 	for (i = 0; i < MAXPROCESSES; i++) {
 		if (process_num[i] == ZERO) {
 			process_num[i] = ONE;
@@ -111,36 +87,35 @@ int32_t execute(const uint8_t* command) {
 		}
 	}
 	if (process < 0) {
+		process = MAXPROCESSES - 1;	// so it doesnt exceed 
+		puts("Maximum number of processess running\n");
 		return -1;
 	}
 
-	puts("Process id: ");
-	putc('0' + process);
-	putc('\n');
-
+	/* Set up paging */
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
 
-	read_data(dentry.inode_index, 0, (void*)0x8048000, get_inode_length(dentry.inode_index));
+	/* Find entry point to program */
+	uint32_t entry_point;									// entry point to read from
+	read_data(dentry.inode_index, 24, (uint8_t*)&entry_point, INT_BYTES);
 
-	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);	// top of the 8KB stack
+	/* Load program */
+	read_data(dentry.inode_index, 0, (void*)PROG_START, get_inode_length(dentry.inode_index));
+
+	/* Set up PCB */
+	pcb_t * block = get_pcb();	// top of the 8KB stack
 	block->process_id = process;
-
-	if (process == 0) {						// first process, so set parent to itself
-		block->parent_block = (pcb_t *)(eightMB - (process + 1) * eightKB);
-	}
-	else {
-		block->parent_block = (pcb_t *)(eightMB - process*eightKB);
-		asm volatile(
-			"movl (%%ebp), %0 \n"
-			"movl 4(%%ebp), %1 \n"
-			:"=r"(block->parent_kbp), "=r"(block->parent_ksp));
-		//block->parent_ksp = tss.esp0;
-		//block->parent_kbp = tss.ebp;
-	}
-
-	// /* Save the kernel stack pointer and kernel base pointer of the parent process control block here as members of the pcb struct because we will need it for the halt function */
-
-
+	if (process == 0)			// first process, so set parent to itself
+		block->parent_block = block;
+	else
+		block->parent_block = (pcb_t *)(eightMB - process * eightKB);
+	/* Save the kernel stack pointer and kernel base pointer of the parent process control block
+	here as members of the pcb struct because we will need it for the halt function */
+	asm volatile(
+		"movl %%ebp, %0 \n"
+		"movl %%esp, %1 \n"
+		:"=r"(block->parent_kbp), "=r"(block->parent_ksp)
+		);
 	/* STDIN */
 	block->fdarray[ZERO].fops_tbl_pointer = &stdin_ops;
 	block->fdarray[ZERO].inode = -1;					// or 0?
@@ -160,13 +135,26 @@ int32_t execute(const uint8_t* command) {
 		block->fdarray[i].flags = ZERO;					// not in use
 	}
 
-	//tss.ss0 = KERNEL_DS;
+	/* Extract args */
+	start = end;
+	while (command[start] == ' ')
+		start++;
+	end = start;
+	while (command[end] != '\0')
+		end++;
+	strncpy((int8_t*)block->args, (int8_t*)(command + start), end - start + 1);
+	
+	/*putc('\n');
+	puts(command + start);
+	putc('\n');
+	puts(block->args);
+*/
+	/* Update tss */
 	tss.esp0 = eightMB - (process * eightKB) - 4;
 
-	uint32_t tmp = 0x83FFFFC/*(eightMB + ((process + 1) * fourMB) - 4)*/;
+	/* Context Switch */
 	asm volatile (
 		"pushl $0x2B; \n"
-		//"movw 0x2B, %%ds \n"
 		"pushl %0; \n"
 		"pushfl; \n"
 		"popl %%ecx; \n"
@@ -175,63 +163,65 @@ int32_t execute(const uint8_t* command) {
 		"pushl $0x23; \n"
 		"pushl %1; \n"
 		"iret; \n"
-		: /* outputs */
-	: "r" (tmp), "r" (entry_point) /* inputs  */
-		: "ecx" // clobbers
+		: /* outputs */ : "r" (PROG_STACK_START), "r" (entry_point) /* inputs  */ : "ecx" // clobbers
 		);
 
 	return 0;
 }
 
 int32_t read(int32_t fd, void* buf, int32_t nbytes) {
-	if (fd < 0 || fd >= MAXFILES || buf == NULL) {
-		return -1;
-	}
-	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);
-	if (block->fdarray[fd].flags == ZERO) {
-		return -1;
-	}
-	return block->fdarray[fd].fops_tbl_pointer->read(fd, buf, nbytes);
 
+	/* Check invalid fd */
+	if (fd < 0 || fd >= MAXFILES || buf == NULL)
+		return -1;
+	pcb_t * block = get_pcb();
+	if (block->fdarray[fd].flags == ZERO)
+		return -1;
+
+	/* Return read for the file type */
+	return block->fdarray[fd].fops_tbl_pointer->read(fd, buf, nbytes);
 }
 
 int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
-	if (fd < 0 || fd >= MAXFILES || buf == NULL) {
+
+	/* Check invalid fd */
+	if (fd < 0 || fd >= MAXFILES || buf == NULL)
 		return -1;
-	}
-	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);
-	if (block->fdarray[fd].flags == ZERO) {
+	pcb_t * block = get_pcb();
+	if (block->fdarray[fd].flags == ZERO)
 		return -1;
-	}
+
+	/* Return write for the file type */
 	return block->fdarray[fd].fops_tbl_pointer->write(fd, buf, nbytes);
 }
 
 int32_t open(const uint8_t* filename) {
-	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);
-	dentry_t dentry;
-	if (read_dentry_by_name((int8_t*)filename, &dentry)) {
-		return -1;
-	}
 
-	int i;
+	/* Check for file existence */
+	dentry_t dentry;
+	if (read_dentry_by_name((int8_t*)filename, &dentry))
+		return -1;
+
+	/* Find fd number */
+	pcb_t * block = get_pcb();
+	int32_t i;
 	for (i = 2; i < MAXFILES; i++) {
 		if (block->fdarray[i].flags == ZERO) {
 			block->fdarray[i].flags = ONE;
 			break;
 		}
 	}
-	/* Check if we ran out of descriptors*/
-	if (i == MAXFILES) {
-		return -1;
-	}
 
+	/* Check if we ran out of descriptors*/
+	if (i == MAXFILES)
+		return -1;
+
+	/* Open files */
 	block->fdarray[i].file_pos = FILE_START_POS;
-	if (dentry.file_type == RTC_TYPE) {
+	if (dentry.file_type == RTC_TYPE)
 		block->fdarray[i].fops_tbl_pointer = &rtc_ops;
-	}
-	else if (dentry.file_type == DIR_TYPE) {
+	else if (dentry.file_type == DIR_TYPE)
 		block->fdarray[i].fops_tbl_pointer = &dir_ops;
-	}
 	else if (dentry.file_type == FILE_TYPE) {
 		block->fdarray[i].fops_tbl_pointer = &file_ops;
 		block->fdarray[i].inode = dentry.inode_index;
@@ -242,18 +232,30 @@ int32_t open(const uint8_t* filename) {
 }
 
 int32_t close(int32_t fd) {
-	pcb_t * block = (pcb_t *)(eightMB - (process + 1) * eightKB);
-	if (fd >= 2 && fd < MAXFILES && block->fdarray[fd].flags == ONE) {
-		block->fdarray[fd].flags = ZERO;
-	}
-	else {
-		return -1;
-	}
 
+	/* Check for fd */
+	pcb_t * block = get_pcb();
+	if (fd >= 2 && fd < MAXFILES && block->fdarray[fd].flags == ONE)
+		block->fdarray[fd].flags = ZERO;
+	else		// non-existent fd
+		return -1;
+
+	/* Return close for that file type */
 	return block->fdarray[fd].fops_tbl_pointer->close(fd);
 }
 
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
+
+	pcb_t* block = get_pcb();
+	puts(block->args);
+
+	/* Check if enough space in buf */
+	if (nbytes < strlen((int8_t*)block->args))
+		return -1;
+
+	/* Copy to buf */
+	strcpy((int8_t*)buf, (int8_t*)block->args);
+
 	return 0;
 }
 
@@ -289,10 +291,9 @@ void implicit_proc() {
 	block->fdarray[ZERO].inode = -1;					// or 0?
 	block->fdarray[ZERO].file_pos = FILE_START_POS;
 	block->fdarray[ZERO].flags = ONE;					// in use
-														/* STDOUT */
+	/* STDOUT */
 	block->fdarray[ONE].fops_tbl_pointer = &stdout_ops;
 	block->fdarray[ONE].inode = -1;
 	block->fdarray[ONE].file_pos = FILE_START_POS;
 	block->fdarray[ONE].flags = ONE;
-
 }

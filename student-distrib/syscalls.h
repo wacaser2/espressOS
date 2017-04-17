@@ -18,6 +18,11 @@
 #define RTC_TYPE			0
 #define DIR_TYPE			1
 #define FILE_TYPE			2
+#define NAME_SIZE			32
+#define ARGBUF_SIZE			128
+#define INT_BYTES			4
+#define PROG_START			0x08048000
+#define PROG_STACK_START	0x83FFFFC
 
 typedef struct fops_table_t {
 	int32_t(*open)(const uint8_t* filename);
@@ -35,6 +40,7 @@ typedef struct fd_t {
 
 typedef struct pcb_t {
 	fd_t fdarray[MAXFILES];
+	uint8_t args[ARGBUF_SIZE];
 	uint8_t process_id;
 	uint32_t parent_kbp;
 	uint32_t parent_ksp;

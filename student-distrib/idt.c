@@ -54,7 +54,7 @@ void fault_handler(isr_stack_t *s){
 		printf("%s : %d\n", exception_messages[s->int_no], s->err_code);		//print error
 		setlinecolor(0x10);
 		//setcolor(0x17);	//make screen blue
-		halt(0);
+		halt(255);
 	}
 }
 

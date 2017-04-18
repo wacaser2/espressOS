@@ -21,6 +21,8 @@
 /* Function to initialize paging*/
 void paging_init(unsigned long addr);
 
+void VtoPpage(uint32_t vaddr, uint32_t paddr);
+
 void VtoPmap(uint32_t vaddr, uint32_t paddr);
 
 #endif

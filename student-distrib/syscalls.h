@@ -23,6 +23,7 @@
 #define INT_BYTES			4
 #define PROG_START			0x08048000
 #define PROG_STACK_START	0x83FFFFC
+#define EXCEPTION_CODE		256
 
 typedef struct fops_table_t {
 	int32_t(*open)(const uint8_t* filename);

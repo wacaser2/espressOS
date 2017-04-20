@@ -11,6 +11,13 @@ volatile int capslock_flag = 0;
 volatile int8_t key_buf[KEY_BUF_SIZE];
 volatile int key_idx = 0;
 
+/* buffer command history variables */
+volatile int buf_hist[MAX_COMMANDS][KEY_BUF_SIZE] = {NULL};
+volatile int buf_start_idx = -1;
+volatile int buf_end_idx = -1;
+volatile int buf_size = 0;
+
+/* keyboard array*/
 static unsigned char key[KEY_BUF_SIZE_ACTUAL] =
 {
 	0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	/* 9 */
@@ -52,6 +59,7 @@ static unsigned char key[KEY_BUF_SIZE_ACTUAL] =
 };
 
 
+/* keyboard array with shift pressed */
 static unsigned char shift_key[KEY_BUF_SIZE_ACTUAL] =
 {
 	0,  27, '!', '@', '#', '$', '%', '^', '&', '*', /* 9 */

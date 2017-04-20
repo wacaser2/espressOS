@@ -13,9 +13,16 @@
 /* keyboard buffer size */
 #define KEY_BUF_SIZE 130
 #define KEY_BUF_SIZE_ACTUAL 128
+#define MAX_COMMANDS 10
 
 #define BACKSPACE 	0x0E
 #define ENTER 		0x1C
+
+/* handling arrow keys */
+#define UP_KEY 		0x48
+#define DOWN_KEY	0x50
+#define LEFT_KEY	0x4B
+#define RIGHT_KEY	0x4D
 
 #define LEFT_CTRL	0x1D
 #define LEFT_SHIFT	0x2A

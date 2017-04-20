@@ -182,6 +182,7 @@ void moveWindow(int32_t dir) {
 			placec(i, window->t - 1, parent->screen[((NUM_COLS*(window->t - 1 - parent->t) + (i - parent->l)) << 1) + 1], parent->screen[((NUM_COLS*(window->t - 1 - parent->t) + (i - parent->l)) << 1)]);
 		}
 		window->t++;
+		window->b++;
 		for (i = window->l - 1; i <= window->r; i++) {
 			placec(i, window->t - 1, BORDER_COLOR, ' ');
 			placec(i, window->b, BORDER_COLOR, ' ');

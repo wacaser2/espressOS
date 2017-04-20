@@ -296,6 +296,16 @@ void enter_put(void)
 	screen_x = 0;
 }
 
+void move_cursor(int type, int key_idx){
+	if(!type){//left arrow 
+		if(key_idx > 0 && screen_x > PROMPT_SIZE) 
+			update_cursor(screen_y, screen_x-1);
+	}
+	else if(type){
+		if(screen_x > PROMPT_SIZE && screen_x < PROMPT_SIZE+key_idx)
+			update_cursor(screen_y, screen_x+1);
+	}
+}
 
 void update_cursor(int row, int col)
 {

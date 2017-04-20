@@ -12,10 +12,11 @@ volatile int8_t key_buf[KEY_BUF_SIZE];
 volatile int key_idx = 0;
 
 /* buffer command history variables */
-volatile int buf_hist[MAX_COMMANDS][KEY_BUF_SIZE] = {NULL};
-volatile int buf_start_idx = -1;
-volatile int buf_end_idx = -1;
+volatile int buf_hist[MAX_COMMANDS][KEY_BUF_SIZE];
+volatile int buf_start_idx = 0;
+volatile int buf_end_idx = -1; // probably don't need this
 volatile int buf_size = 0;
+volatile int curr_idx; // while typing in a cmd store cmd idx
 
 /* keyboard array*/
 static unsigned char key[KEY_BUF_SIZE_ACTUAL] =
@@ -147,6 +148,13 @@ void keyboard_handler()
 				key_buf[--key_idx] = NULL_KEY;
 				backspace_put(key_idx); // call backspace_put func
 			}
+		}
+		else if (scancode == LEFT_KEY){
+			if(key_idx > 0)
+				move_cursor(0, key_idx); //0 indicates left arrow-key
+		}
+		else if (scancode == RIGHT_KEY){
+			move_cursor(1, key_idx); //1 indicates right arrow key
 		}
 		else if (scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
 		{

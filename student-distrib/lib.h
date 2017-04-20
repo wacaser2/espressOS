@@ -8,6 +8,7 @@
 #define VIDEO 0xB8000
 #define NUM_COLS 80
 #define NUM_ROWS 25
+#define PROMPT_SIZE 7 //change if you change prompt
 #define ATTRIB 0xf
 #include "types.h"
 
@@ -24,6 +25,8 @@ void test_interrupts();
 void backspace_put(int key_idx);
 void enter_put(void);
 void update_cursor(int row, int col);
+void move_cursor(int type, int key_idx);
+
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);

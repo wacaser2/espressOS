@@ -12,6 +12,7 @@
 #include "paging.h"
 #include "file.h"
 #include "syscalls.h"
+#include "window.h"
 
  /* Macros. */
  /* Check if the bit BIT in FLAGS is set. */
@@ -25,6 +26,7 @@ entry(unsigned long magic, unsigned long addr)
 	multiboot_info_t *mbi;
 
 	/* Clear the screen. */
+	window_init(-1);
 	clear();
 
 	/* Am I booted by a Multiboot-compliant boot loader? */

@@ -41,7 +41,9 @@ typedef struct fd_t {
 
 typedef struct pcb_t {
 	fd_t fdarray[MAXFILES];
+	uint8_t name[NAME_SIZE];
 	uint8_t args[ARGBUF_SIZE];
+	int32_t window_id;
 	uint8_t process_id;
 	uint32_t parent_kbp;
 	uint32_t parent_ksp;
@@ -70,7 +72,11 @@ int32_t sigreturn(void);
 
 int32_t null_ops(void);
 
-pcb_t* get_pcb();
+pcb_t* get_pcb(int32_t proc);
+
+pcb_t* get_parent_pcb(int32_t proc);
+
+int32_t get_proc();
 
 void implicit_proc();
 

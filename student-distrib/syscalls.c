@@ -3,6 +3,7 @@
 #include "x86_desc.h"
 #include "syscalls.h"
 #include "paging.h"
+#include "window.h"
 
 uint8_t process_num[6] = { 0, 0, 0, 0, 0, 0 };
 volatile int process = -1;
@@ -20,6 +21,8 @@ int32_t halt(uint8_t status) {
 
 	/* Clear this program's process number */
 	process_num[process] = ZERO;
+	if (!strncmp((int8_t*)get_pcb(process)->name, (int8_t*)"shell", NAME_SIZE))
+		window_exit(process);
 
 	/* If this process is the top shell, restart */
 	if (process == 0) {
@@ -27,7 +30,7 @@ int32_t halt(uint8_t status) {
 		execute((uint8_t *)"shell");
 	}
 	/* Reset process to parent */
-	pcb_t * block = get_pcb();
+	pcb_t * block = get_pcb(process);
 	process = block->parent_block->process_id;
 
 	/* Reset page mapping to parent process */
@@ -105,7 +108,7 @@ int32_t execute(const uint8_t* command) {
 	}
 
 	/* Set up PCB */
-	pcb_t * block = get_pcb();	// top of the 8KB stack
+	pcb_t * block = get_pcb(process);	// top of the 8KB stack
 	block->process_id = process;
 	if (process == 0)			// first process, so set parent to itself
 		block->parent_block = block;
@@ -130,6 +133,9 @@ int32_t execute(const uint8_t* command) {
 		block->fdarray[i].flags = ZERO;					// not in use
 	}
 
+	/* Save name */
+	strncpy((int8_t*)block->name, (int8_t*)name, NAME_SIZE);
+
 	/* Extract args */
 	start = end;
 	while (command[start] == ' ')
@@ -142,6 +148,13 @@ int32_t execute(const uint8_t* command) {
 
 	/* Set up paging */
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
+	if (!strncmp((int8_t*)name, (int8_t*)"shell", NAME_SIZE)) {
+		block->window_id = process;
+		window_init(process);
+	}
+	else {
+		block->window_id = block->parent_block->window_id;
+	}
 
 	/* Find entry point to program */
 	uint32_t entry_point;									// entry point to read from
@@ -183,7 +196,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes) {
 	/* Check invalid fd */
 	if (fd < 0 || fd >= MAXFILES || buf == NULL)
 		return -1;
-	pcb_t * block = get_pcb();
+	pcb_t * block = get_pcb(process);
 	if (block->fdarray[fd].flags == ZERO)
 		return -1;
 
@@ -196,7 +209,7 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
 	/* Check invalid fd */
 	if (fd < 0 || fd >= MAXFILES || buf == NULL)
 		return -1;
-	pcb_t * block = get_pcb();
+	pcb_t * block = get_pcb(process);
 	if (block->fdarray[fd].flags == ZERO)
 		return -1;
 
@@ -212,7 +225,7 @@ int32_t open(const uint8_t* filename) {
 		return -1;
 
 	/* Find fd number */
-	pcb_t * block = get_pcb();
+	pcb_t * block = get_pcb(process);
 	int32_t i;
 	for (i = 2; i < MAXFILES; i++) {
 		if (block->fdarray[i].flags == ZERO) {
@@ -243,7 +256,7 @@ int32_t open(const uint8_t* filename) {
 int32_t close(int32_t fd) {
 
 	/* Check for fd */
-	pcb_t * block = get_pcb();
+	pcb_t * block = get_pcb(process);
 	if (fd >= 2 && fd < MAXFILES && block->fdarray[fd].flags == ONE)
 		block->fdarray[fd].flags = ZERO;
 	else		// non-existent fd
@@ -255,7 +268,7 @@ int32_t close(int32_t fd) {
 
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
 
-	pcb_t* block = get_pcb();
+	pcb_t* block = get_pcb(process);
 
 	/* Check if enough space in buf */
 	if (nbytes < strlen((int8_t*)block->args))
@@ -288,8 +301,16 @@ int32_t null_ops(void) {
 	return -1;
 }
 
-pcb_t* get_pcb() {
-	return (pcb_t *)(eightMB - (process + 1) * eightKB);
+pcb_t* get_pcb(int32_t proc) {
+	return (pcb_t *)(eightMB - (proc + 1) * eightKB);
+}
+
+pcb_t* get_parent_pcb(int32_t proc) {
+	return get_pcb(proc)->parent_block;
+}
+
+int32_t get_proc() {
+	return process;
 }
 
 /* For debugging */

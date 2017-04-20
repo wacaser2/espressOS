@@ -42,14 +42,23 @@ int32_t halt(uint8_t status) {
 		block->fdarray[i].fops_tbl_pointer = (void*)null_ops;
 		block->fdarray[i].flags = ZERO;
 	}
+	int32_t ret_val;
+	if (status == 255)
+		ret_val = EXCEPTION_CODE;
+	else if (status != 0)
+		ret_val = 1;
+	else
+		ret_val = 0;
 
 	/* Reset ebp and esp to the execute for this function to return to parent */
 	asm volatile(
-		"movl %0, %%ebp \n"
-		"movl %1, %%esp \n"
-		: : "r" (block->parent_kbp), "r" (block->parent_ksp)
+		"movl %0, %%eax \n"
+		"movl %1, %%ebp \n"
+		"movl %2, %%esp \n"
+		"leave \n"
+		"ret \n"
+		: : "r" (ret_val), "r" (block->parent_kbp), "r" (block->parent_ksp)
 		);
-
 	return 0;
 }
 
@@ -65,7 +74,7 @@ int32_t execute(const uint8_t* command) {
 		end++;
 	uint8_t name[NAME_SIZE + 1];
 	strncpy((int8_t*)name, (int8_t*)(command + start), end - start);
-	name[end] = '\0';
+	name[end - start] = '\0';
 
 	/* Find file */
 	dentry_t dentry;
@@ -92,7 +101,7 @@ int32_t execute(const uint8_t* command) {
 	if (process < 0) {
 		process = MAXPROCESSES - 1;	// so it doesnt exceed 
 		puts("Maximum number of processess running\n");
-		return -1;
+		return 0;
 	}
 
 	/* Set up PCB */
@@ -126,9 +135,10 @@ int32_t execute(const uint8_t* command) {
 	while (command[start] == ' ')
 		start++;
 	end = start;
-	while (command[end] != '\0')
+	while (command[end] != '\0' && command[end] != ' ')
 		end++;
-	strncpy((int8_t*)block->args, (int8_t*)(command + start), end - start + 1);
+	strncpy((int8_t*)block->args, (int8_t*)(command + start), end - start);
+	block->args[end - start] = '\0';
 
 	/* Set up paging */
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
@@ -258,7 +268,12 @@ int32_t getargs(uint8_t* buf, int32_t nbytes) {
 }
 
 int32_t vidmap(uint8_t** screen_start) {
-	return 0;
+	if (((int32_t)screen_start < onetwentyeightMB) || ((int32_t)screen_start>(onetwentyeightMB + fourMB)))
+		return -1;
+	uint32_t idx = onetwentyeightMB + fourMB;
+	VtoPpage(idx, VIDEO);
+	*screen_start = (uint8_t*)idx;
+	return idx;
 }
 
 int32_t set_handler(int32_t signum, void* handler_address) {

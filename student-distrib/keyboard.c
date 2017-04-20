@@ -246,6 +246,9 @@ int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 			break;
 	}
 
+	for (j = i + 1; (j < nbytes && j < KEY_BUF_SIZE); j++)
+		((int8_t *)buf)[j] = '\0';
+
 	/* clear the key buffer */
 	for (j = 0; j < KEY_BUF_SIZE; j++)
 	{

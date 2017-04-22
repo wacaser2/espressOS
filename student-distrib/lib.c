@@ -297,8 +297,8 @@ void enter_put(void)
 }
 
 void move_cursor(int type, int key_idx){
-	if(!type){//left arrow 
-		if(key_idx > 0 && screen_x > PROMPT_SIZE) 
+	if(!type){//left arrow
+		if(key_idx > 0 && screen_x > PROMPT_SIZE)
 			update_cursor(screen_y, screen_x-1);
 	}
 	else if(type){

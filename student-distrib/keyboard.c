@@ -12,11 +12,11 @@ volatile int8_t key_buf[KEY_BUF_SIZE];
 volatile int key_idx = 0;
 
 /* buffer command history variables */
-volatile int buf_hist[MAX_COMMANDS][KEY_BUF_SIZE];
-volatile int buf_start_idx = 0;
-volatile int buf_end_idx = -1; // probably don't need this
-volatile int buf_size = 0;
-volatile int curr_idx; // while typing in a cmd store cmd idx
+volatile int8_t buf_hist[MAX_COMMANDS][KEY_BUF_SIZE];
+volatile int buf_hist_cmd_size[MAX_COMMANDS];
+volatile int updown_idx = 0;
+volatile int buf_size = 1;
+volatile int write_idx = 0; // while typing in a cmd store cmd idx
 
 /* keyboard array*/
 static unsigned char key[KEY_BUF_SIZE_ACTUAL] =
@@ -122,9 +122,13 @@ void keyboard_init()
 void keyboard_handler()
 {
 	uint8_t scancode = 0;
+	int i; // looping variable
 
 	/* Read from the keyboard's data buffer */
 	scancode = inb((int)KEYBOARD_PORT);
+
+	/* set current command index value */
+	write_idx = write_idx%buf_size;
 
 	send_eoi(KEYBOARD_IRQ);	//allow more interrupts to queue for the keyboard
 	/* If the top bit of the byte we read from the keyboard is
@@ -149,15 +153,44 @@ void keyboard_handler()
 				backspace_put(key_idx); // call backspace_put func
 			}
 		}
-		else if (scancode == LEFT_KEY){
+		else if (scancode == LEFT_KEY)
+		{
 			if(key_idx > 0)
-				move_cursor(0, key_idx); //0 indicates left arrow-key
+				move_cursor(0, key_idx); // 0 indicates left arrow-key
 		}
-		else if (scancode == RIGHT_KEY){
-			move_cursor(1, key_idx); //1 indicates right arrow key
+		else if (scancode == RIGHT_KEY)
+		{
+			move_cursor(1, key_idx); // 1 indicates right arrow key
+		}
+		else if (scancode == UP_KEY) // goes to command up
+		{
+			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
+				backspace_put(0);
+			updown_idx = (write_idx-1)%buf_size;
+			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
+				putc(buf_hist[updown_idx][i]);
+		}
+		else if (scancode == DOWN_KEY) // goes to command down
+		{
+			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
+				backspace_put(0);
+			updown_idx = (write_idx+1)%buf_size;
+			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
+				putc(buf_hist[updown_idx][i]);
 		}
 		else if (scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
 		{
+			/* handling history of commands */
+			for(i=0; i<key_idx; ++i)
+				buf_hist[write_idx][key_idx] = key_buf[i];
+			buf_hist_cmd_size[write_idx] = key_idx;
+
+			if(buf_size < MAX_COMMANDS) buf_size++;
+			write_idx++;
+			if(buf_size == MAX_COMMANDS) write_idx %= buf_size;
+			updown_idx = write_idx;
+
+			/* handling one command */
 			enter_flag = 1;
 			key_buf[key_idx++] = NEW_LINE;
 			key_idx = 0;    // because its a new line

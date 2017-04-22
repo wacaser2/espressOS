@@ -193,8 +193,7 @@ void keyboard_handler()
 
 				/* change write idx and buf_size */
 				if(buf_size < MAX_COMMANDS) buf_size++;
-				write_idx++;
-				if(buf_size == MAX_COMMANDS) write_idx %= buf_size;
+				write_idx = (write_idx++)%MAX_COMMANDS;
 				updown_idx = write_idx;
 			}
 

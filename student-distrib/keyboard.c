@@ -127,9 +127,6 @@ void keyboard_handler()
 	/* Read from the keyboard's data buffer */
 	scancode = inb((int)KEYBOARD_PORT);
 
-	/* set current command index value */
-	write_idx = write_idx%buf_size;
-
 	send_eoi(KEYBOARD_IRQ);	//allow more interrupts to queue for the keyboard
 	/* If the top bit of the byte we read from the keyboard is
 	*  set, that means that a key has just been released */
@@ -162,33 +159,44 @@ void keyboard_handler()
 		{
 			move_cursor(1, key_idx); // 1 indicates right arrow key
 		}
-		else if (scancode == UP_KEY) // goes to command up
+		else if (scancode == UP_KEY || scancode == DOWN_KEY)
 		{
-			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
-				backspace_put(0);
-			updown_idx = (write_idx-1)%buf_size;
-			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
-				putc(buf_hist[updown_idx][i]);
-		}
-		else if (scancode == DOWN_KEY) // goes to command down
-		{
-			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
-				backspace_put(0);
-			updown_idx = (write_idx+1)%buf_size;
-			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
-				putc(buf_hist[updown_idx][i]);
+			buf_hist_cmd_size[write_idx] = key_idx; //set size of current buffer
+			if (scancode == UP_KEY) // goes to command up
+			{
+				for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
+					backspace_put(0);
+				updown_idx = (write_idx-1)%buf_size;
+				for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
+					putc(buf_hist[updown_idx][i]);
+			}
+			else if (scancode == DOWN_KEY) // goes to command down
+			{
+				for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
+					backspace_put(0);
+				updown_idx = (write_idx+1)%buf_size;
+				for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
+					putc(buf_hist[updown_idx][i]);
+			}
 		}
 		else if (scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
 		{
-			/* handling history of commands */
-			for(i=0; i<key_idx; ++i)
-				buf_hist[write_idx][key_idx] = key_buf[i];
-			buf_hist_cmd_size[write_idx] = key_idx;
+			if(key_idx != 0) // do only when a command is entered
+			{
+				/* handling history of commands */
+				for(i=0; i<buf_hist_cmd_size[updown_idx]; ++i)
+				{
+					buf_hist[write_idx][i] = buf_hist[updown_idx][i];
+					key_buf[i] = buf_hist[updown_idx][i];
+				}
+				buf_hist_cmd_size[write_idx] = i;
 
-			if(buf_size < MAX_COMMANDS) buf_size++;
-			write_idx++;
-			if(buf_size == MAX_COMMANDS) write_idx %= buf_size;
-			updown_idx = write_idx;
+				/* change write idx and buf_size */
+				if(buf_size < MAX_COMMANDS) buf_size++;
+				write_idx++;
+				if(buf_size == MAX_COMMANDS) write_idx %= buf_size;
+				updown_idx = write_idx;
+			}
 
 			/* handling one command */
 			enter_flag = 1;
@@ -217,17 +225,20 @@ void keyboard_handler()
 				{
 					if (shift_key[scancode] >= 65 && shift_key[scancode] <= 90) // capital letters
 					{
+						buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
 						key_buf[key_idx++] = key[scancode];
 						putc(key[scancode]);
 					}
 					else // else case for small letters
 					{
+						buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
 						key_buf[key_idx++] = shift_key[scancode];
 						putc(shift_key[scancode]);
 					}
 				}
 				else if (shift_flag == 1) // only shift pressed
 				{
+					buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
 					key_buf[key_idx++] = shift_key[scancode];
 					putc(shift_key[scancode]);
 				}
@@ -235,17 +246,20 @@ void keyboard_handler()
 				{
 					if (key[scancode] >= 97 && key[scancode] <= 122) // for small ASCII chars
 					{
+						buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
 						key_buf[key_idx++] = key[scancode] - 32;
 						putc(key[scancode] - 32);
 					}
 					else // for capital ASCII letters
 					{
+						buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
 						key_buf[key_idx++] = key[scancode];
 						putc(key[scancode]);
 					}
 				}
 				else // else case for spamming with other letters
 				{
+					buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
 					key_buf[key_idx++] = key[scancode];
 					putc(key[scancode]);  // put the char on the screen
 				}

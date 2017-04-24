@@ -12,6 +12,7 @@
 #include "paging.h"
 #include "file.h"
 #include "syscalls.h"
+#include "mouse.h"
 
  /* Macros. */
  /* Check if the bit BIT in FLAGS is set. */
@@ -164,6 +165,10 @@ entry(unsigned long magic, unsigned long addr)
 	printf("Initializing keyboard\n");
 	keyboard_init();
 
+	/* Init mouse */
+	printf("Initializing mouse\n");
+	mouse_init();
+
 	/* Enable interrupts*/
 	printf("Enabling Interrupts\n");
 	sti();
@@ -174,6 +179,7 @@ entry(unsigned long magic, unsigned long addr)
 
 	/* Init paging*/
 	paging_init(0);
+
 
 	clear();
 	execute((uint8_t *)"shell");

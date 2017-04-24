@@ -240,6 +240,7 @@ int32_t terminal_open(const uint8_t* filename)
 
 int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 {
+	int32_t i, j;
 	/* clear the key buffer */
 	for (j = 0; j < KEY_BUF_SIZE; j++)
 	{
@@ -253,7 +254,6 @@ int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 		// nothing, keeping looping till enter is pressed
 	}
 	cli();
-	int32_t i, j;
 	for (i = 0; i < nbytes; i++) // copy over all relevant info from key_buf to buf passed in
 	{
 		((int8_t *)buf)[i] = key_buf[i];

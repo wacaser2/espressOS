@@ -240,6 +240,11 @@ int32_t terminal_open(const uint8_t* filename)
 
 int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 {
+	/* clear the key buffer */
+	for (j = 0; j < KEY_BUF_SIZE; j++)
+	{
+		key_buf[j] = NULL_KEY;
+	}
 	sti();
 
 	enter_flag = 0;
@@ -260,11 +265,6 @@ int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 	for (j = i + 1; (j < nbytes && j < KEY_BUF_SIZE); j++)
 		((int8_t *)buf)[j] = '\0';
 
-	/* clear the key buffer */
-	for (j = 0; j < KEY_BUF_SIZE; j++)
-	{
-		key_buf[j] = NULL_KEY;
-	}
 
 	// return number of bytes taken from keyboard buff
 	return i + 1;

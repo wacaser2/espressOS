@@ -1,6 +1,6 @@
 #include "types.h"
 
-#define BORDER_COLOR 0x7f
+#define BORDER_COLOR 0x74
 #define LEFT		0
 #define RIGHT		1
 #define UP			2
@@ -26,6 +26,18 @@ void window_exit(int32_t proc);
 void sizeWindow(int32_t dir);
 
 void moveWindow(int32_t dir);
+
+void updateWindow(window_t* window);
+
+void updateHline(window_t* window, window_t* parent, int32_t y);
+
+void updateVline(window_t* window, window_t* parent, int32_t x);
+
+void borderHline(window_t* window, int32_t y);
+
+void borderVline(window_t* window, int32_t x);
+
+void updateStatus(window_t* window);
 
 window_t* get_window(int32_t proc);
 

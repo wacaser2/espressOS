@@ -162,15 +162,18 @@ void keyboard_handler()
 		else if (scancode == UP_KEY || scancode == DOWN_KEY)
 		{
 			/* debug */
-			//putc('f'); 
+			//putc('f');
 			/* debug */
 
 			/* set size of current buffer */
-			buf_hist_cmd_size[write_idx] = key_idx; 
+			buf_hist_cmd_size[write_idx] = key_idx;
 
 			/* move to prev command and add required backspaces */
-			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i)
-				if(key_idx>0) backspace_put(buf_hist_cmd_size[updown_idx]);
+			i = key_idx;
+			while(i>0){
+				backspace_put(0);
+				i--;
+			}
 
 			/* change the updown_idx */
 			if (scancode == UP_KEY) updown_idx = (write_idx-1)%buf_size;
@@ -191,7 +194,7 @@ void keyboard_handler()
 		else if (scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
 		{
 			/* works only when command is entered */
-			if(key_idx != 0) 
+			if(key_idx != 0)
 			{
 				/* handling history of commands */
 				for(i=0; i<key_idx; ++i){

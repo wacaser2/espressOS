@@ -162,34 +162,37 @@ void keyboard_handler()
 		else if (scancode == UP_KEY || scancode == DOWN_KEY)
 		{
 			/* debug */
-			//putc('f');
+			printf("%d", buf_size);
 			/* debug */
 
-			/* set size of current buffer */
-			buf_hist_cmd_size[write_idx] = key_idx;
+			/* should only work if between 0 and max_xommands */
+			if(updown_idx>0 && updown_idx<MAX_COMMANDS-1){
+				/* set size of current buffer */
+				buf_hist_cmd_size[write_idx] = key_idx;
 
-			/* move to prev command and add required backspaces */
-			i = key_idx;
-			while(i>0){
-				backspace_put(0);
-				i--;
+				/* move to prev command and add required backspaces */
+				i = key_idx;
+				while(i>0){
+					backspace_put(0);
+					i--;
+				}
+
+				/* change the updown_idx */
+				if (scancode == UP_KEY) --updown_idx;
+				else if (scancode == DOWN_KEY) if(updown_idx < buf_size) ++updown_idx;
+
+				/* print the command at the updown_idx */
+				for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i){
+					key_buf[i] = buf_hist[updown_idx][i];
+					putc(buf_hist[updown_idx][i]);
+				}
+
+				/* clear the remaining buffer */
+				for(; i<KEY_BUF_SIZE; ++i) key_buf[i] = NULL_KEY;
+
+				/* set right key_idx value */
+				key_idx = buf_hist_cmd_size[updown_idx];
 			}
-
-			/* change the updown_idx */
-			if (scancode == UP_KEY) updown_idx = (write_idx-1)%buf_size;
-			else if (scancode == DOWN_KEY) updown_idx = (write_idx+1)%buf_size;
-
-			/* print the command at the updown_idx */
-			for(i = 0; i<buf_hist_cmd_size[updown_idx]; ++i){
-				key_buf[i] = buf_hist[updown_idx][i];
-				putc(buf_hist[updown_idx][i]);
-			}
-
-			/* clear the remaining buffer */
-			for(; i<KEY_BUF_SIZE; ++i) key_buf[i] = NULL_KEY;
-
-			/* set right key_idx value */
-			key_idx = buf_hist_cmd_size[updown_idx];
 		}
 		else if (scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
 		{

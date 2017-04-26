@@ -102,5 +102,6 @@ void isrs_install(){
 	SET_IDT_ENTRY(idt[31], (unsigned)isr31, 0);
 	SET_IDT_ENTRY(idt[0x21], (unsigned)keyboard_handler_wrapper, 0);
 	SET_IDT_ENTRY(idt[0x28], (unsigned)rtc_handler_wrapper, 0);
+	SET_IDT_ENTRY(idt[0x2C], (unsigned)mouse_handler_wrapper, 0);
 	SET_IDT_ENTRY(idt[0x80], (unsigned)sys_call, 3);
 }

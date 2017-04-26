@@ -13,7 +13,7 @@ void mouse_handler(void);
 
 int32_t mouse_open(void);
 
-char mouse_read(void);
+unsigned char mouse_read(void);
 
 void mouse_write(unsigned char a_write);
 

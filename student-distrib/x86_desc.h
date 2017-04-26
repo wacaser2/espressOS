@@ -226,6 +226,7 @@ extern void isr30();
 extern void isr31();
 extern void keyboard_handler_wrapper();
 extern void rtc_handler_wrapper();
+extern void mouse_handler_wrapper();
 extern void sys_call();
 
 /* Sets runtime parameters for an IDT entry */

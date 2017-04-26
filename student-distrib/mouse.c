@@ -2,28 +2,30 @@
 #include "mouse.h"
 
 unsigned char cycle = 0;
-char packet_byte[3];
-char x_move = 0;
-char y_move = 0;
+signed char packet_byte[3];
+signed char x_move = 0;
+signed char y_move = 0;
 
 
 void
 mouse_init(void)
 {
 	unsigned char status;
+
+	// Enable the auxiliary mouse device
+	//mouse_wait(1);
+	outb(0xA8, 0x64);
+
 	//mouse_wait(1);
 	outb(0x20, 0x64);
 	//mouse_wait(0);
 	status = inb(0x60);		// get status byte
 	status |= 2;
-	status &= 223; 
+	printf("%d\n", status);
+	//status &= 223; 
 	//mouse_wait(1);
 	outb(0x60, 0x64);
 	outb(status, 0x60);
-
-	// Enable the auxiliary mouse device
-	//mouse_wait(1);
-	outb(0xA8, 0x64);
 
 	 //Tell the mouse to use default settings
   	mouse_write(0xF6);
@@ -55,6 +57,8 @@ mouse_handler(void)
 		packet_byte[0] = inb(0x60);		// third IRQ
 		x_move = packet_byte[2];
 		y_move = packet_byte[0];
+		printf("x_move");
+		//putc(y_move);
 		cycle = 0;
 	}
 }
@@ -66,7 +70,7 @@ mouse_open(void)
 	return 0;
 }
 
-char
+unsigned char
 mouse_read(void)
 {
 	//mouse_wait(0);
@@ -83,6 +87,7 @@ void mouse_write(unsigned char a_write)
   	//Wait for the final part
   	//mouse_wait(1);
   	//Finally write
+  	printf("%d\n", a_write);
   	outb(a_write, 0x60);
 }
 

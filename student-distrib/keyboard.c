@@ -150,23 +150,23 @@ void keyboard_handler()
 				backspace_put(0); // call backspace_put func
 			}
 		}
-		else if (scancode == LEFT_KEY)
-		{
-			if(key_idx > 0)
-				move_cursor(0, key_idx); // 0 indicates left arrow-key
-		}
-		else if (scancode == RIGHT_KEY)
-		{
-			move_cursor(1, key_idx); // 1 indicates right arrow key
-		}
+		// else if (scancode == LEFT_KEY)
+		// {
+		// 	if(key_idx > 0)
+		// 		move_cursor(0, key_idx); // 0 indicates left arrow-key
+		// }
+		// else if (scancode == RIGHT_KEY)
+		// {
+		// 	move_cursor(1, key_idx); // 1 indicates right arrow key
+		// }
 		else if (scancode == UP_KEY || scancode == DOWN_KEY)
 		{
 			/* debug */
-			//printf("%d",key_idx);
+			//printf("%d",buf_hist_cmd_size[updown_idx]);
 			/* debug */
 
 			/* should only work if between 0 and max_xommands */
-			if(updown_idx>=0 && updown_idx<MAX_COMMANDS-1){
+			//if(updown_idx>=0 && updown_idx<MAX_COMMANDS-1){
 
 				if(key_idx != 0){
 					buf_hist_cmd_size[write_idx] = key_idx;
@@ -179,26 +179,35 @@ void keyboard_handler()
 				}
 				/* change the updown_idx */
 				if (scancode == UP_KEY){
-					if(updown_idx<=0) updown_idx=0; 
-					else --updown_idx;
+					if(buf_size == MAX_COMMANDS){
+						if((updown_idx-1)%MAX_COMMANDS == write_idx){}
+						else updown_idx = (updown_idx-1)%MAX_COMMANDS;
+					}
+					else{
+						if(updown_idx<=0) updown_idx=0; 
+						else --updown_idx;
+					}
 				}
 				else if (scancode == DOWN_KEY){
-					if(updown_idx>=buf_size) updown_idx=buf_size; 
-					else ++updown_idx;//if(updown_idx < buf_size) 
+					if(updown_idx==write_idx){}
+					else if(updown_idx>=buf_size) updown_idx=buf_size; 
+					else updown_idx = (updown_idx+1)%MAX_COMMANDS;
 				}
 
+				if(updown_idx == write_idx) key_idx=0;
+				else key_idx = buf_hist_cmd_size[updown_idx];
 				/* change key_idx to updown value */
-				key_idx = buf_hist_cmd_size[updown_idx];
+				
 
 				/* print the command at the updown_idx */
-				for(i = 0; i<key_idx; ++i){
+				for(i = 0; key_idx; ++i){
 					key_buf[i] = buf_hist[updown_idx][i];
-					putc(buf_hist[updown_idx][i]);
+					putc(key_buf[i]);
 				}
 
 				/* clear the remaining buffer */
 				for(; i<KEY_BUF_SIZE; ++i) key_buf[i] = NULL_KEY;
-			}
+			//}
 		}
 		else if (scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
 		{
@@ -211,9 +220,22 @@ void keyboard_handler()
 				//for(; i<KEY_BUF_SIZE; ++i) buf_hist[write_idx][i] = NULL_KEY;
 				buf_hist_cmd_size[write_idx] = key_idx;
 
+				/* debug */
+				//printf("%d %d",write_idx, buf_hist_cmd_size[write_idx]);
+				/* debug */
+
 				/* change write idx and buf_size */
 				if(buf_size < MAX_COMMANDS) buf_size++;
-				write_idx = (write_idx+1)%MAX_COMMANDS;
+				write_idx++;
+				if(write_idx == MAX_COMMANDS) write_idx = 0;
+
+				/* clear the buffer you are going to write to */
+				for(i=0; i<buf_hist_cmd_size[write_idx]; ++i) 
+					buf_hist[write_idx][i] = NULL_KEY;
+				/* also clear the size in buf_hist_cmd_size */
+				buf_hist_cmd_size[write_idx] = 0;
+
+				/* set up_down index to current index value */
 				updown_idx = write_idx;
 			}
 

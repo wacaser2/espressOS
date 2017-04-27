@@ -5,7 +5,9 @@
 #include "paging.h"
 
 uint8_t process_num[6] = { 0, 0, 0, 0, 0, 0 };
-volatile int process = -1;
+volatile int32_t process = -1;
+int32_t active = -1;
+int32_t terminal_process[3] = { -1,-1,-1 };
 
 fops_tbl_t stdin_ops = { (void*)null_ops, terminal_read, (void*)null_ops, (void*)null_ops };
 fops_tbl_t stdout_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, terminal_write, (void*)null_ops };
@@ -236,7 +238,7 @@ int32_t open(const uint8_t* filename) {
 		block->fdarray[i].inode = dentry.inode_index;
 	}
 
-	//return block->fdarray[i]->fops_tbl_pointer->open(filename);
+	block->fdarray[i].fops_tbl_pointer->open(filename);
 	return i; // file descriptor is returned
 }
 
@@ -258,7 +260,8 @@ int32_t getargs(uint8_t* buf, int32_t nbytes) {
 	pcb_t* block = get_pcb();
 
 	/* Check if enough space in buf */
-	if (nbytes < strlen((int8_t*)block->args))
+	int32_t l = strlen((int8_t*)block->args);
+	if (!l || nbytes < l)
 		return -1;
 
 	/* Copy to buf */

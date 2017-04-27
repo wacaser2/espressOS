@@ -19,6 +19,6 @@ void mouse_write(unsigned char a_write);
 
 int32_t mouse_close(void);
 
-//void mouse_wait(unsigned char type)
+//void mouse_wait(unsigned char type);
 
 #endif

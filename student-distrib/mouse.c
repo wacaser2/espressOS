@@ -44,6 +44,8 @@ mouse_init(void)
 void
 mouse_handler(void)
 {
+	send_eoi(12);
+
 	if(cycle == 0)
 	{
 		packet_byte[1] = inb(0x60);		// first IRQ
@@ -59,7 +61,7 @@ mouse_handler(void)
 		packet_byte[0] = inb(0x60);		// third IRQ
 		x_move = packet_byte[2];
 		y_move = packet_byte[0];
-		printf("x_move");
+		puts("x_move");
 		//putc(y_move);
 		cycle = 0;
 	}

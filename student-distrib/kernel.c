@@ -165,7 +165,7 @@ entry(unsigned long magic, unsigned long addr)
 	printf("Initializing keyboard\n");
 	keyboard_init();
 
-	/* Init mouse */
+	/* Init mouse*/
 	printf("Initializing mouse\n");
 	mouse_init();
 
@@ -181,8 +181,8 @@ entry(unsigned long magic, unsigned long addr)
 	paging_init(0);
 
 
-	//clear();
-	//execute((uint8_t *)"shell");
+	clear();
+	execute((uint8_t *)"shell");
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

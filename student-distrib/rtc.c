@@ -48,7 +48,9 @@ int32_t
 rtc_read(int32_t fd, void* buf, int32_t nbytes)
 {
 	interrupt_flag = 0;
+	sti();
 	while(interrupt_flag == 0) {} //  do nothing, keeping looping till an interrupt occurs
+	cli();
 	return 0;
 }
 

@@ -30,10 +30,12 @@ mouse_init(void)
 	 //Tell the mouse to use default settings
   	mouse_write(0xF6);
   	mouse_read();  //Acknowledge
+  	//printf("Ack1");
   
   	//Enable the mouse
   	mouse_write(0xF4);
   	mouse_read();  //Acknowledge
+  	//printf("Ack2");
 
   	enable_irq(12);
 }
@@ -87,7 +89,7 @@ void mouse_write(unsigned char a_write)
   	//Wait for the final part
   	//mouse_wait(1);
   	//Finally write
-  	printf("%d\n", a_write);
+  	//printf("%d\n", a_write);
   	outb(a_write, 0x60);
 }
 

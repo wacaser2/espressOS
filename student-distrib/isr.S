@@ -28,9 +28,9 @@ isr0:
 	jmp isr_common
 isr1:
 	cli
-		pushl $0x00
-		pushl $0x01
-		jmp isr_common	
+	pushl $0x00
+	pushl $0x01
+	jmp isr_common	
 isr2:
 	cli
 	pushl $0x00

@@ -261,7 +261,7 @@ keyboard_handler_wrapper:
     pop %es
     pop %ds
     popa
-    iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!	
+    iret
 
 # rtc_handler_wrapper
 #   DESCRIPTION: Saves the registers and call rtc_handler

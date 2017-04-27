@@ -21,7 +21,7 @@ mouse_init(void)
 	//mouse_wait(0);
 	status = inb(0x60);		// get status byte
 	status |= 2;
-	printf("%d\n", status);
+	//printf("%d\n", status);
 	//status &= 223; 
 	//mouse_wait(1);
 	outb(0x60, 0x64);

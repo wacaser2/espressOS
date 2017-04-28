@@ -24,7 +24,7 @@ paging_init(unsigned long addr) {
 	for (i = 0; i < oneUNIT; i++)
 	{
 		page_directory[i] = 0;	// sets not present
-		first_page_table[i] = (i << OFFSET) | RW | PRESENT; // setting indexes
+		first_page_table[i] = (i << OFFSET); // setting indexes
 	}
 
 	first_page_table[VIDEO >> OFFSET] |= RW | PRESENT;
@@ -48,6 +48,10 @@ paging_init(unsigned long addr) {
 	: "r"(page_directory)		// input operands
 		: "eax"						// clobbers
 		);
+}
+
+void windowPage(int32_t proc) {
+	first_page_table[(VIDEO >> OFFSET) + 1 + proc] |= RW | PRESENT;
 }
 
 void VtoPpage(uint32_t vaddr, uint32_t paddr) {

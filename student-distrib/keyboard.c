@@ -3,13 +3,14 @@
 #include "x86_desc.h"
 #include "keyboard.h"
 #include "syscalls.h"
+#include "window.h"
 
-volatile int enter_flag = 0;
-volatile int ctrl_flag = 0;
-volatile int shift_flag = 0;
-volatile int capslock_flag = 0;
-volatile int8_t key_buf[KEY_BUF_SIZE];
-volatile int key_idx = 0;
+volatile int32_t enter_flag = 0;
+volatile int32_t ctrl_flag = 0;
+volatile int32_t shift_flag = 0;
+volatile int32_t capslock_flag = 0;
+//volatile int8_t key_buf[KEY_BUF_SIZE];
+//volatile int32_t key_idx = 0;
 
 static unsigned char key[KEY_BUF_SIZE_ACTUAL] =
 {
@@ -114,6 +115,10 @@ void keyboard_handler()
 {
 	uint8_t scancode = 0;
 
+	pcb_t* block = get_pcb(get_term_proc(get_active()));
+	int8_t* key_buf = block->command;
+	int32_t key_idx = block->key_idx;
+
 	/* Read from the keyboard's data buffer */
 	scancode = inb((int)KEYBOARD_PORT);
 
@@ -207,8 +212,26 @@ void keyboard_handler()
 				clear();  // clear the screen
 				key_idx = 0; // reset buffer as everything on screen was cleared
 			}
-			else if (ctrl_flag == 1 && (key[scancode] == 'c' || shift_key[scancode] == 'C'))	//halt current program
+			else if (ctrl_flag == 1 && (key[scancode] == 'c' || shift_key[scancode] == 'C')) {	//halt current program
+				putc('\n');
 				halt(0);
+			}
+			else if (ctrl_flag == 1 && scancode == LEFT_ARROW)
+				sizeWindow(LEFT);
+			else if (ctrl_flag == 1 && scancode == RIGHT_ARROW)
+				sizeWindow(RIGHT);
+			else if (ctrl_flag == 1 && scancode == UP_ARROW)
+				sizeWindow(UP);
+			else if (ctrl_flag == 1 && scancode == DOWN_ARROW)
+				sizeWindow(DOWN);
+			else if (shift_flag == 1 && scancode == LEFT_ARROW)
+				moveWindow(LEFT);
+			else if (shift_flag == 1 && scancode == RIGHT_ARROW)
+				moveWindow(RIGHT);
+			else if (shift_flag == 1 && scancode == UP_ARROW)
+				moveWindow(UP);
+			else if (shift_flag == 1 && scancode == DOWN_ARROW)
+				moveWindow(DOWN);
 		}
 	}
 }
@@ -221,6 +244,16 @@ int32_t terminal_open(const uint8_t* filename)
 
 int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 {
+
+	pcb_t* block = get_pcb(get_term_proc(get_active()));
+	int8_t* key_buf = block->command;
+
+	int32_t i, j;
+	/* clear the key buffer */
+	for (j = 0; j < KEY_BUF_SIZE; j++)
+	{
+		key_buf[j] = NULL_KEY;
+	}
 	sti();
 
 	enter_flag = 0;
@@ -229,7 +262,6 @@ int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 		// nothing, keeping looping till enter is pressed
 	}
 	cli();
-	int32_t i, j;
 	for (i = 0; i < nbytes; i++) // copy over all relevant info from key_buf to buf passed in
 	{
 		((int8_t *)buf)[i] = key_buf[i];
@@ -241,11 +273,6 @@ int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 	for (j = i + 1; (j < nbytes && j < KEY_BUF_SIZE); j++)
 		((int8_t *)buf)[j] = '\0';
 
-	/* clear the key buffer */
-	for (j = 0; j < KEY_BUF_SIZE; j++)
-	{
-		key_buf[j] = NULL_KEY;
-	}
 
 	// return number of bytes taken from keyboard buff
 	return i + 1;

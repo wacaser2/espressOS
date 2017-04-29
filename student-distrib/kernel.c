@@ -161,6 +161,7 @@ entry(unsigned long magic, unsigned long addr)
 	/* Init rtc*/
 	printf("Initializing RTC\n");
 	rtc_init();
+	rtc_open((uint8_t*)"");
 
 	/* Init keyboard*/
 	printf("Initializing keyboard\n");
@@ -177,7 +178,11 @@ entry(unsigned long magic, unsigned long addr)
 	/* Init paging*/
 	paging_init(0);
 
+	/* Init windows */
+	window_init(-1);
+
 	clear();
+	switch_active(0);
 	execute((uint8_t *)"shell");
 
 	/* Spin (nicely, so we don't chew up cycles) */

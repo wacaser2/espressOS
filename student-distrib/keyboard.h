@@ -16,16 +16,19 @@
 
 #define BACKSPACE 	0x0E
 #define ENTER 		0x1C
+#define F_START			0x3b
 
 #define LEFT_CTRL	0x1D
 #define LEFT_SHIFT	0x2A
 #define RIGHT_SHIFT	0x36
 #define CAPS_LOCK	0x3A
+#define ALT			0x38
 
 #define LEFT_CTRL_REL	0x9D
 #define LEFT_SHIFT_REL	0xAA
 #define RIGHT_SHIFT_REL	0xB6
 #define CAPS_LOCK_REL	0xBA
+#define ALT_REL			0xB8
 
 #define NULL_KEY	'\0'
 #define NEW_LINE	'\n'

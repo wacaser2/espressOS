@@ -23,6 +23,8 @@ void paging_init(unsigned long addr);
 
 void windowPage(int32_t proc);
 
+void videoPage(void* window);
+
 void VtoPpage(uint32_t vaddr, uint32_t paddr);
 
 void VtoPmap(uint32_t vaddr, uint32_t paddr);

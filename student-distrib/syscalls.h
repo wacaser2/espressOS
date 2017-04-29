@@ -43,11 +43,15 @@ typedef struct pcb_t {
 	fd_t fdarray[MAXFILES];
 	uint8_t name[NAME_SIZE];
 	uint8_t args[ARGBUF_SIZE];
-	uint8_t command[ARGBUF_SIZE];
+	int8_t command[ARGBUF_SIZE];
 	int32_t key_idx;
+	int32_t enter_flag;
 	int32_t cycles;
 	int32_t window_id;
-	uint8_t process_id;
+	int32_t process_id;
+	int32_t parent_id;
+	uint32_t kbp;
+	uint32_t ksp;
 	uint32_t parent_kbp;
 	uint32_t parent_ksp;
 	struct pcb_t * parent_block;

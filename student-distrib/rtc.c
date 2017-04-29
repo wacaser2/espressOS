@@ -2,6 +2,7 @@
 #include "rtc.h"
 #include "lib.h"
 #include "x86_desc.h"
+#include "syscalls.h"
 
 volatile int interrupt_flag = 0;
 
@@ -34,6 +35,19 @@ rtc_handler(void)
 	inb(CMOS_PORT);
 	send_eoi(RTC_IRQ);		//informs pic that we got the interrupt
 	interrupt_flag = 1;
+	if (get_proc() != -1) {
+		pcb_t* block = get_pcb(get_proc());
+		if (block->cycles == 0) {
+			block->cycles = 0;
+			int32_t next = get_proc_term();
+			while (get_term_proc(next = (next + 1) % 3) == -1)
+				;
+			switch_process(next);
+		}
+		else {
+			block->cycles--;
+		}
+	}
 }
 
 
@@ -49,7 +63,7 @@ rtc_read(int32_t fd, void* buf, int32_t nbytes)
 {
 	interrupt_flag = 0;
 	sti();
-	while(interrupt_flag == 0) {} //  do nothing, keeping looping till an interrupt occurs
+	while (interrupt_flag == 0) {} //  do nothing, keeping looping till an interrupt occurs
 	cli();
 	return 0;
 }
@@ -57,11 +71,11 @@ rtc_read(int32_t fd, void* buf, int32_t nbytes)
 int32_t
 rtc_write(int32_t fd, const void* buf, int32_t nbytes)
 {
-	if(buf == NULL || nbytes != 4)
+	if (buf == NULL || nbytes != 4)
 		return -1;
 	int freq = *(int32_t*)buf;
 	int ret = set_freq(freq); // ret gets return value of set_freq
-	if(ret == -1) return ret; // if ret == -1 return -1
+	if (ret == -1) return ret; // if ret == -1 return -1
 	return nbytes; // return nbytes value
 }
 
@@ -79,43 +93,43 @@ set_freq(int32_t freq)
 
 	outb(STATUS_REGISTER_A, RTC_PORT);		// set index to register A, disable NMI
 	char prev = inb(CMOS_PORT);	// get initial value of register A
-	
+
 	unsigned char rate;			// interrupt rate
 
-	switch(freq)			// all the rate values can be found on ds12887 datasheet
+	switch (freq)			// all the rate values can be found on ds12887 datasheet
 	{
-		case FREQ_LIMIT:
-			rate = RATE_at_FREQ_LIMIT;
-			break;
-		case FREQ_LIMIT >> 1:
-			rate = RATE_at_FREQ_LIMIT + 1;
-			break;
-		case FREQ_LIMIT >> 2:
-			rate = RATE_at_FREQ_LIMIT + 2;
-			break;
-		case FREQ_LIMIT >> 3:
-			rate = RATE_at_FREQ_LIMIT + 3;
-			break;
-		case FREQ_LIMIT >> 4:
-			rate = RATE_at_FREQ_LIMIT + 4;
-			break;
-		case FREQ_LIMIT >> 5:
-			rate = RATE_at_FREQ_LIMIT + 5;
-			break;
-		case FREQ_LIMIT >> 6:
-			rate = RATE_at_FREQ_LIMIT + 6;
-			break;
-		case FREQ_LIMIT >> 7:
-			rate = RATE_at_FREQ_LIMIT + 7;
-			break;
-		case FREQ_LIMIT >> 8:
-			rate = RATE_at_FREQ_LIMIT + 8;
-			break;
-		case FREQ_LIMIT >> 9:
-			rate = RATE_at_FREQ_LIMIT + 9;
-			break;
-		default:
-			return -1;
+	case FREQ_LIMIT:
+		rate = RATE_at_FREQ_LIMIT;
+		break;
+	case FREQ_LIMIT >> 1:
+		rate = RATE_at_FREQ_LIMIT + 1;
+		break;
+	case FREQ_LIMIT >> 2:
+		rate = RATE_at_FREQ_LIMIT + 2;
+		break;
+	case FREQ_LIMIT >> 3:
+		rate = RATE_at_FREQ_LIMIT + 3;
+		break;
+	case FREQ_LIMIT >> 4:
+		rate = RATE_at_FREQ_LIMIT + 4;
+		break;
+	case FREQ_LIMIT >> 5:
+		rate = RATE_at_FREQ_LIMIT + 5;
+		break;
+	case FREQ_LIMIT >> 6:
+		rate = RATE_at_FREQ_LIMIT + 6;
+		break;
+	case FREQ_LIMIT >> 7:
+		rate = RATE_at_FREQ_LIMIT + 7;
+		break;
+	case FREQ_LIMIT >> 8:
+		rate = RATE_at_FREQ_LIMIT + 8;
+		break;
+	case FREQ_LIMIT >> 9:
+		rate = RATE_at_FREQ_LIMIT + 9;
+		break;
+	default:
+		return -1;
 	}
 
 	outb(STATUS_REGISTER_A, RTC_PORT);		// reset index to A
@@ -123,5 +137,5 @@ set_freq(int32_t freq)
 
 	sti();
 
-	return 0;	
+	return 0;
 }

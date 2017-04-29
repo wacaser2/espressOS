@@ -1,6 +1,7 @@
 #include "paging.h"
 #include "lib.h"
 #include "multiboot.h"
+#include "syscalls.h"
 
 
 uint32_t page_directory[oneUNIT] __attribute__((aligned(oneUNIT * PAGE_SIZE_MULTIPLIER)));	// 1024 entries. all 4kB aligned
@@ -28,6 +29,7 @@ paging_init(unsigned long addr) {
 	}
 
 	first_page_table[VIDEO >> OFFSET] |= RW | PRESENT;
+	first_page_table[(VIDEO >> OFFSET) - 1] = first_page_table[VIDEO >> OFFSET];
 	page_directory[0] = ((uint32_t)first_page_table) | PRESENT | RW;	// add page table to directory of 4kb pages
 	page_directory[1] = KERNEL_ADDR | PRESENT | fourMBpage | RW;	// 4mb page
 	first_page_table[(int32_t)page_directory >> OFFSET] |= RW | PRESENT;
@@ -52,6 +54,11 @@ paging_init(unsigned long addr) {
 
 void windowPage(int32_t proc) {
 	first_page_table[(VIDEO >> OFFSET) + 1 + proc] |= RW | PRESENT;
+}
+
+void videoPage(void* window) {
+	first_page_table[(VIDEO >> OFFSET)] = (((int32_t)window) & 0xFFFFF000) | RW | PRESENT;
+	VtoPpage(onetwentyeightMB + fourMB, (uint32_t)window);
 }
 
 void VtoPpage(uint32_t vaddr, uint32_t paddr) {

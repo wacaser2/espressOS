@@ -7,14 +7,14 @@ void window_init(int32_t proc) {
 	if (proc > -1)
 		windowPage(proc);
 	window_t* window = get_window(proc);
-	if (proc == 0 || proc == -1) {
+	if (proc == -1 || get_pcb(proc)->parent_id == -1) {
 		window->l = 0;
 		window->t = 0;
 		window->r = NUM_COLS;
 		window->b = NUM_ROWS;
 	}
 	else {
-		window_t* prev = get_window(proc - 1);
+		window_t* prev = get_window(get_parent_pcb(proc)->process_id);
 		window->l = prev->l + 1;
 		window->t = prev->t + 1;
 		window->r = prev->r - 1;
@@ -131,23 +131,28 @@ void updateWindow(window_t* window) {
 	int32_t i, j;
 	for (i = window->t; i < window->b; i++) {
 		for (j = window->l; j < window->r; j++) {
-			placec(j, i, window->screen[((NUM_COLS*(i - window->t) + (j - window->l)) << 1) + 1], window->screen[((NUM_COLS*(i - window->t) + (j - window->l)) << 1)]);
+			placec(j, i, window->screen[((NUM_COLS*(i) + (j)) << 1) + 1], window->screen[((NUM_COLS*(i) + (j)) << 1)]);
 		}
 	}
+	borderHline(window, window->t - 1);
+	borderHline(window, window->b);
+	borderVline(window, window->l - 1);
+	borderVline(window, window->r);
 	updateStatus(window);
+	update_cursor(window->cy, window->cx);
 }
 
 void updateHline(window_t* window, window_t* parent, int32_t y) {
 	int32_t i;
 	for (i = window->l - 1; i <= window->r; i++) {
-		placec(i, y, parent->screen[((NUM_COLS*(y - parent->t) + (i - parent->l)) << 1) + 1], parent->screen[((NUM_COLS*(y - parent->t) + (i - parent->l)) << 1)]);
+		placec(i, y, parent->screen[((NUM_COLS*(y) + (i)) << 1) + 1], parent->screen[((NUM_COLS*(y) + (i)) << 1)]);
 	}
 }
 
 void updateVline(window_t* window, window_t* parent, int32_t x) {
 	int32_t i;
 	for (i = window->t - 1; i <= window->b; i++) {
-		placec(x, i, parent->screen[((NUM_COLS*(i - parent->t) + (x - parent->l)) << 1) + 1], parent->screen[((NUM_COLS*(i - parent->t) + (x - parent->l)) << 1)]);
+		placec(x, i, parent->screen[((NUM_COLS*(i) + (x)) << 1) + 1], parent->screen[((NUM_COLS*(i) + (x)) << 1)]);
 	}
 }
 

@@ -19,16 +19,44 @@ fops_tbl_t dir_ops = (fops_tbl_t) { dir_open, dir_read, dir_write, dir_close };
 fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*)null_ops, (void*)null_ops };
 
 void switch_active(int32_t term) {
-	/*store current*/
 	process_term = active = term;
-	if (terminal_process[term] == -1) {
-		execute((uint8_t*)"shell");
-	}
+	switch_process(term);
 }
 
 void switch_process(int32_t term) {
 	/*store current*/
+	if (process != -1) {
+		pcb_t* block = get_pcb(get_proc());
+		asm volatile(
+			"movl %%ebp, %0 \n"
+			"movl %%esp, %1 \n"
+			: "=r" (block->kbp), "=r" (block->ksp)
+			);
+	}
+
+	process = terminal_process[term];
+	if (active == term) {
+		videoPage((void*)VIDEO);
+		if (process_term == active)
+			updateWindow(get_window(terminal_process[term]));
+	}
+	else
+		videoPage((void*)get_window(process));
+	process_term = term;
+
+	if (process == -1) {
+		execute((uint8_t*)"shell");
+	}
+
 	/*restore other*/
+	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
+	tss.esp0 = eightMB - (process * eightKB) - 4;
+	pcb_t* block = get_pcb(process);
+	asm volatile(
+		"movl %0, %%ebp \n"
+		"movl %1, %%esp \n"
+		: : "r" (block->kbp), "r" (block->ksp)
+		);
 }
 
 /* System Calls*/
@@ -37,15 +65,18 @@ int32_t halt(uint8_t status) {
 
 	/* Clear this program's process number */
 	process_num[process] = ZERO;
+
+	/* If this process is the top shell, restart */
+	if (get_pcb(process)->parent_id == -1) {
+		clear();
+		terminal_process[process_term] = -1;
+		process = -1;
+		execute((uint8_t *)"shell");
+	}
+
 	if (!strncmp((int8_t*)get_pcb(process)->name, (int8_t*)"shell", NAME_SIZE))
 		window_exit(process);
 
-	/* If this process is the top shell, restart */
-	if (get_pcb(process) == get_parent_pcb(process)) {
-		terminal_process[process_term] = -1;
-		clear();
-		execute((uint8_t *)"shell");
-	}
 	/* Reset process to parent */
 	pcb_t * block = get_pcb(process);
 	process = block->parent_block->process_id;
@@ -120,7 +151,7 @@ int32_t execute(const uint8_t* command) {
 		}
 	}
 	if (process < 0) {
-		process = MAXPROCESSES - 1;	// so it doesnt exceed 
+		process = parent_proc;	// so it doesnt exceed 
 		puts("Maximum number of processess running\n");
 		return 0;
 	}
@@ -128,9 +159,11 @@ int32_t execute(const uint8_t* command) {
 	/* Set up PCB */
 	pcb_t * block = get_pcb(process);	// top of the 8KB stack
 	block->process_id = process;
-	block->command = "";
+	block->parent_id = parent_proc;
+	strcpy(block->command, "");
 	block->key_idx = 0;
-	if (terminal_process[process_term] == -1)			// first process, so set parent to itself
+	block->cycles = 2;
+	if (parent_proc == -1)			// first process, so set parent to itself
 		block->parent_block = block;
 	else
 		block->parent_block = get_pcb(parent_proc);
@@ -306,7 +339,7 @@ int32_t vidmap(uint8_t** screen_start) {
 	if (((int32_t)screen_start < onetwentyeightMB) || ((int32_t)screen_start>(onetwentyeightMB + fourMB)))
 		return -1;
 	uint32_t idx = onetwentyeightMB + fourMB;
-	VtoPpage(idx, VIDEO);
+	//VtoPpage(idx, VIDEO);
 	*screen_start = (uint8_t*)idx;
 	return idx;
 }
@@ -336,7 +369,7 @@ int32_t get_proc() {
 }
 
 int32_t get_term_proc(int32_t term) {
-	return terminal_process[term);
+	return terminal_process[term];
 }
 
 int32_t get_active() {

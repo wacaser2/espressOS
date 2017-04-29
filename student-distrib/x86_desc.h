@@ -224,6 +224,7 @@ extern void isr28();
 extern void isr29();
 extern void isr30();
 extern void isr31();
+extern void pit_handler_wrapper();
 extern void keyboard_handler_wrapper();
 extern void rtc_handler_wrapper();
 extern void sys_call();

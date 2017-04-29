@@ -7,6 +7,7 @@
 #include "lib.h"
 #include "i8259.h"
 #include "debug.h"
+#include "pit.h"
 #include "rtc.h"
 #include "keyboard.h"
 #include "paging.h"
@@ -150,6 +151,7 @@ entry(unsigned long magic, unsigned long addr)
 		ltr(KERNEL_TSS);
 	}
 
+
 	/* Install ISR'S*/
 	printf("Installing isrs\n");
 	isrs_install();
@@ -181,8 +183,7 @@ entry(unsigned long magic, unsigned long addr)
 	/* Init paging*/
 	paging_init(0);
 
-	clear();
-
+	//clear();
 
 	// startup sequence
 	bootup_sequence_1();

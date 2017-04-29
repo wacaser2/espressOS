@@ -12,7 +12,7 @@
 .globl isr10, isr11, isr12, isr13, isr14, isr15, isr16, isr17, isr18, isr19
 .globl isr20, isr21, isr22, isr23, isr24, isr25, isr26, isr27, isr28, isr29
 .globl isr30, isr31
-.globl rtc_handler_wrapper, sys_call, keyboard_handler_wrapper
+.globl rtc_handler_wrapper, sys_call, keyboard_handler_wrapper, pit_handler_wrapper
 
 
 # isr0-31

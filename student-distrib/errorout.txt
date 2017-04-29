@@ -1,4 +1,4 @@
-make: Warning: File `Makefile.dep' has modification time 1.1 s in the future
+make: Warning: File `Makefile.dep' has modification time 3.7 s in the future
 gcc  -nostdinc -g  -c -o boot.o boot.S
 gcc  -nostdinc -g  -c -o isr.o isr.S
 gcc  -nostdinc -g  -c -o x86_desc.o x86_desc.S

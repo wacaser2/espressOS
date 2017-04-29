@@ -10,6 +10,7 @@ volatile int32_t process = -1;
 int32_t process_term = -1;
 int32_t active = -1;
 int32_t terminal_process[3] = { -1,-1,-1 };
+int32_t reload = 0;
 
 fops_tbl_t stdin_ops = { (void*)null_ops, terminal_read, (void*)null_ops, (void*)null_ops };
 fops_tbl_t stdout_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, terminal_write, (void*)null_ops };
@@ -20,6 +21,7 @@ fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*
 
 void switch_active(int32_t term) {
 	process_term = active = term;
+	reload = 1;
 	switch_process(term);
 }
 
@@ -35,14 +37,17 @@ void switch_process(int32_t term) {
 	}
 
 	process = terminal_process[term];
+	process_term = term;
 	if (active == term) {
 		videoPage((void*)VIDEO);
-		if (process_term == active)
+		if (reload)
+		{
 			updateWindow(get_window(terminal_process[term]));
+			reload = 0;
+		}
 	}
 	else
 		videoPage((void*)get_window(process));
-	process_term = term;
 
 	if (process == -1) {
 		execute((uint8_t*)"shell");
@@ -62,6 +67,18 @@ void switch_process(int32_t term) {
 /* System Calls*/
 
 int32_t halt(uint8_t status) {
+	cli();
+	/* Close all files associated */
+	pcb_t * block = get_pcb(process);
+	int32_t i;
+	for (i = 2; i < MAXFILES; i++) {
+		block->fdarray[i].fops_tbl_pointer->close(i);
+	}
+	/* Clear out fdarray */
+	for (i = 0; i < MAXFILES; i++) {
+		block->fdarray[i].fops_tbl_pointer = (void*)null_ops;
+		block->fdarray[i].flags = ZERO;
+	}
 
 	/* Clear this program's process number */
 	process_num[process] = ZERO;
@@ -78,7 +95,7 @@ int32_t halt(uint8_t status) {
 		window_exit(process);
 
 	/* Reset process to parent */
-	pcb_t * block = get_pcb(process);
+	block = get_pcb(process);
 	process = block->parent_block->process_id;
 	terminal_process[process_term] = process;
 	/* Reset page mapping to parent process */
@@ -87,12 +104,6 @@ int32_t halt(uint8_t status) {
 	/* Update tss */
 	tss.esp0 = block->parent_ksp;
 
-	/* Clear out fdarray */
-	int32_t i;
-	for (i = 0; i < MAXFILES; i++) {
-		block->fdarray[i].fops_tbl_pointer = (void*)null_ops;
-		block->fdarray[i].flags = ZERO;
-	}
 	int32_t ret_val;
 	if (status == 255)
 		ret_val = EXCEPTION_CODE;
@@ -114,7 +125,7 @@ int32_t halt(uint8_t status) {
 }
 
 int32_t execute(const uint8_t* command) {
-
+	cli();
 
 	/* Extract name */
 	int32_t start = 0;
@@ -133,6 +144,8 @@ int32_t execute(const uint8_t* command) {
 		return -1;
 
 	/* Check for executable */
+	if (dentry.file_type != 2)
+		return -1;
 	int8_t buffer[INT_BYTES];
 	int8_t magic_number[INT_BYTES] = { 0x7f, 0x45, 0x4c, 0x46 };		// DEL, E, L, F
 	read_data(dentry.inode_index, 0, (uint8_t*)buffer, INT_BYTES);
@@ -294,8 +307,10 @@ int32_t open(const uint8_t* filename) {
 
 	/* Open files */
 	block->fdarray[i].file_pos = FILE_START_POS;
-	if (dentry.file_type == RTC_TYPE)
+	if (dentry.file_type == RTC_TYPE) {
 		block->fdarray[i].fops_tbl_pointer = &rtc_ops;
+		block->fdarray[i].file_pos = 512;
+	}
 	else if (dentry.file_type == DIR_TYPE)
 		block->fdarray[i].fops_tbl_pointer = &dir_ops;
 	else if (dentry.file_type == FILE_TYPE) {

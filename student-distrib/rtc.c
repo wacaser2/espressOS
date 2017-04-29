@@ -5,6 +5,7 @@
 #include "syscalls.h"
 
 volatile int interrupt_flag = 0;
+volatile int count = 0;
 
 /*
 * void rtc_init()
@@ -20,6 +21,7 @@ rtc_init(void)
 	outb(STATUS_REGISTER_B, RTC_PORT);		// set the index again (a read will reset the index to register D)
 	outb(prev | 0x40, CMOS_PORT);	// write the previous value ORed with 0x40. This turns on bit 6 of register B
 	enable_irq(RTC_IRQ);				//enables the interrupts for rtc
+	set_freq(FREQ_LIMIT);
 }
 
 /*
@@ -35,14 +37,15 @@ rtc_handler(void)
 	inb(CMOS_PORT);
 	send_eoi(RTC_IRQ);		//informs pic that we got the interrupt
 	interrupt_flag = 1;
+	count++;
 	if (get_proc() != -1) {
 		pcb_t* block = get_pcb(get_proc());
 		if (block->cycles == 0) {
-			block->cycles = 0;
-			int32_t next = get_proc_term();
-			while (get_term_proc(next = (next + 1) % 3) == -1)
-				;
-			switch_process(next);
+			block->cycles = 10;
+			int32_t next, i;
+			for (next = get_proc_term(), i = 0; i < 3; i++)
+				if (get_term_proc((next + i) % 3) != -1)
+					switch_process((next + i) % 3);
 		}
 		else {
 			block->cycles--;
@@ -54,16 +57,18 @@ rtc_handler(void)
 int32_t
 rtc_open(const uint8_t* filename)
 {
-	set_freq(DEFAULT_FREQ); // set default frequency
+	//set_freq(DEFAULT_FREQ); // set default frequency
 	return 0; // return zero
 }
 
 int32_t
 rtc_read(int32_t fd, void* buf, int32_t nbytes)
 {
-	interrupt_flag = 0;
+	//interrupt_flag = 0;
+	int flag = get_pcb(get_proc())->fdarray[fd].file_pos;
 	sti();
-	while (interrupt_flag == 0) {} //  do nothing, keeping looping till an interrupt occurs
+	while (count&flag); //  do nothing, keeping looping till an interrupt occurs
+	while (!(count&flag));
 	cli();
 	return 0;
 }
@@ -73,9 +78,18 @@ rtc_write(int32_t fd, const void* buf, int32_t nbytes)
 {
 	if (buf == NULL || nbytes != 4)
 		return -1;
-	int freq = *(int32_t*)buf;
-	int ret = set_freq(freq); // ret gets return value of set_freq
-	if (ret == -1) return ret; // if ret == -1 return -1
+	int32_t input = *(int32_t*)buf;
+	int32_t freq = 1;
+	while (input < FREQ_LIMIT) {
+		input <<= 1;
+		freq <<= 1;
+	}
+	if (input > FREQ_LIMIT)
+		return -1;
+	get_pcb(get_proc())->fdarray[fd].file_pos = freq;
+	//int freq = *(int32_t*)buf;
+	//int ret = set_freq(freq); // ret gets return value of set_freq
+	//if (ret == -1) return ret; // if ret == -1 return -1
 	return nbytes; // return nbytes value
 }
 

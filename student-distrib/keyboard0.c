@@ -18,6 +18,11 @@ volatile int updown_idx = 0;
 volatile int buf_size = 0;
 volatile int write_idx = 0; // while typing in a cmd store cmd idx
 
+/* used to store current prompt in terminal */
+volatile int flag = 0;
+volatile unsigned char curr_prompt[KEY_BUF_SIZE];
+volatile int curr_prompt_size = 0;
+
 /* keyboard array*/
 static unsigned char key[KEY_BUF_SIZE_ACTUAL] =
 {
@@ -146,9 +151,7 @@ void keyboard_handler()
 		{
 			if (key_idx > 0)
 			{
-				--key_idx;
-				if(updown_idx == write_idx) buf_hist[write_idx][key_idx] = NULL_KEY;
-				key_buf[key_idx] = NULL_KEY;
+				key_buf[--key_idx] = NULL_KEY;
 				backspace_put(0); // call backspace_put func
 			}
 		}
@@ -170,15 +173,30 @@ void keyboard_handler()
 			/* should only work if between 0 and max_xommands */
 			//if(updown_idx>=0 && updown_idx<MAX_COMMANDS-1){
 
+			/* done when updown command immediately pressed when typing into terminal */
+			if(!flag){
+				if(!key_idx)
+					curr_prompt_size = 0;
+				else {
+					curr_prompt_size = key_idx;
+					for(i=0; i<key_idx; ++i)
+						curr_prompt[i] = key_buf[i];
+				}
+				flag = 1;
+			}
+
+
+			if(key_idx == 0 && !flag){flag = 1;}
+			else if
+
 			if(key_idx != 0){
-				if(buf_hist_cmd_size[write_idx] == 0) buf_hist_cmd_size[write_idx] = key_idx;
+				buf_hist_cmd_size[write_idx] = key_idx;
 				/* move to prev command and add required backspaces */
 				i = key_idx;
 				while(i>0){
 					backspace_put(0);
 					i--;
 				}
-<<<<<<< HEAD
 			}
 			/* change the updown_idx */
 			if (scancode == UP_KEY){
@@ -187,61 +205,26 @@ void keyboard_handler()
 					else updown_idx = (updown_idx-1)%MAX_COMMANDS;
 				}
 				else{
-					if(updown_idx<=0) updown_idx=0; 
+					if(updown_idx<=0) updown_idx=0;
 					else --updown_idx;
-=======
-				/* change the updown_idx */
-				if (scancode == UP_KEY){
-					if(buf_size == MAX_COMMANDS){
-						if((updown_idx-1)%MAX_COMMANDS == write_idx){}
-						else updown_idx = (updown_idx-1)%MAX_COMMANDS;
-					}
-					else{
-						if(updown_idx<=0) updown_idx=0;
-						else --updown_idx;
-					}
-				}
-				else if (scancode == DOWN_KEY){
-					if(updown_idx==write_idx){}
-					else if(updown_idx>=buf_size) updown_idx=buf_size;
-					else updown_idx = (updown_idx+1)%MAX_COMMANDS;
->>>>>>> 50f56d34171a5d328820e8c207c6456456d27b43
 				}
 			}
 			else if (scancode == DOWN_KEY){
 				if(updown_idx==write_idx){}
-				else if(updown_idx>=buf_size) updown_idx=buf_size; 
+				else if(updown_idx>=buf_size) updown_idx=buf_size;
 				else updown_idx = (updown_idx+1)%MAX_COMMANDS;
 			}
 
-<<<<<<< HEAD
-			if(updown_idx == write_idx){
-				if(buf_hist_cmd_size[write_idx] != 0)
-					key_idx = buf_hist_cmd_size[write_idx];
-				else
-					key_idx=0;
-			} 
+			if(updown_idx == write_idx) key_idx=0;
 			else key_idx = buf_hist_cmd_size[updown_idx];
 			/* change key_idx to updown value */
-			
+
 
 			/* print the command at the updown_idx */
 			for(i = 0; i<key_idx; ++i){
 				key_buf[i] = buf_hist[updown_idx][i];
 				putc(key_buf[i]);
 			}
-=======
-				if(updown_idx == write_idx) key_idx=0;
-				else key_idx = buf_hist_cmd_size[updown_idx];
-				/* change key_idx to updown value */
-
-
-				/* print the command at the updown_idx */
-				for(i = 0; i<key_idx; ++i){
-					key_buf[i] = buf_hist[updown_idx][i];
-					putc(key_buf[i]);
-				}
->>>>>>> 50f56d34171a5d328820e8c207c6456456d27b43
 
 			/* clear the remaining buffer */
 			for(; i<KEY_BUF_SIZE; ++i) key_buf[i] = NULL_KEY;
@@ -249,6 +232,7 @@ void keyboard_handler()
 		}
 		else if (scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
 		{
+			if(key_idx == 0 && !flag)
 			/* works only when command is entered */
 			if(key_idx != 0){
 				/* handling history of commands */
@@ -277,6 +261,7 @@ void keyboard_handler()
 				updown_idx = write_idx;
 			}
 
+			flag = 0;
 			/* handling one command */
 			enter_flag = 1;
 			key_buf[key_idx++] = NEW_LINE;
@@ -304,20 +289,23 @@ void keyboard_handler()
 				{
 					if (shift_key[scancode] >= 65 && shift_key[scancode] <= 90) // capital letters
 					{
-						if(updown_idx == write_idx) buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
+						buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
+
 						key_buf[key_idx++] = key[scancode];
 						putc(key[scancode]);
 					}
 					else // else case for small letters
 					{
-						if(updown_idx == write_idx) buf_hist[write_idx][key_idx] = shift_key[scancode]; // adding keys to history buffer
+						buf_hist[write_idx][key_idx] = shift_key[scancode]; // adding keys to history buffer
+
 						key_buf[key_idx++] = shift_key[scancode];
 						putc(shift_key[scancode]);
 					}
 				}
 				else if (shift_flag == 1) // only shift pressed
 				{
-					if(updown_idx == write_idx) buf_hist[write_idx][key_idx] = shift_key[scancode]; // adding keys to history buffer
+					buf_hist[write_idx][key_idx] = shift_key[scancode]; // adding keys to history buffer
+
 					key_buf[key_idx++] = shift_key[scancode];
 					putc(shift_key[scancode]);
 				}
@@ -325,20 +313,22 @@ void keyboard_handler()
 				{
 					if (key[scancode] >= 97 && key[scancode] <= 122) // for small ASCII chars
 					{
-						if(updown_idx == write_idx) buf_hist[write_idx][key_idx] = key[scancode]-32; // adding keys to history buffer
+						buf_hist[write_idx][key_idx] = key[scancode]-32; // adding keys to history buffer
+
 						key_buf[key_idx++] = key[scancode] - 32;
 						putc(key[scancode] - 32);
 					}
 					else // for capital ASCII letters
 					{
-						if(updown_idx == write_idx) buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
+						buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
+
 						key_buf[key_idx++] = key[scancode];
 						putc(key[scancode]);
 					}
 				}
 				else // else case for spamming with other letters
 				{
-					if(updown_idx == write_idx) buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
+					buf_hist[write_idx][key_idx] = key[scancode]; // adding keys to history buffer
 					key_buf[key_idx++] = key[scancode];
 					putc(key[scancode]);  // put the char on the screen
 				}

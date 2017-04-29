@@ -9,7 +9,7 @@
 #define NUM_COLS 80
 #define NUM_ROWS 25
 #define ATTRIB 0x0f
-#define BROWN 0xf6
+#define BROWN 0x76
 #include "types.h"
 
 int32_t printf(int8_t *format, ...);

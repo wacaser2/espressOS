@@ -203,6 +203,38 @@ isr_common:
     popa	# pop all the user regs
     add $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
+
+
+
+
+# pit_handler_wrapper
+#   DESCRIPTION: Saves registers and call pit_handler
+#   INPUTS: none
+#   OUTPUTS: none
+#   RETURN VALUE: none
+#   SIDE EFFECTS: Calls keyboard_handler so anything that does
+pit_handler_wrapper:
+	cli
+	pusha
+    push %ds
+    push %es
+    push %fs
+    push %gs
+    mov $KERNEL_CS, %ax	# Load the Kernel Data Segment descriptor!
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    mov %esp, %eax   # Push us the stack
+    push %eax
+    call pit_handler
+    pop %eax
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+    iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!	
 	
 # keyboard_handler_wrapper
 #   DESCRIPTION: Saves registers and call keyboard_handler

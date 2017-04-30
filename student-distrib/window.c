@@ -34,9 +34,9 @@ void window_exit(int32_t proc) {
 }
 
 void sizeWindow(int32_t dir) {
-	window_t* window = get_window(get_proc());
-	window_t* parent = get_parent_window(get_proc());
-	if (get_proc() < 1)
+	window_t* window = get_window(get_term_proc(get_active()));
+	window_t* parent = get_parent_window(get_term_proc(get_active()));
+	if (window == parent)
 		return;
 	switch (dir) {
 	case LEFT:
@@ -76,9 +76,9 @@ void sizeWindow(int32_t dir) {
 }
 
 void moveWindow(int32_t dir) {
-	window_t* window = get_window(get_proc());
-	window_t* parent = get_parent_window(get_proc());
-	if (get_proc() < 1)
+	window_t* window = get_window(get_term_proc(get_active()));
+	window_t* parent = get_parent_window(get_term_proc(get_active()));
+	if (window == parent)
 		return;
 	switch (dir) {
 	case LEFT:
@@ -131,7 +131,7 @@ void updateWindow(window_t* window) {
 	int32_t i, j;
 	for (i = window->t; i < window->b; i++) {
 		for (j = window->l; j < window->r; j++) {
-			placec(j, i, window->screen[((NUM_COLS*(i) + (j)) << 1) + 1], window->screen[((NUM_COLS*(i) + (j)) << 1)]);
+			fplacec(j, i, window->screen[((NUM_COLS*(i)+(j)) << 1) + 1], window->screen[((NUM_COLS*(i)+(j)) << 1)]);
 		}
 	}
 	borderHline(window, window->t - 1);
@@ -145,41 +145,41 @@ void updateWindow(window_t* window) {
 void updateHline(window_t* window, window_t* parent, int32_t y) {
 	int32_t i;
 	for (i = window->l - 1; i <= window->r; i++) {
-		placec(i, y, parent->screen[((NUM_COLS*(y) + (i)) << 1) + 1], parent->screen[((NUM_COLS*(y) + (i)) << 1)]);
+		fplacec(i, y, parent->screen[((NUM_COLS*(y)+(i)) << 1) + 1], parent->screen[((NUM_COLS*(y)+(i)) << 1)]);
 	}
 }
 
 void updateVline(window_t* window, window_t* parent, int32_t x) {
 	int32_t i;
 	for (i = window->t - 1; i <= window->b; i++) {
-		placec(x, i, parent->screen[((NUM_COLS*(i) + (x)) << 1) + 1], parent->screen[((NUM_COLS*(i) + (x)) << 1)]);
+		fplacec(x, i, parent->screen[((NUM_COLS*(i)+(x)) << 1) + 1], parent->screen[((NUM_COLS*(i)+(x)) << 1)]);
 	}
 }
 
 void borderHline(window_t* window, int32_t y) {
 	int32_t i;
 	for (i = window->l - 1; i <= window->r; i++) {
-		placec(i, y, BORDER_COLOR, ' ');
+		fplacec(i, y, BORDER_COLOR, ' ');
 	}
 }
 
 void borderVline(window_t* window, int32_t x) {
 	int32_t i;
 	for (i = window->t - 1; i <= window->b; i++) {
-		placec(x, i, BORDER_COLOR, ' ');
+		fplacec(x, i, BORDER_COLOR, ' ');
 	}
 }
 
 void updateStatus(window_t* window) {
-	placec(window->l, window->t - 1, BORDER_COLOR, 'S');
-	placec(window->l + 1, window->t - 1, BORDER_COLOR, 'h');
-	placec(window->l + 2, window->t - 1, BORDER_COLOR, 'e');
-	placec(window->l + 3, window->t - 1, BORDER_COLOR, 'l');
-	placec(window->l + 4, window->t - 1, BORDER_COLOR, 'l');
-	placec(window->l + 5, window->t - 1, BORDER_COLOR, ' ');
-	placec(window->r - 1, window->t - 1, BORDER_COLOR, ' ');
-	placec(window->r, window->t, BORDER_COLOR, ' ');
-	placec(window->r, window->t - 1, BORDER_COLOR, 'X');
+	fplacec(window->l, window->t - 1, BORDER_COLOR, 'S');
+	fplacec(window->l + 1, window->t - 1, BORDER_COLOR, 'h');
+	fplacec(window->l + 2, window->t - 1, BORDER_COLOR, 'e');
+	fplacec(window->l + 3, window->t - 1, BORDER_COLOR, 'l');
+	fplacec(window->l + 4, window->t - 1, BORDER_COLOR, 'l');
+	fplacec(window->l + 5, window->t - 1, BORDER_COLOR, ' ');
+	fplacec(window->r - 1, window->t - 1, BORDER_COLOR, ' ');
+	fplacec(window->r, window->t, BORDER_COLOR, ' ');
+	fplacec(window->r, window->t - 1, BORDER_COLOR, 'X');
 }
 
 window_t* get_window(int32_t proc) {

@@ -12,7 +12,7 @@
 .globl isr10, isr11, isr12, isr13, isr14, isr15, isr16, isr17, isr18, isr19
 .globl isr20, isr21, isr22, isr23, isr24, isr25, isr26, isr27, isr28, isr29
 .globl isr30, isr31
-.globl rtc_handler_wrapper, sys_call, keyboard_handler_wrapper, pit_handler_wrapper
+.globl rtc_handler_wrapper, sys_call, keyboard_handler_wrapper, pit_handler_wrapper, mouse_handler_wrapper
 
 
 # isr0-31
@@ -28,9 +28,9 @@ isr0:
 	jmp isr_common
 isr1:
 	cli
-		pushl $0x00
-		pushl $0x01
-		jmp isr_common	
+	pushl $0x00
+	pushl $0x01
+	jmp isr_common	
 isr2:
 	cli
 	pushl $0x00
@@ -206,7 +206,6 @@ isr_common:
 
 
 
-
 # pit_handler_wrapper
 #   DESCRIPTION: Saves registers and call pit_handler
 #   INPUTS: none
@@ -228,6 +227,35 @@ pit_handler_wrapper:
     mov %esp, %eax   # Push us the stack
     push %eax
     call pit_handler
+    pop %eax
+    pop %gs
+    pop %fs
+    pop %es
+    pop %ds
+    popa
+    iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!	
+
+# mouse_handler_wrapper
+#   DESCRIPTION: Saves registers and call mouse_handler
+#   INPUTS: none
+#   OUTPUTS: none
+#   RETURN VALUE: none
+#   SIDE EFFECTS: Calls mouse_handler so anything that does
+mouse_handler_wrapper:
+	cli
+	pusha
+    push %ds
+    push %es
+    push %fs
+    push %gs
+    mov $KERNEL_CS, %ax	# Load the Kernel Data Segment descriptor!
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+    mov %esp, %eax   # Push us the stack
+    push %eax
+    call mouse_handler
     pop %eax
     pop %gs
     pop %fs
@@ -263,7 +291,7 @@ keyboard_handler_wrapper:
     pop %es
     pop %ds
     popa
-    iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!	
+    iret
 
 # rtc_handler_wrapper
 #   DESCRIPTION: Saves the registers and call rtc_handler

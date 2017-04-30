@@ -13,7 +13,7 @@
 /* keyboard buffer size */
 #define KEY_BUF_SIZE 130
 #define KEY_BUF_SIZE_ACTUAL 128
-#define MAX_COMMANDS 5
+#define MAX_COMMANDS 30
 
 #define BACKSPACE 	0x0E
 #define ENTER 		0x1C

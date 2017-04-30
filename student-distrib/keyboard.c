@@ -177,13 +177,9 @@ void keyboard_handler()
 				i--;
 			}
 
-			/* debug */
-			//printf("%d",buf_size);
-			/* debug */
-
 			/* change the updown_idx */
 			if (scancode == UP_KEY) {
-				if (buf_size != MAX_COMMANDS && updown_idx == 0) updown_idx = 0;
+				if (buf_size != MAX_COMMANDS && updown_idx == 0) {}
 				else if ((buf_size + updown_idx - 1) % buf_size != write_idx) updown_idx = (buf_size + updown_idx - 1) % buf_size;
 				else updown_idx = (write_idx + 1) % MAX_COMMANDS;
 			}
@@ -227,10 +223,6 @@ void keyboard_handler()
 				updown_idx = write_idx;
 				temp_size = 0;
 			}
-
-			/* debug */
-			// printf("%d %d %d", updown_idx, write_idx, buf_size);
-			/* debug */
 
 			/* handling one command */
 			enter_flag = 1;

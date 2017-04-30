@@ -4,6 +4,9 @@
 #include "i8259.h"
 #include "lib.h"
 #include "x86_desc.h"
+#include "syscalls.h"
+#include "types.h"
+#include "bootup.h"
 
 /* Irq that the PIT sits on */
 #define PIT_IRQ 			0
@@ -20,6 +23,9 @@
 // default PIT freq in Hz(not required to set by ourself)
 #define DEFAULT_PIT_FREQ 	18
 
+#define FAILURE				-1
+#define SUCCESS				0
+
 // Functions
 
 /* Function to init pit*/
@@ -35,5 +41,6 @@ int32_t pit_close(int32_t fd);
 
 // helper functions
 void pit_timer_phase(int freq);
+void set_login_flag(int32_t login_status);
 
 #endif	/* _PIT_H*/

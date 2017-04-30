@@ -15,6 +15,7 @@
 int32_t printf(int8_t *format, ...);
 void placec(int32_t x, int32_t y, int8_t a, int8_t c);
 void fplacec(int32_t x, int32_t y, int8_t a, int8_t c);
+void vplacec(int32_t x, int32_t y, int8_t a, int8_t c);
 void fputc(uint8_t c);
 void placecolor(int32_t x, int32_t y, int8_t a);
 int8_t getcolor(int32_t x, int32_t y);

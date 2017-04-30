@@ -9,6 +9,7 @@
 #define BACKGROUND 		0x77
 #define TEXT 			0x76
 
+/* LOGIN CREDENTIALS*/
 #define USER_NAME		"espressos"
 #define PASSWORD		"memes"
 

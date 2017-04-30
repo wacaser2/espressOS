@@ -15,7 +15,7 @@
 #include "syscalls.h"
 #include "window.h"
 #include "bootup.h"
-
+#include "mouse.h"
 
  /* Macros. */
  /* Check if the bit BIT in FLAGS is set. */
@@ -174,6 +174,10 @@ entry(unsigned long magic, unsigned long addr)
 	/* Init keyboard*/
 	printf("Initializing keyboard\n");
 	keyboard_init();
+
+	/* Init mouse*/
+	printf("Initializing mouse\n");
+	mouse_init();
 
 	/* Enable interrupts*/
 	//printf("Enabling Interrupts\n");

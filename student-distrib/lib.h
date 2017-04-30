@@ -16,6 +16,7 @@ int32_t printf(int8_t *format, ...);
 void placec(int32_t x, int32_t y, int8_t a, int8_t c);
 void fplacec(int32_t x, int32_t y, int8_t a, int8_t c);
 void fputc(uint8_t c);
+void placecolor(int32_t x, int32_t y, int8_t a);
 void putc(uint8_t c);
 void putspecial(uint8_t c);
 void setcolor(uint8_t c);
@@ -27,6 +28,7 @@ uint32_t strlen(const int8_t* s);
 void clear(void);
 void fclear(void);
 void restore(int32_t wid);
+
 void test_interrupts();
 void backspace_put(int key_idx);
 void fbackspace_put(int key_idx);

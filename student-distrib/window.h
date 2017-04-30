@@ -1,3 +1,8 @@
+
+
+#ifndef _WINDOW_H
+#define _WINDOW_H
+
 #include "types.h"
 
 #define BORDER_COLOR 0x74
@@ -27,6 +32,8 @@ void sizeWindow(int32_t dir);
 
 void moveWindow(int32_t dir);
 
+void shiftWindow(window_t* window);
+
 void updateWindow(window_t* window);
 
 void updateHline(window_t* window, window_t* parent, int32_t y);
@@ -42,3 +49,5 @@ void updateStatus(window_t* window);
 window_t* get_window(int32_t proc);
 
 window_t* get_parent_window(int32_t proc);
+
+#endif	/* _WINDOW_H*/

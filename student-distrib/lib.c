@@ -58,6 +58,8 @@ void restore(int32_t wid) {
 	update_cursor(prev->cy, prev->cx);
 }
 
+
+
 /* Standard printf().
  * Only supports the following format strings:
  * %%  - print a literal '%' character
@@ -245,6 +247,13 @@ setcolor(uint8_t c)
 			*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1) + 1) = c;
 		}
 	}
+}
+
+void placecolor(int32_t x, int32_t y, int8_t a) {
+	if (x < 0 || y < 0 || x >= NUM_COLS || y >= NUM_ROWS)
+		return;
+	*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*y + x) << 1) + 1) = a;
+	//*(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1)) = c;
 }
 
 /*

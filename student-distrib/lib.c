@@ -268,8 +268,8 @@ setlinecolor(uint8_t c)
 	window_t * window = get_window(get_proc());
 	int j;
 	for (j = window->l; j < window->r; j++) {
-		window->screen[((NUM_COLS*(window->cy - 1) + (j)) << 1) + 1] |= c;
-		*(uint8_t *)(video_mem + ((NUM_COLS*(window->cy - 1) + j) << 1) + 1) |= c;
+		window->screen[((NUM_COLS*(window->cy - 1) + (j)) << 1) + 1] = c;
+		*(uint8_t *)(video_mem + ((NUM_COLS*(window->cy - 1) + j) << 1) + 1) = c;
 	}
 }
 

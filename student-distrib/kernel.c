@@ -180,7 +180,7 @@ entry(unsigned long magic, unsigned long addr)
 	mouse_init();
 
 	/* Enable interrupts*/
-	printf("Enabling Interrupts\n");
+	//printf("Enabling Interrupts\n");
 	
 
 	/* Init file_sys*/
@@ -197,6 +197,7 @@ entry(unsigned long magic, unsigned long addr)
 
 	// startup sequence
 	bootup_sequence_1();
+	// login_screen();
 
 	switch_active(0);
 

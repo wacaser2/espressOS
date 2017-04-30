@@ -11,6 +11,8 @@ volatile int32_t shift_flag = 0;
 volatile int32_t capslock_flag = 0;
 //volatile int8_t key_buf[KEY_BUF_SIZE];
 //volatile int32_t key_idx = 0;
+int32_t login_mode = FAILURE;
+int32_t password_being_entered = FAILURE;
 
 static unsigned char key[KEY_BUF_SIZE_ACTUAL] =
 {
@@ -147,15 +149,15 @@ void keyboard_handler()
 			if (block->key_idx > 0)
 			{
 				key_buf[--(block->key_idx)] = NULL_KEY;
-				fbackspace_put(block->key_idx); // call backspace_put func
+				if (password_being_entered == SUCCESS) fbackspace_put(block->key_idx); // call backspace_put func
 			}
 		}
 		else if (scancode == ENTER || key[scancode] == CARRIAGE_RETURN)
 		{
 			block->enter_flag = 1;
 			key_buf[(block->key_idx)++] = NEW_LINE;
-			block->key_idx = 0;    // because its a new line
-			fputc(key[scancode]); // put newline character
+			block->key_idx = 0;    // because its a new line 
+			if (password_being_entered == SUCCESS) fputc(key[scancode]); // put newline character
 		}
 		else if (scancode == LEFT_CTRL)
 		{
@@ -182,40 +184,40 @@ void keyboard_handler()
 					if (shift_key[scancode] >= 65 && shift_key[scancode] <= 90) // capital letters
 					{
 						key_buf[(block->key_idx)++] = key[scancode];
-						fputc(key[scancode]);
+						if (password_being_entered == SUCCESS) fputc(key[scancode]);
 					}
 					else // else case for small letters
 					{
 						key_buf[(block->key_idx)++] = shift_key[scancode];
-						fputc(shift_key[scancode]);
+						if (password_being_entered == SUCCESS) fputc(shift_key[scancode]);
 					}
 				}
 				else if (shift_flag == 1) // only shift pressed
 				{
 					key_buf[(block->key_idx)++] = shift_key[scancode];
-					fputc(shift_key[scancode]);
+					if (password_being_entered == SUCCESS) fputc(shift_key[scancode]);
 				}
 				else if (capslock_flag == 1) // only capslock pressed
 				{
 					if (key[scancode] >= 97 && key[scancode] <= 122) // for small ASCII chars
 					{
 						key_buf[(block->key_idx)++] = key[scancode] - 32;
-						fputc(key[scancode] - 32);
+						if (password_being_entered == SUCCESS) fputc(key[scancode] - 32);
 					}
 					else // for capital ASCII letters
 					{
 						key_buf[(block->key_idx)++] = key[scancode];
-						fputc(key[scancode]);
+						if (password_being_entered == SUCCESS) fputc(key[scancode]);
 					}
 				}
 				else // else case for spamming with other letters
 				{
 					key_buf[(block->key_idx)++] = key[scancode];
-					fputc(key[scancode]);  // put the char on the screen
+					if (password_being_entered == SUCCESS) fputc(key[scancode]);  // put the char on the screen
 				}
 
 			}
-			else if (ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L')) // clearing the screen
+			else if (ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L') && (login_mode == SUCCESS)) // clearing the screen
 			{
 				fclear();  // clear the screen
 				block->key_idx = 0; // reset buffer as everything on screen was cleared
@@ -224,27 +226,27 @@ void keyboard_handler()
 			// 	fputc('\n');
 			// 	halt(0);
 			// }
-			else if (ctrl_flag == 1 && scancode == LEFT_ARROW)
-				shiftWindow(LEFT);
-			else if (ctrl_flag == 1 && scancode == RIGHT_ARROW)
-				shiftWindow(RIGHT);
-			else if (ctrl_flag == 1 && scancode == UP_ARROW)
+			else if (ctrl_flag == 1 && scancode == LEFT_ARROW && (login_mode == SUCCESS))
+				sizeWindow(LEFT);
+			else if (ctrl_flag == 1 && scancode == RIGHT_ARROW && (login_mode == SUCCESS))
+				sizeWindow(RIGHT);
+			else if (ctrl_flag == 1 && scancode == UP_ARROW && (login_mode == SUCCESS))
 				sizeWindow(UP);
-			else if (ctrl_flag == 1 && scancode == DOWN_ARROW)
+			else if (ctrl_flag == 1 && scancode == DOWN_ARROW && (login_mode == SUCCESS))
 				sizeWindow(DOWN);
-			else if (shift_flag == 1 && scancode == LEFT_ARROW)
+			else if (shift_flag == 1 && scancode == LEFT_ARROW && (login_mode == SUCCESS))
 				moveWindow(LEFT);
-			else if (shift_flag == 1 && scancode == RIGHT_ARROW)
+			else if (shift_flag == 1 && scancode == RIGHT_ARROW && (login_mode == SUCCESS))
 				moveWindow(RIGHT);
-			else if (shift_flag == 1 && scancode == UP_ARROW)
+			else if (shift_flag == 1 && scancode == UP_ARROW && (login_mode == SUCCESS))
 				moveWindow(UP);
-			else if (shift_flag == 1 && scancode == DOWN_ARROW)
+			else if (shift_flag == 1 && scancode == DOWN_ARROW && (login_mode == SUCCESS))
 				moveWindow(DOWN);
-			else if (alt_flag == 1 && scancode == F_START)
+			else if (alt_flag == 1 && scancode == F_START && (login_mode == SUCCESS))
 				switch_active(0);
-			else if (alt_flag == 1 && scancode == F_START + 1)
+			else if (alt_flag == 1 && scancode == F_START + 1 && (login_mode == SUCCESS))
 				switch_active(1);
-			else if (alt_flag == 1 && scancode == F_START + 2)
+			else if (alt_flag == 1 && scancode == F_START + 2 && (login_mode == SUCCESS))
 				switch_active(2);
 		}
 	}
@@ -279,7 +281,7 @@ int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 	}
 	block->enter_flag = 0;
 	cli();
-	for (i = 0; i < nbytes; i++) // copy over all relevant info from key_buf to buf passed in
+	for (i = 0; i < nbytes; i++) // copy over all relevant info from key_buf to buf passed in 
 	{
 		((int8_t *)buf)[i] = key_buf[i];
 
@@ -308,4 +310,16 @@ int32_t terminal_write(int32_t fd, const void * buf, int32_t nbytes)
 int32_t terminal_close(int32_t fd)
 {
 	return 0; // return zero when closing term
+}
+
+/* setter function to set login_mode variable value */
+void set_login_mode(int32_t login_status)
+{
+	login_mode = login_status;
+}
+
+/* setter function to set password_being_entered variable value */
+void set_password_being_entered_mode(int32_t login_status)
+{
+	password_being_entered = login_status;
 }

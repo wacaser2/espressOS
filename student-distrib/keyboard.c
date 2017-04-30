@@ -153,40 +153,35 @@ void keyboard_handler()
 	{
 		if (scancode == BACKSPACE) // case for backspace
 		{
-			// if (key_idx > 0)
-			// {
-			// 	--key_idx;
-			// 	i = leftright_idx;
-			// 	while(i<key_idx){
-			// 		key_buf[i-1] = key_buf[i];
-			// 		putc(key_buf[i]);
-			// 		++i;
-			// 	}
-			// 	key_buf[i] = NULL_KEY;
-			// 	if (updown_idx == write_idx){
-			// 		i = leftright_idx;
-			// 		while(i<key_idx){
-			// 			temp[i-1] = temp[i];
-			// 			++i;
-			// 		}
-			// 		temp[i] = NULL_KEY;
-			// 		--temp_size;
-			// 	}
-			// 	--leftright_idx;
-			// 	backspace_put(0); // move cursor
-			// }
-			if (key_idx > 0)
+			if (key_idx > 0 && leftright_idx > 0)
 			{
+				backspace_put(0) ; // move cursor
 				--key_idx;
-				--leftright_idx;
-				if (updown_idx == write_idx) {
-					temp[key_idx] = NULL_KEY;
-					temp_size--;
-				}
-				key_buf[key_idx] = NULL_KEY;
-				backspace_put(0); // call backspace_put func
-			}
 
+				/* to display onto video */
+				i = leftright_idx;
+				while(i<key_idx+1){
+					key_buf[i-1] = key_buf[i]; 
+					putc(key_buf[i]); 
+					++i;
+				}
+				putc(NULL_KEY);
+				key_buf[i] = NULL_KEY;
+
+				/* move cursor back to correct place */
+				for(i=0; i<(key_idx+1)-(leftright_idx-1); ++i)
+					move_cursor_left();
+
+				/* case where we're changing prompt after hitting RETURN */
+				if (updown_idx == write_idx){
+					i = leftright_idx;
+					for(i=0; i<key_idx; ++i)
+						temp[i] = key_buf[i];
+					temp[i] = NULL_KEY;
+					--temp_size;
+				}
+				--leftright_idx;
+			}
 		}
 		else if (scancode == LEFT_KEY)
 		{
@@ -320,7 +315,11 @@ void keyboard_handler()
 					
 				}
 				++leftright_idx;
-				if (updown_idx == write_idx) {
+
+				/* 
+				 implement working of putting characters in between 
+				*/
+				if (updown_idx == write_idx){
 					++temp_size;
 					temp[key_idx] = temp_char; // adding keys to history buffer
 				}

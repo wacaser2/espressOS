@@ -286,45 +286,54 @@ void keyboard_handler()
 				if (shift_flag == 1 && capslock_flag == 1) // if both caps lock and shift are pressed
 				{
 					if (shift_key[scancode] >= 65 && shift_key[scancode] <= 90) // capital letters
-					{
 						temp_char = key[scancode];
-					}
 					else // else case for small letters
-					{
 						temp_char = shift_key[scancode];
-					}
 				}
 				else if (shift_flag == 1) // only shift pressed
-				{
 					temp_char = shift_key[scancode];
-				}
 				else if (capslock_flag == 1) // only capslock pressed
 				{
 					if (key[scancode] >= 97 && key[scancode] <= 122) // for small ASCII chars
-					{
 						temp_char = key[scancode]-32;
-					}
 					else // for capital ASCII letters
-					{
 						temp_char = key[scancode];
-					}
 				}
 				else // else case for spamming with other letters
-				{
 					temp_char = key[scancode];
-					
+
+				/* implement working of putting characters in between  */
+		
+				putc(temp_char);
+				i = key_idx;
+
+				while(i>leftright_idx){
+					key_buf[i] = key_buf[i-1];
+					--i;
+				}
+
+				for(i=leftright_idx; i<key_idx; ++i)
+					putc(key_buf[i+1]);
+
+				/* move cursor back to correct place */
+				for(i=0; i<key_idx-leftright_idx; ++i)
+					move_cursor_left();
+
+				key_buf[leftright_idx] = temp_char;
+				++key_idx;
+
+				if (updown_idx == write_idx){
+					for(i=0; i<key_idx; ++i)
+						temp[i] = key_buf[i];
+					++temp_size;
 				}
 				++leftright_idx;
-
-				/* 
-				 implement working of putting characters in between 
-				*/
-				if (updown_idx == write_idx){
-					++temp_size;
-					temp[key_idx] = temp_char; // adding keys to history buffer
-				}
-				key_buf[key_idx++] = temp_char;
-				putc(temp_char);  // put the char on the screen
+				// if (updown_idx == write_idx){
+				// 	++temp_size;
+				// 	temp[key_idx] = temp_char; // adding keys to history buffer
+				// }
+				// key_buf[key_idx++] = temp_char;
+				// putc(temp_char);  // put the char on the screen
 			}
 			else if (ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L')) // clearing the screen
 			{

@@ -127,6 +127,44 @@ void moveWindow(int32_t dir) {
 	updateWindow(window);
 }
 
+void shiftWindow(window_t* window) {
+	int32_t i, j;
+	switch (dir) {
+	case LEFT:
+		break;
+	case RIGHT:
+		break;
+	case UP:
+		for (i = window->t; i < window->b; i++) {
+			for (j = window->l; j < window->r; j++) {
+				if (i == window->b - 1) {
+					placec(j, i, ATTRIB, ' ');
+				}
+				else {
+					placec(j, i, window->screen[((NUM_COLS*(i + 1) + (j)) << 1) + 1], window->screen[((NUM_COLS*(i + 1) + (j)) << 1)]);
+				}
+			}
+		}
+		break;
+	case DOWN:
+		break;
+	default:
+		break;
+	}
+					/*
+					window->screen[((NUM_COLS*(i)+(j)) << 1)] = ' ';
+					window->screen[((NUM_COLS*(i)+(j)) << 1) + 1] = ATTRIB;
+					*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1)) = ' ';
+					*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1) + 1) = ATTRIB;
+					*/
+					/*
+					window->screen[((NUM_COLS*(i)+(j)) << 1)] = window->screen[((NUM_COLS*(i + 1) + (j)) << 1)];
+					window->screen[((NUM_COLS*(i)+(j)) << 1) + 1] = window->screen[((NUM_COLS*(i + 1) + (j)) << 1) + 1];
+					*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS*(i + 1) + j) << 1));
+					*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1) + 1) = *(uint8_t *)(video_mem + ((NUM_COLS*(i + 1) + j) << 1) + 1);
+					*/
+}
+
 void updateWindow(window_t* window) {
 	int32_t i, j;
 	for (i = window->t; i < window->b; i++) {

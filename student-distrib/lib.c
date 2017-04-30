@@ -256,6 +256,15 @@ void placecolor(int32_t x, int32_t y, int8_t a) {
 	//*(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1)) = c;
 }
 
+int8_t getcolor(int32_t x, int32_t y)
+{
+	//if (x < 0 || y < 0 || x >= NUM_COLS || y >= NUM_ROWS)
+	//	return;
+	int8_t a;
+	a = *(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*y + x) << 1) + 1);
+	return a;
+}
+
 /*
 * void setlinecolor(uint8_t c);
 *   Inputs: uint_8* c = attribute to set

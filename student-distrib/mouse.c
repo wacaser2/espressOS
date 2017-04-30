@@ -7,9 +7,12 @@ int32_t x_pixel = 0;
 int32_t y_pixel = 0;
 int32_t x_text = -1;
 int32_t y_text = -1;
+int32_t old_x_text = 0;
+int32_t old_y_text = 0;
 int32_t x_temp = 0;
 int32_t y_temp = 0;
 uint8_t prev_y = 0;
+int8_t color = 0;
 
 volatile int left_flag = 0;
 volatile int right_flag = 0;
@@ -81,6 +84,8 @@ mouse_handler(void)
 
 	placecolor(x_text, y_text, ATTRIB);
 	//placec(x_text, y_text, 0x70, 'M');
+	old_x_text = x_text;
+	old_y_text = y_text;
 
 	packet_byte[cycle] = inb(0x60);
 	if(cycle == 0)
@@ -115,49 +120,49 @@ mouse_handler(void)
 			//puts("Middle button is pressed!n");
 			middle_flag = 1;
 		}
-		else if (packet_byte[1] & 0x2)
+		if (packet_byte[1] & 0x2)
 		{
 			//puts("Right button is pressed!n");
 			right_flag = 1;
 		}
-		else if (packet_byte[1] & 0x1)
+		if (packet_byte[1] & 0x1)
 		{   	
 		  	//puts("Left button is pressed!n");
 		  	left_flag = 1;
 		}
-		else
+		
+		
+		//clear();
+		//puts("ha");
+		x_pixel += x_temp;
+		y_pixel -= y_temp;
+		x_text = (x_pixel >> 2);
+		y_text = (y_pixel >> 3);
+		if(x_text < 0)
 		{
-			//clear();
-			//puts("ha");
-			x_pixel += x_temp;
-			y_pixel -= y_temp;
-			x_text = (x_pixel >> 2);
-			y_text = (y_pixel >> 3);
-			if(x_text < 0)
-			{
-				//printf("  %d  %d     \n", x_text, y_text);
-				x_text = 0;
-				x_pixel = 0;
-			}
-			else if(x_text > 79)
-			{
-				x_text = 79;
-				x_pixel = (((x_text + 1) << 2) - 1);
-			}
-
-			if(y_text < 0)
-			{
-				y_text = 0;
-				y_pixel = 0;
-			}
-			else if(y_text > 24)
-			{
-				y_text = 24;
-				y_pixel = (((y_text + 1) << 3) - 1);
-			}
-			//printf("  %d  %d    \n", x_text, y_text);
-			//printf(" %d     %d    %x  \n", x_temp, y_temp, packet_byte[1]);
+			//printf("  %d  %d     \n", x_text, y_text);
+			x_text = 0;
+			x_pixel = 0;
 		}
+		else if(x_text > 79)
+		{
+			x_text = 79;
+			x_pixel = (((x_text + 1) << 2) - 1);
+		}
+
+		if(y_text < 0)
+		{
+			y_text = 0;
+			y_pixel = 0;
+		}
+		else if(y_text > 24)
+		{
+			y_text = 24;
+			y_pixel = (((y_text + 1) << 3) - 1);
+		}
+		//printf("  %d  %d    \n", x_text, y_text);
+		//printf(" %d     %d    %x  \n", x_temp, y_temp, packet_byte[1]);
+		
 
 		//y_text = prev_y;
 		prev_y = packet_byte[1];
@@ -165,7 +170,10 @@ mouse_handler(void)
  	//printf(" %d     %d    %x  \n", x_temp, y_temp, packet_byte[1]);    
 
     //placec(x_text, y_text, 0x70, 'M');
-    placecolor(x_text, y_text, 0x70);
+    placecolor(old_x_text, old_y_text, color);
+    color = getcolor(x_text, y_text);
+    placecolor(x_text, y_text, (color ^ 0x88));
+
     //printf("  %d  %d     ", x_text, y_text);
     	
     // do what you want here, just replace the puts's to execute an action for each button

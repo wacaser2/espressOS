@@ -16,7 +16,7 @@ volatile int8_t buf_hist[MAX_COMMANDS][KEY_BUF_SIZE];
 volatile unsigned char buf_hist_cmd_size[MAX_COMMANDS];
 volatile int updown_idx = 0;
 volatile int write_idx = 0; // while typing in a cmd store cmd idx
-volatile int buf_size = 0;
+volatile int buf_size = 1;
 
 /* current prompt info */
 volatile int8_t temp[KEY_BUF_SIZE];
@@ -178,7 +178,7 @@ void keyboard_handler()
 			}
 
 			/* debug */
-			//printf("%d",updown_idx);
+			//printf("%d",buf_size);
 			/* debug */
 
 			/* change the updown_idx */

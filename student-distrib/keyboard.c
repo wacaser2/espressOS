@@ -220,10 +220,10 @@ void keyboard_handler()
 				fclear();  // clear the screen
 				block->key_idx = 0; // reset buffer as everything on screen was cleared
 			}
-			else if (ctrl_flag == 1 && (key[scancode] == 'c' || shift_key[scancode] == 'C')) {	//halt current program
-				fputc('\n');
-				halt(0);
-			}
+			// else if (ctrl_flag == 1 && (key[scancode] == 'c' || shift_key[scancode] == 'C')) {	//halt current program
+			// 	fputc('\n');
+			// 	halt(0);
+			// }
 			else if (ctrl_flag == 1 && scancode == LEFT_ARROW)
 				sizeWindow(LEFT);
 			else if (ctrl_flag == 1 && scancode == RIGHT_ARROW)

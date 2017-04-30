@@ -177,7 +177,7 @@ entry(unsigned long magic, unsigned long addr)
 
 	/* Enable interrupts*/
 	printf("Enabling Interrupts\n");
-	sti();
+	
 
 	/* Init file_sys*/
 	uint32_t a = ((module_t*)mbi->mods_addr)->mod_start;

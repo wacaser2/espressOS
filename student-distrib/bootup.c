@@ -48,8 +48,6 @@ void bootup_sequence_1()
 		}
 	}
 
-	sti();		
-
 
 	clear(); 
 }

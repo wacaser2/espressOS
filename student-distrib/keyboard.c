@@ -202,7 +202,14 @@ void keyboard_handler()
 		else if (!(ctrl_flag || shift_flag) && (scancode == UP_KEY || scancode == DOWN_KEY))
 		{
 			/* move to prev command and add required backspaces */
-			i = key_idx;
+			if(key_idx != leftright_idx){
+				i=0;
+				while(i<key_idx-leftright_idx){
+					move_cursor_right();
+					++i;
+				}
+			}
+			i=key_idx;
 			while (i > 0) {
 				backspace_put(0);
 				i--;
@@ -303,7 +310,6 @@ void keyboard_handler()
 					temp_char = key[scancode];
 
 				/* implement working of putting characters in between  */
-		
 				putc(temp_char);
 				i = key_idx;
 
@@ -328,12 +334,6 @@ void keyboard_handler()
 					++temp_size;
 				}
 				++leftright_idx;
-				// if (updown_idx == write_idx){
-				// 	++temp_size;
-				// 	temp[key_idx] = temp_char; // adding keys to history buffer
-				// }
-				// key_buf[key_idx++] = temp_char;
-				// putc(temp_char);  // put the char on the screen
 			}
 			else if (ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L')) // clearing the screen
 			{

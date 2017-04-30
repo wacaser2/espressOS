@@ -4,6 +4,7 @@
 #include "syscalls.h"
 #include "paging.h"
 #include "window.h"
+#include "bootup.h"
 
 uint8_t process_num[6] = { 0, 0, 0, 0, 0, 0 };
 volatile int32_t process = -1;
@@ -103,6 +104,7 @@ int32_t halt(uint8_t status) {
 	/* If this process is the top shell, restart */
 	if (block->parent_id == -1) {
 		clear();
+		login_screen();
 		terminal_process[process_term] = -1;
 		process = -1;
 		execute((uint8_t *)"shell");

@@ -20,12 +20,14 @@ fops_tbl_t dir_ops = (fops_tbl_t) { dir_open, dir_read, dir_write, dir_close };
 fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*)null_ops, (void*)null_ops };
 
 void switch_active(int32_t term) {
+	cli();
 	process_term = active = term;
 	reload = 1;
 	switch_process(term);
 }
 
 void switch_process(int32_t term) {
+	cli();
 	/*store current*/
 	if (process != -1) {
 		pcb_t* block = get_pcb(get_proc());
@@ -55,13 +57,27 @@ void switch_process(int32_t term) {
 
 	/*restore other*/
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
-	tss.esp0 = eightMB - (process * eightKB) - 4;
 	pcb_t* block = get_pcb(process);
+	tss.esp0 = eightMB - (process * eightKB) - 4;
+	/* Context Switch */
+	//asm volatile (
+	//	"pushl $0x2B; \n"
+	//	"pushl %0; \n"
+	//	"pushfl; \n"
+	//	"popl %%ecx; \n"
+	//	"orl $0x0200, %%ecx; \n"
+	//	"pushl %%ecx; \n"
+	//	"pushl $0x23; \n"
+	//	"pushl %1; \n"
+	//	"iret; \n"
+	//	: /* outputs */ : "r" (PROG_STACK_START), "r" (entry_point) /* inputs  */ : "ecx" // clobbers
+	//	);
 	asm volatile(
 		"movl %0, %%ebp \n"
 		"movl %1, %%esp \n"
 		: : "r" (block->kbp), "r" (block->ksp)
 		);
+	//sti();
 }
 
 /* System Calls*/
@@ -84,25 +100,25 @@ int32_t halt(uint8_t status) {
 	process_num[process] = ZERO;
 
 	/* If this process is the top shell, restart */
-	if (get_pcb(process)->parent_id == -1) {
+	if (block->parent_id == -1) {
 		clear();
 		terminal_process[process_term] = -1;
 		process = -1;
 		execute((uint8_t *)"shell");
 	}
 
-	if (!strncmp((int8_t*)get_pcb(process)->name, (int8_t*)"shell", NAME_SIZE))
+	if (!strncmp((int8_t*)block->name, (int8_t*)"shell", NAME_SIZE))
 		window_exit(process);
 
 	/* Reset process to parent */
-	block = get_pcb(process);
-	process = block->parent_block->process_id;
+	//block = get_pcb(process);
+	process = block->parent_id;
 	terminal_process[process_term] = process;
 	/* Reset page mapping to parent process */
 	VtoPmap(onetwentyeightMB, (eightMB + ((process)* fourMB)));
 
 	/* Update tss */
-	tss.esp0 = block->parent_ksp;
+	tss.esp0 = eightMB - (process * eightKB) - 4; //block->parent_ksp;
 
 	int32_t ret_val;
 	if (status == 255)
@@ -117,6 +133,7 @@ int32_t halt(uint8_t status) {
 		"movl %0, %%eax \n"
 		"movl %1, %%ebp \n"
 		"movl %2, %%esp \n"
+		"sti \n"
 		"leave \n"
 		"ret \n"
 		: : "r" (ret_val), "r" (block->parent_kbp), "r" (block->parent_ksp)
@@ -175,7 +192,7 @@ int32_t execute(const uint8_t* command) {
 	block->parent_id = parent_proc;
 	strcpy(block->command, "");
 	block->key_idx = 0;
-	block->cycles = 2;
+	block->cycles = 0;
 	if (parent_proc == -1)			// first process, so set parent to itself
 		block->parent_block = block;
 	else

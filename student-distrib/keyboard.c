@@ -113,6 +113,7 @@ void keyboard_init()
 */
 void keyboard_handler()
 {
+	cli();
 	uint8_t scancode = 0;
 
 	pcb_t* block = get_pcb(get_term_proc(get_active()));
@@ -247,6 +248,7 @@ void keyboard_handler()
 				switch_active(2);
 		}
 	}
+	sti();
 }
 
 
@@ -258,7 +260,7 @@ int32_t terminal_open(const uint8_t* filename)
 int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 {
 
-	pcb_t* block = get_pcb(get_term_proc(get_active()));
+	pcb_t* block = get_pcb(get_proc());
 	int8_t* key_buf = block->command;
 	block->key_idx = 0;
 

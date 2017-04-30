@@ -241,8 +241,8 @@ setcolor(uint8_t c)
 	int i, j;
 	for (i = 0; i < NUM_ROWS; i++) {
 		for (j = 0; j < NUM_COLS; j++) {
-			window->screen[((NUM_COLS*(i)+(j)) << 1) + 1] |= c;
-			*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1) + 1) |= c;
+			window->screen[((NUM_COLS*(i)+(j)) << 1) + 1] = c;
+			*(uint8_t *)(video_mem + ((NUM_COLS*i + j) << 1) + 1) = c;
 		}
 	}
 }
@@ -407,6 +407,68 @@ void fputc(uint8_t c) {
 		fupdate_cursor(window->cy, window->cx);
 	}
 }
+
+
+
+
+void putspecial(uint8_t c) {
+
+	//int i, j;
+	//// reaching vertical end
+	//if (c == '\n' || c == '\r') {
+	//	screen_y++;
+	//	screen_x = 0;
+
+	//	int i, j;
+	//	// reaching vertical end
+	//	if (screen_y == NUM_ROWS)
+	//	{
+	//		for (j = 0, i = NUM_COLS; j < NUM_ROWS*NUM_COLS; j++, i++)
+	//		{
+	//			if (i < NUM_ROWS*NUM_COLS)
+	//			{
+	//				*(uint8_t *)(video_mem + (j << 1)) = *(uint8_t *)(video_mem + (i << 1));
+	//				*(uint8_t *)(video_mem + (j << 1) + 1) = *(uint8_t *)(video_mem + (i << 1) + 1);
+	//			}
+	//			else
+	//			{
+	//				*(uint8_t *)(video_mem + (j << 1)) = ' ';
+	//				*(uint8_t *)(video_mem + (j << 1) + 1) = BROWN;
+	//			}
+	//		}
+	//		screen_y--;
+	//	}
+	//	update_cursor(screen_y, screen_x);
+	//}
+	//else {
+	//	if ((screen_x + 1 == NUM_COLS) && (screen_y == NUM_ROWS - 1))
+	//	{
+	//		for (j = 0, i = NUM_COLS; j < NUM_ROWS*NUM_COLS; j++, i++)
+	//		{
+	//			if (i < NUM_ROWS*NUM_COLS)
+	//			{
+	//				*(uint8_t *)(video_mem + (j << 1)) = *(uint8_t *)(video_mem + (i << 1));
+	//				*(uint8_t *)(video_mem + (j << 1) + 1) = *(uint8_t *)(video_mem + (i << 1) + 1);
+	//			}
+	//			else
+	//			{
+	//				*(uint8_t *)(video_mem + (j << 1)) = ' ';
+	//				*(uint8_t *)(video_mem + (j << 1) + 1) = BROWN;
+	//			}
+	//		}
+
+	//		screen_y--;
+	//		update_cursor(screen_y, screen_x);
+	//	}
+	//	*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1)) = c;
+	//	*(uint8_t *)(video_mem + ((NUM_COLS*screen_y + screen_x) << 1) + 1) = BROWN;
+	//	screen_x++;
+	//	screen_y = (screen_y + (screen_x / NUM_COLS))/* % NUM_ROWS*/;
+	//	screen_x %= NUM_COLS;
+	//	update_cursor(screen_y, screen_x);
+	//}
+}
+
 
 
 void backspace_put(int key_idx)

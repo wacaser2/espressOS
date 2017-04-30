@@ -7,12 +7,15 @@
 #include "lib.h"
 #include "i8259.h"
 #include "debug.h"
+#include "pit.h"
 #include "rtc.h"
 #include "keyboard.h"
 #include "paging.h"
 #include "file.h"
 #include "syscalls.h"
 #include "window.h"
+#include "bootup.h"
+
 
  /* Macros. */
  /* Check if the bit BIT in FLAGS is set. */
@@ -150,6 +153,7 @@ entry(unsigned long magic, unsigned long addr)
 		ltr(KERNEL_TSS);
 	}
 
+
 	/* Install ISR'S*/
 	printf("Installing isrs\n");
 	isrs_install();
@@ -157,6 +161,10 @@ entry(unsigned long magic, unsigned long addr)
 	/* Init the PIC */
 	printf("Initializing PIC\n");
 	i8259_init();
+
+	/* Init pit */
+	printf("Initializing PIT\n");
+	pit_init();
 
 	/* Init rtc*/
 	printf("Initializing RTC\n");
@@ -182,8 +190,11 @@ entry(unsigned long magic, unsigned long addr)
 	window_init(-1);
 
 	clear();
+
+	// startup sequence
+	bootup_sequence_1();
+
 	switch_active(0);
-	execute((uint8_t *)"shell");
 
 	/* Spin (nicely, so we don't chew up cycles) */
 	asm volatile(".1: hlt; jmp .1;");

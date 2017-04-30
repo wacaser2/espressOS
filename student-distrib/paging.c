@@ -54,22 +54,28 @@ paging_init(unsigned long addr) {
 
 void windowPage(int32_t proc) {
 	first_page_table[(VIDEO >> OFFSET) + 1 + proc] |= RW | PRESENT;
+	clearTLB();
 }
 
 void videoPage(void* window) {
 	first_page_table[(VIDEO >> OFFSET)] = (((int32_t)window) & 0xFFFFF000) | RW | PRESENT;
 	VtoPpage(onetwentyeightMB + fourMB, (uint32_t)window);
+	clearTLB();
 }
 
 void VtoPpage(uint32_t vaddr, uint32_t paddr) {
 	page_directory[((vaddr >> 22) & 0x000003FF)] = ((uint32_t)user_page_table) | PRESENT | RW | USER;
 	user_page_table[((vaddr >> 12) & 0x000003FF)] = (paddr & 0xFFFFF000) | PRESENT | RW | USER;
+	clearTLB();
 }
 
 void VtoPmap(uint32_t vaddr, uint32_t paddr) {
 	int32_t vidx = (vaddr >> 22) & 0x000003FF;		// vidx = 32
 	page_directory[vidx] = (paddr & 0xFFC00000) | PRESENT | fourMBpage | RW | USER;
+	clearTLB();
+}
 
+void clearTLB() {
 	asm volatile (
 		"movl %%cr3,%%eax; \n \t"
 		"movl %%eax,%%cr3; \n \t"

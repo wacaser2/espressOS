@@ -38,19 +38,6 @@ rtc_handler(void)
 	send_eoi(RTC_IRQ);		//informs pic that we got the interrupt
 	interrupt_flag = 1;
 	count++;
-	if (get_proc() != -1) {
-		pcb_t* block = get_pcb(get_proc());
-		if (block->cycles == 0) {
-			block->cycles = 10;
-			int32_t next, i;
-			for (next = get_proc_term(), i = 0; i < 3; i++)
-				if (get_term_proc((next + i) % 3) != -1)
-					switch_process((next + i) % 3);
-		}
-		else {
-			block->cycles--;
-		}
-	}
 }
 
 

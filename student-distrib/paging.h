@@ -29,4 +29,6 @@ void VtoPpage(uint32_t vaddr, uint32_t paddr);
 
 void VtoPmap(uint32_t vaddr, uint32_t paddr);
 
+void clearTLB();
+
 #endif

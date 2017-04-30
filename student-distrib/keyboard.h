@@ -13,7 +13,7 @@
 /* keyboard buffer size */
 #define KEY_BUF_SIZE 130
 #define KEY_BUF_SIZE_ACTUAL 128
-#define MAX_COMMANDS 30
+#define MAX_COMMANDS 10
 
 #define BACKSPACE 	0x0E
 #define ENTER 		0x1C
@@ -24,6 +24,7 @@
 #define LEFT_KEY	0x4B
 #define RIGHT_KEY	0x4D
 
+/* ctrl and shift macros */
 #define LEFT_CTRL	0x1D
 #define LEFT_SHIFT	0x2A
 #define RIGHT_SHIFT	0x36
@@ -34,6 +35,7 @@
 #define RIGHT_SHIFT_REL	0xB6
 #define CAPS_LOCK_REL	0xBA
 
+/* character macros */
 #define NULL_KEY	'\0'
 #define NEW_LINE	'\n'
 #define CARRIAGE_RETURN '\r'

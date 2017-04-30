@@ -1,3 +1,4 @@
+make: Warning: File `Makefile.dep' has modification time 5.3 s in the future
 gcc  -nostdinc -g  -c -o boot.o boot.S
 gcc  -nostdinc -g  -c -o isr.o isr.S
 gcc  -nostdinc -g  -c -o x86_desc.o x86_desc.S
@@ -13,3 +14,4 @@ gcc -Wall -fno-builtin -fno-stack-protector -nostdlib -nostdinc -g  -c -o syscal
 rm -f bootimg
 gcc -nostdlib -static boot.o isr.o x86_desc.o file.o i8259.o idt.o kernel.o keyboard.o lib.o paging.o rtc.o syscalls.o -Ttext=0x400000 -o bootimg
 sudo ./debug.sh
+make: warning:  Clock skew detected.  Your build may be incomplete.

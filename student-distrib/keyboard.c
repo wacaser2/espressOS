@@ -4,12 +4,14 @@
 #include "keyboard.h"
 #include "syscalls.h"
 
+/* implemeting keyboard function variables */
 volatile int enter_flag = 0;
 volatile int ctrl_flag = 0;
 volatile int shift_flag = 0;
 volatile int capslock_flag = 0;
 volatile int8_t key_buf[KEY_BUF_SIZE];
 volatile int key_idx = 0;
+volatile unsigned char temp_char;
 
 /* buffer command history variables */
 volatile int8_t buf_hist[MAX_COMMANDS][KEY_BUF_SIZE];
@@ -21,6 +23,9 @@ volatile int buf_size = 1;
 /* current prompt info */
 volatile int8_t temp[KEY_BUF_SIZE];
 volatile int temp_size = 0;
+
+/* variables for left and right function */
+volatile uint32_t  leftright_idx = 0;
 
 /* keyboard array*/
 static unsigned char key[KEY_BUF_SIZE_ACTUAL] =
@@ -148,9 +153,32 @@ void keyboard_handler()
 	{
 		if (scancode == BACKSPACE) // case for backspace
 		{
+			// if (key_idx > 0)
+			// {
+			// 	--key_idx;
+			// 	i = leftright_idx;
+			// 	while(i<key_idx){
+			// 		key_buf[i-1] = key_buf[i];
+			// 		putc(key_buf[i]);
+			// 		++i;
+			// 	}
+			// 	key_buf[i] = NULL_KEY;
+			// 	if (updown_idx == write_idx){
+			// 		i = leftright_idx;
+			// 		while(i<key_idx){
+			// 			temp[i-1] = temp[i];
+			// 			++i;
+			// 		}
+			// 		temp[i] = NULL_KEY;
+			// 		--temp_size;
+			// 	}
+			// 	--leftright_idx;
+			// 	backspace_put(0); // move cursor
+			// }
 			if (key_idx > 0)
 			{
 				--key_idx;
+				--leftright_idx;
 				if (updown_idx == write_idx) {
 					temp[key_idx] = NULL_KEY;
 					temp_size--;
@@ -158,16 +186,24 @@ void keyboard_handler()
 				key_buf[key_idx] = NULL_KEY;
 				backspace_put(0); // call backspace_put func
 			}
+
 		}
-		// else if (scancode == LEFT_KEY)
-		// {
-		// 	if(key_idx > 0)
-		// 		move_cursor(0, key_idx); // 0 indicates left arrow-key
-		// }
-		// else if (scancode == RIGHT_KEY)
-		// {
-		// 	move_cursor(1, key_idx); // 1 indicates right arrow key
-		// }
+		else if (scancode == LEFT_KEY)
+		{
+			//printf("%d", leftright_idx);
+			if(leftright_idx != 0){
+				--leftright_idx;
+				move_cursor_left();
+			}
+
+		}
+		else if (scancode == RIGHT_KEY)
+		{
+			if(leftright_idx != key_idx){
+				++leftright_idx;
+				move_cursor_right();
+			}
+		}
 		else if (!(ctrl_flag || shift_flag) && (scancode == UP_KEY || scancode == DOWN_KEY))
 		{
 			/* move to prev command and add required backspaces */
@@ -191,6 +227,10 @@ void keyboard_handler()
 			/* change key_idx to updown value */
 			if (updown_idx == write_idx) key_idx = temp_size;
 			else key_idx = buf_hist_cmd_size[updown_idx];
+
+			/* left and right value updated when up/down pressed */
+			leftright_idx = key_idx;
+
 			/* print the command at the updown_idx */
 			for (i = 0; i < key_idx; ++i) {
 				if (updown_idx == write_idx) key_buf[i] = temp[i];
@@ -228,6 +268,7 @@ void keyboard_handler()
 			enter_flag = 1;
 			key_buf[key_idx++] = NEW_LINE;
 			key_idx = 0;    // because its a new line
+			leftright_idx = 0; // because its a new line 
 			putc(key[scancode]); // put newline character
 		}
 		else if (scancode == LEFT_CTRL)
@@ -251,63 +292,40 @@ void keyboard_handler()
 				{
 					if (shift_key[scancode] >= 65 && shift_key[scancode] <= 90) // capital letters
 					{
-						if (updown_idx == write_idx) {
-							temp_size++;
-							temp[key_idx] = key[scancode]; // adding keys to history buffer
-						}
-						key_buf[key_idx++] = key[scancode];
-						putc(key[scancode]);
+						temp_char = key[scancode];
 					}
 					else // else case for small letters
 					{
-						if (updown_idx == write_idx) {
-							temp_size++;
-							temp[key_idx] = shift_key[scancode];  // adding keys to history buffer
-						}
-						key_buf[key_idx++] = shift_key[scancode];
-						putc(shift_key[scancode]);
+						temp_char = shift_key[scancode];
 					}
 				}
 				else if (shift_flag == 1) // only shift pressed
 				{
-					if (updown_idx == write_idx) {
-						temp_size++;
-						temp[key_idx] = shift_key[scancode]; // adding keys to history buffer
-					}
-					key_buf[key_idx++] = shift_key[scancode];
-					putc(shift_key[scancode]);
+					temp_char = shift_key[scancode];
 				}
 				else if (capslock_flag == 1) // only capslock pressed
 				{
 					if (key[scancode] >= 97 && key[scancode] <= 122) // for small ASCII chars
 					{
-						if (updown_idx == write_idx) {
-							temp_size++;
-							temp[key_idx] = key[scancode] - 32; // adding keys to history buffer
-						}
-						key_buf[key_idx++] = key[scancode] - 32;
-						putc(key[scancode] - 32);
+						temp_char = key[scancode]-32;
 					}
 					else // for capital ASCII letters
 					{
-						if (updown_idx == write_idx) {
-							temp_size++;
-							temp[key_idx] = key[scancode]; // adding keys to history buffer
-						}
-						key_buf[key_idx++] = key[scancode];
-						putc(key[scancode]);
+						temp_char = key[scancode];
 					}
 				}
 				else // else case for spamming with other letters
 				{
-					if (updown_idx == write_idx) {
-						temp_size++;
-						temp[key_idx] = key[scancode]; // adding keys to history buffer
-					}
-					key_buf[key_idx++] = key[scancode];
-					putc(key[scancode]);  // put the char on the screen
+					temp_char = key[scancode];
+					
 				}
-
+				++leftright_idx;
+				if (updown_idx == write_idx) {
+					++temp_size;
+					temp[key_idx] = temp_char; // adding keys to history buffer
+				}
+				key_buf[key_idx++] = temp_char;
+				putc(temp_char);  // put the char on the screen
 			}
 			else if (ctrl_flag == 1 && (key[scancode] == 'l' || shift_key[scancode] == 'L')) // clearing the screen
 			{

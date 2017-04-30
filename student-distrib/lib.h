@@ -25,7 +25,10 @@ void test_interrupts();
 void backspace_put(int key_idx);
 void enter_put(void);
 void update_cursor(int row, int col);
-void move_cursor(int type, int key_idx);
+
+/* functions for implementing left and right func */
+void move_cursor_left();
+void move_cursor_right();
 
 
 void* memset(void* s, int32_t c, uint32_t n);

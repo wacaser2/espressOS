@@ -225,9 +225,9 @@ void keyboard_handler()
 			// 	halt(0);
 			// }
 			else if (ctrl_flag == 1 && scancode == LEFT_ARROW)
-				sizeWindow(LEFT);
+				shiftWindow(LEFT);
 			else if (ctrl_flag == 1 && scancode == RIGHT_ARROW)
-				sizeWindow(RIGHT);
+				shiftWindow(RIGHT);
 			else if (ctrl_flag == 1 && scancode == UP_ARROW)
 				sizeWindow(UP);
 			else if (ctrl_flag == 1 && scancode == DOWN_ARROW)

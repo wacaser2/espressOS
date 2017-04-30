@@ -32,7 +32,7 @@ void sizeWindow(int32_t dir);
 
 void moveWindow(int32_t dir);
 
-void shiftWindow(window_t* window);
+void shiftWindow(int32_t dir);
 
 void updateWindow(window_t* window);
 

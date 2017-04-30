@@ -47,14 +47,15 @@ void fclear(void)
 }
 
 void restore(int32_t wid) {
-	window_t* window = get_window(wid);
+	//window_t* window = get_window(wid);
 	window_t* prev = get_window(get_parent_pcb(wid)->process_id);
-	int32_t i, j;
-	for (i = window->t - 1; i <= window->b; i++) {
-		for (j = window->l - 1; j <= window->r; j++) {
-			placec(j, i, prev->screen[((NUM_COLS*(i)+(j)) << 1) + 1], prev->screen[((NUM_COLS*(i)+(j)) << 1)]);
-		}
-	}
+	updateWindow(prev);
+	//int32_t i, j;
+	//for (i = window->t - 1; i <= window->b; i++) {
+	//	for (j = window->l - 1; j <= window->r; j++) {
+	//		placec(j, i, prev->screen[((NUM_COLS*(i)+(j)) << 1) + 1], prev->screen[((NUM_COLS*(i)+(j)) << 1)]);
+	//	}
+	//}
 	update_cursor(prev->cy, prev->cx);
 }
 

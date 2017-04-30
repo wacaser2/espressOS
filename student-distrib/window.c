@@ -48,13 +48,15 @@ void sizeWindow(int32_t dir) {
 		fupdate_cursor(window->cy, window->cx - 1);
 		break;
 	case RIGHT:
-		if (window->cx + 1 >= window->r)
+		if (window->l + 1 >= window->r)
 			break;
 		updateVline(window, parent, window->l - 1);
 		window->l++;
 		//borderVline(window, window->l - 1);
-		shiftWindow(dir);
-		fupdate_cursor(window->cy, window->cx + 1);
+		if (window->cx + 1 < window->r) {
+			shiftWindow(dir);
+			fupdate_cursor(window->cy, window->cx + 1);
+		}
 		break;
 	case UP:
 		if (window->t - 1 <= parent->t)
@@ -65,13 +67,15 @@ void sizeWindow(int32_t dir) {
 		fupdate_cursor(window->cy - 1, window->cx);
 		break;
 	case DOWN:
-		if (window->cy + 1 >= window->b)
+		if (window->t + 1 >= window->b)
 			break;
 		updateHline(window, parent, window->t - 1);
 		window->t++;
 		//borderHline(window, window->t - 1);
-		shiftWindow(dir);
-		fupdate_cursor(window->cy + 1, window->cx);
+		if (window->cy + 1 < window->b) {
+			shiftWindow(dir);
+			fupdate_cursor(window->cy + 1, window->cx);
+		}
 		break;
 	default:
 		break;
@@ -219,7 +223,7 @@ void updateWindow(window_t* window) {
 	borderVline(window, window->l - 1);
 	borderVline(window, window->r);
 	updateStatus(window);
-	update_cursor(window->cy, window->cx);
+	fupdate_cursor(window->cy, window->cx);
 }
 
 void updateHline(window_t* window, window_t* parent, int32_t y) {
@@ -271,6 +275,6 @@ window_t* get_window(int32_t proc) {
 window_t* get_parent_window(int32_t proc) {
 	if (proc == -1)
 		return (window_t*)VIDEO;
-	return (window_t*)(VIDEO + ((1 + get_parent_pcb(proc)->window_id) << 12));
+	return (window_t*)(VIDEO + ((1 + get_parent_pcb(get_pcb(proc)->window_id)->window_id) << 12));
 }
 

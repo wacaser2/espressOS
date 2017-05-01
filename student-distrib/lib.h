@@ -6,6 +6,7 @@
 #define _LIB_H
 
 #define VIDEO 0xB8000
+#define TRUE_VIDEO_OFFSET -0x1000
 #define NUM_COLS 80
 #define NUM_ROWS 25
 #define PROMPT_SIZE 7 //change if you change prompt
@@ -21,7 +22,6 @@ void fputc(uint8_t c);
 void placecolor(int32_t x, int32_t y, int8_t a);
 int8_t getcolor(int32_t x, int32_t y);
 void putc(uint8_t c);
-void putspecial(uint8_t c);
 void setcolor(uint8_t c);
 void setlinecolor(uint8_t c);
 int32_t puts(int8_t *s);
@@ -30,14 +30,12 @@ int8_t *strrev(int8_t* s);
 uint32_t strlen(const int8_t* s);
 void clear(void);
 void fclear(void);
-void restore(int32_t wid);
 
 void test_interrupts();
-void backspace_put(int key_idx);
-void fbackspace_put(int key_idx);
-void enter_put(void);
-void update_cursor(int row, int col);
-void fupdate_cursor(int row, int col);
+void backspace_put(int32_t key_idx);
+void fbackspace_put(int32_t key_idx);
+void update_cursor(int32_t row, int32_t col);
+void fupdate_cursor(int32_t row, int32_t col);
 
 /* functions for implementing left and right func */
 void move_cursor_left();

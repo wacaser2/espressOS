@@ -13,14 +13,14 @@
 
 
 typedef struct window {
-	int8_t screen[4000];
-	int32_t l;
-	int32_t r;
-	int32_t t;
-	int32_t b;
-	int32_t cx;
-	int32_t cy;
-	uint8_t res[72];
+	int8_t screen[4000];//text mode memory
+	int32_t l;			//left edge position
+	int32_t r;			//right edge position
+	int32_t t;			//top edge position
+	int32_t b;			//bottom edge position
+	int32_t cx;			//cursor x position
+	int32_t cy;			//cursor y position
+	uint8_t res[72];	//reserved
 } window_t;
 
 

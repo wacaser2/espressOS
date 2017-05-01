@@ -383,12 +383,25 @@ void keyboard_handler()
 	sti();
 }
 
-
+/*
+* void terminal_open()
+*   Inputs: const uint8_t* filename = name of file to open (not used)
+*   Return Value: success or failure
+*	Function: Doesn't do anything since stdio are default opened
+*/
 int32_t terminal_open(const uint8_t* filename)
 {
 	return 0; // just returning zero for opening term
 }
 
+/*
+* void terminal_read()
+*   Inputs: int32_t fd = file descriptor (should be 0)
+			void* buf = buffer to read to
+			int32_t nbytes = max number of bytes to read
+*   Return Value: number of bytes read or -1 for failure
+*	Function: Reads a line of input from the keyboard
+*/
 int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 {
 
@@ -427,6 +440,14 @@ int32_t terminal_read(int32_t fd, void * buf, int32_t nbytes)
 	return i + 1;
 }
 
+/*
+* void terminal_write()
+*   Inputs: int32_t fd = file descriptor (should be 1)
+			const void* buf = buffer to write from
+			int32_t nbytes = max number of bytes to write
+*   Return Value: number of bytes written or -1 for failure
+*	Function: Writes to the screen
+*/
 int32_t terminal_write(int32_t fd, const void * buf, int32_t nbytes)
 {
 	int32_t i;
@@ -437,6 +458,12 @@ int32_t terminal_write(int32_t fd, const void * buf, int32_t nbytes)
 	return i;
 }
 
+/*
+* void terminal_read()
+*   Inputs: int32_t fd = file descriptor 
+*   Return Value: 0 or -1 for failure
+*	Function: Doesn't really do anything
+*/
 int32_t terminal_close(int32_t fd)
 {
 	return 0; // return zero when closing term

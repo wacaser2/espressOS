@@ -6,13 +6,15 @@
 #include "window.h"
 #include "bootup.h"
 
-uint8_t process_num[6] = { 0, 0, 0, 0, 0, 0 };
+/* Variables to keep track of running processes */
+uint8_t process_num[MAXPROCESSES] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 volatile int32_t process = -1;
 int32_t process_term = -1;
 int32_t active = -1;
 int32_t terminal_process[3] = { -1,-1,-1 };
 int32_t reload = 0;
 
+/* Tables for the different file types */
 fops_tbl_t stdin_ops = { (void*)null_ops, terminal_read, (void*)null_ops, (void*)null_ops };
 fops_tbl_t stdout_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, terminal_write, (void*)null_ops };
 fops_tbl_t rtc_ops = (fops_tbl_t) { rtc_open, rtc_read, rtc_write, rtc_close };
@@ -20,6 +22,12 @@ fops_tbl_t file_ops = (fops_tbl_t) { file_open, file_read, file_write, file_clos
 fops_tbl_t dir_ops = (fops_tbl_t) { dir_open, dir_read, dir_write, dir_close };
 fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*)null_ops, (void*)null_ops };
 
+/*
+void switch_active
+input: int32_t term = terminal to switch to active
+output: none
+purpose: triggers the switching to that terminal
+*/
 void switch_active(int32_t term) {
 	cli();
 	process_term = active = term;
@@ -27,6 +35,12 @@ void switch_active(int32_t term) {
 	switch_process(term);
 }
 
+/*
+void switch_process
+input: int32_t term
+output: none
+purpose: trigger the switching to a different process
+*/
 void switch_process(int32_t term) {
 	cli();
 	/*store current*/
@@ -60,30 +74,22 @@ void switch_process(int32_t term) {
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
 	pcb_t* block = get_pcb(process);
 	tss.esp0 = eightMB - (process * eightKB) - 4;
-	/* Context Switch */
-	//asm volatile (
-	//	"pushl $0x2B; \n"
-	//	"pushl %0; \n"
-	//	"pushfl; \n"
-	//	"popl %%ecx; \n"
-	//	"orl $0x0200, %%ecx; \n"
-	//	"pushl %%ecx; \n"
-	//	"pushl $0x23; \n"
-	//	"pushl %1; \n"
-	//	"iret; \n"
-	//	: /* outputs */ : "r" (PROG_STACK_START), "r" (entry_point) /* inputs  */ : "ecx" // clobbers
-	//	);
 	asm volatile(
 		"movl %0, %%ebp \n"
 		"movl %1, %%esp \n"
 		: : "r" (block->kbp), "r" (block->ksp)
 		);
-	//sti();
 }
 
 
 /* System Calls*/
 
+/*
+int32_t halt
+input: uint8_t status = status to use in return value
+output: int32_t = failure or success code
+purpose: to halt the current process
+*/
 int32_t halt(uint8_t status) {
 	cli();
 	/* Close all files associated */
@@ -136,7 +142,6 @@ int32_t halt(uint8_t status) {
 		"movl %0, %%eax \n"
 		"movl %1, %%ebp \n"
 		"movl %2, %%esp \n"
-		"sti \n"
 		"leave \n"
 		"ret \n"
 		: : "r" (ret_val), "r" (block->parent_kbp), "r" (block->parent_ksp)
@@ -144,6 +149,12 @@ int32_t halt(uint8_t status) {
 	return 0;
 }
 
+/*
+int32_t execute
+input: const uint8_t* command = command to execute
+output: int32_t shouldn't return from execute, straight from halt
+purpose: to execute a program file
+*/
 int32_t execute(const uint8_t* command) {
 	cli();
 
@@ -282,6 +293,14 @@ int32_t execute(const uint8_t* command) {
 	return 0;
 }
 
+/*
+int32_t read
+input: int32_t fd = file descriptor for file to read
+		void* buf = buffer to write to
+		int32_t nbytes = number of bytes to read
+output: int32_t = either number of bytes read or -1 for failure
+purpose: interface to read from a file
+*/
 int32_t read(int32_t fd, void* buf, int32_t nbytes) {
 
 	/* Check invalid fd */
@@ -295,6 +314,14 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes) {
 	return block->fdarray[fd].fops_tbl_pointer->read(fd, buf, nbytes);
 }
 
+/*
+int32_t write
+input: int32_t fd = file descriptor for file to write to
+		const void* buf = buffer to write from
+		int32_t nbytes = number of bytes to write
+output: int32_t either failure or number of bytes written
+purpose: interface to write to a file
+*/
 int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
 
 	/* Check invalid fd */
@@ -308,6 +335,12 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
 	return block->fdarray[fd].fops_tbl_pointer->write(fd, buf, nbytes);
 }
 
+/*
+int32_t open
+input: const uint8_t* filename = name of file to open
+output: int32_t either success or failure 0, -1
+purpose: interface to open a file for use
+*/
 int32_t open(const uint8_t* filename) {
 
 	/* Check for file existence */
@@ -346,6 +379,12 @@ int32_t open(const uint8_t* filename) {
 	return i; // file descriptor is returned
 }
 
+/*
+int32_t close
+input: int32_t fd = file descriptor for file to close
+output: int32_t = success or failure 0, -1
+purpose: interface for closing a file
+*/
 int32_t close(int32_t fd) {
 
 	/* Check for fd */
@@ -359,6 +398,13 @@ int32_t close(int32_t fd) {
 	return block->fdarray[fd].fops_tbl_pointer->close(fd);
 }
 
+/*
+int32_t getargs
+input: uint8_t* buf = buffer to write args to
+		int32_t nbytes = max number of bytes to read
+output: int32_t = success or failure 0, -1
+purpose: to retrieve the argument to this process
+*/
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
 
 	pcb_t* block = get_pcb(process);
@@ -374,6 +420,12 @@ int32_t getargs(uint8_t* buf, int32_t nbytes) {
 	return 0;
 }
 
+/*
+int32_t vidmap
+input: uint8_t** screen_start = pointer to pointer to video memory
+output: int32_t = success / failure, 0, -1
+purpose: to give user programs a mapping to video memory
+*/
 int32_t vidmap(uint8_t** screen_start) {
 	if (((int32_t)screen_start < onetwentyeightMB) || ((int32_t)screen_start>(onetwentyeightMB + fourMB)))
 		return -1;
@@ -383,38 +435,93 @@ int32_t vidmap(uint8_t** screen_start) {
 	return idx;
 }
 
+/*
+int32_t set_handler
+input: int32_t signum = signal identifier
+		void* handler_address = address for the handler
+output: success or failure, 0, -1
+purpose: set the handler for a particular signal
+*/
 int32_t set_handler(int32_t signum, void* handler_address) {
 	return -1;
 }
 
+/*
+int32_t sigreturn
+input: none
+output: int32_t = success or failure, 0, -1
+purpose: return from a signal
+*/
 int32_t sigreturn(void) {
 	return -1;
 }
 
+/*
+int32_t null_ops
+input: none
+output: success or failure
+purpose: to do nothing and return -1
+*/
 int32_t null_ops(void) {
 	return -1;
 }
 
+/*
+pcb_t* get_pcb
+input: int32_t proc = process to retrieve pcb for
+output: pcb_t* = pointer to pcb of the process
+purpose: helper function to get the pcb
+*/
 pcb_t* get_pcb(int32_t proc) {
 	return (pcb_t *)(eightMB - (proc + 1) * eightKB);
 }
 
+/*
+pcb_t* get_parent_pcb
+input: int32_t proc = process to retrieve parent pcb for
+output: pcb_t* = pointer to parent pcb of the process
+purpose: helper function to get the parent pcb
+*/
 pcb_t* get_parent_pcb(int32_t proc) {
 	return get_pcb(proc)->parent_block;
 }
 
+/*
+int32_t get_proc
+input: none
+output: int32_t = currently running process
+purpose: helper function to get the current process
+*/
 int32_t get_proc() {
 	return process;
 }
 
+/*
+int32_t get_term_proc
+input: int32_t term = terminal to retrieve process for
+output: int32_t = currently running process on specified terminal
+purpose: helper function to get the current process on the terminal
+*/
 int32_t get_term_proc(int32_t term) {
 	return terminal_process[term];
 }
 
+/*
+int32_t get_active
+input: none
+output: int32_t = currently active terminal
+purpose: helper function to get the current terminal
+*/
 int32_t get_active() {
 	return active;
 }
 
+/*
+int32_t get_proc_term
+input: none
+output: int32_t = currently running process's terminal
+purpose: helper function to get the current process's terminal
+*/
 int32_t get_proc_term() {
 	return process_term;
 }

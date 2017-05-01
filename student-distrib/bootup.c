@@ -1,6 +1,11 @@
 #include "bootup.h"
 
-
+/*
+void bootup_sequence_1()
+input: none
+output: none
+purpose: the lulz
+*/
 void bootup_sequence_1()
 {
 	cli();
@@ -52,7 +57,12 @@ void bootup_sequence_1()
 	clear(); 
 }
 
-
+/*
+void login_screen()
+input: none
+output: none
+purpose: to keep people who don't know the username and password off
+*/
 void login_screen()
 {
 

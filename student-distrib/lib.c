@@ -46,21 +46,6 @@ void fclear(void)
 	fupdate_cursor(window->t, window->l);
 }
 
-void restore(int32_t wid) {
-	//window_t* window = get_window(wid);
-	window_t* prev = get_window(get_parent_pcb(wid)->process_id);
-	updateWindow(prev);
-	//int32_t i, j;
-	//for (i = window->t - 1; i <= window->b; i++) {
-	//	for (j = window->l - 1; j <= window->r; j++) {
-	//		placec(j, i, prev->screen[((NUM_COLS*(i)+(j)) << 1) + 1], prev->screen[((NUM_COLS*(i)+(j)) << 1)]);
-	//	}
-	//}
-	update_cursor(prev->cy, prev->cx);
-}
-
-
-
 /* Standard printf().
  * Only supports the following format strings:
  * %%  - print a literal '%' character
@@ -211,6 +196,15 @@ puts(int8_t* s)
 	return index;
 }
 
+/*
+* void placec(int32_t x, int32_t y, int8_t a, int8_t c)
+*   Inputs: int32_t x = x position to place at
+			int32_t y = y position to place at
+			int8_t a = attribute to place
+			int8_t c = character to place
+*   Return Value: none
+*	Function: Places a character with given attribute at the location
+*/
 void placec(int32_t x, int32_t y, int8_t a, int8_t c) {
 	if (x < 0 || y < 0 || x >= NUM_COLS || y >= NUM_ROWS)
 		return;
@@ -221,21 +215,39 @@ void placec(int32_t x, int32_t y, int8_t a, int8_t c) {
 	*(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1)) = c;
 }
 
+/*
+* void fplacec(int32_t x, int32_t y, int8_t a, int8_t c)
+*   Inputs: int32_t x = x position to place at
+			int32_t y = y position to place at
+			int8_t a = attribute to place
+			int8_t c = character to place
+*   Return Value: none
+*	Function: Places a character with given attribute at the location for active terminal
+*/
 void fplacec(int32_t x, int32_t y, int8_t a, int8_t c) {
 	if (x < 0 || y < 0 || x >= NUM_COLS || y >= NUM_ROWS)
 		return;
 	window_t* window = get_window(get_term_proc(get_active()));
 	window->screen[((NUM_COLS*(y)+x) << 1) + 1] = a;
 	window->screen[((NUM_COLS*(y)+x) << 1)] = c;
-	*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*y + x) << 1) + 1) = a;
-	*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*y + x) << 1)) = c;
+	*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*y + x) << 1) + 1) = a;
+	*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*y + x) << 1)) = c;
 }
 
+/*
+* void vplacec(int32_t x, int32_t y, int8_t a, int8_t c)
+*   Inputs: int32_t x = x position to place at
+			int32_t y = y position to place at
+			int8_t a = attribute to place
+			int8_t c = character to place
+*   Return Value: none
+*	Function: Places a character with given attribute at the location only on the screen, not stored
+*/
 void vplacec(int32_t x, int32_t y, int8_t a, int8_t c) {
 	if (x < 0 || y < 0 || x >= NUM_COLS || y >= NUM_ROWS)
 		return;
-	*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*y + x) << 1) + 1) = a;
-	*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*y + x) << 1)) = c;
+	*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*y + x) << 1) + 1) = a;
+	*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*y + x) << 1)) = c;
 }
 
 /*
@@ -257,19 +269,34 @@ setcolor(uint8_t c)
 	}
 }
 
+/*
+* void placecolor(int32_t x, int32_t y, int8_t a) {
+*   Inputs: int32_t x = x position to place at
+			int32_t y = y position to place at
+			uint8_t* a = attribute to set
+*   Return Value: void
+*	Function: changes the attribute of the screen at a location
+*/
 void placecolor(int32_t x, int32_t y, int8_t a) {
 	if (x < 0 || y < 0 || x >= NUM_COLS || y >= NUM_ROWS)
 		return;
-	*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*y + x) << 1) + 1) = a;
+	*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*y + x) << 1) + 1) = a;
 	//*(uint8_t *)(video_mem + ((NUM_COLS*y + x) << 1)) = c;
 }
 
+/*
+* void getcolor(int32_t x, int32_t y) {
+*   Inputs: int32_t x = x position to get from
+			int32_t y = y position to get from
+*   Return Value: void
+*	Function: gets the attribute of the screen at a location
+*/
 int8_t getcolor(int32_t x, int32_t y)
 {
 	//if (x < 0 || y < 0 || x >= NUM_COLS || y >= NUM_ROWS)
 	//	return;
 	int8_t a;
-	a = *(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*y + x) << 1) + 1);
+	a = *(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*y + x) << 1) + 1);
 	return a;
 }
 
@@ -366,7 +393,7 @@ void putc(uint8_t c) {
 * void fputc(uint8_t c);
 *   Inputs: uint_8* c = character to print
 *   Return Value: void
-*	Function: Output a character to the console
+*	Function: Output a character to the console of active terminal
 */
 void fputc(uint8_t c) {
 	window_t * window = get_window(get_term_proc(get_active()));
@@ -385,14 +412,14 @@ void fputc(uint8_t c) {
 					if (i == window->b - 1) {
 						window->screen[((NUM_COLS*(i)+(j)) << 1)] = ' ';
 						window->screen[((NUM_COLS*(i)+(j)) << 1) + 1] = ATTRIB;
-						*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*i + j) << 1)) = ' ';
-						*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*i + j) << 1) + 1) = ATTRIB;
+						*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*i + j) << 1)) = ' ';
+						*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*i + j) << 1) + 1) = ATTRIB;
 					}
 					else {
 						window->screen[((NUM_COLS*(i)+(j)) << 1)] = window->screen[((NUM_COLS*(i + 1) + (j)) << 1)];
 						window->screen[((NUM_COLS*(i)+(j)) << 1) + 1] = window->screen[((NUM_COLS*(i + 1) + (j)) << 1) + 1];
-						*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*i + j) << 1)) = *(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*(i + 1) + j) << 1));
-						*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*i + j) << 1) + 1) = *(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*(i + 1) + j) << 1) + 1);
+						*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*i + j) << 1)) = *(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*(i + 1) + j) << 1));
+						*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*i + j) << 1) + 1) = *(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*(i + 1) + j) << 1) + 1);
 					}
 				}
 			}
@@ -408,14 +435,14 @@ void fputc(uint8_t c) {
 					if (i == window->b - 1) {
 						window->screen[((NUM_COLS*(i)+(j)) << 1)] = ' ';
 						window->screen[((NUM_COLS*(i)+(j)) << 1) + 1] = ATTRIB;
-						*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*i + j) << 1)) = ' ';
-						*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*i + j) << 1) + 1) = ATTRIB;
+						*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*i + j) << 1)) = ' ';
+						*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*i + j) << 1) + 1) = ATTRIB;
 					}
 					else {
 						window->screen[((NUM_COLS*(i)+(j)) << 1)] = window->screen[((NUM_COLS*(i + 1) + (j)) << 1)];
 						window->screen[((NUM_COLS*(i)+(j)) << 1) + 1] = window->screen[((NUM_COLS*(i + 1) + (j)) << 1) + 1];
-						*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*i + j) << 1)) = *(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*(i + 1) + j) << 1));
-						*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*i + j) << 1) + 1) = *(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*(i + 1) + j) << 1) + 1);
+						*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*i + j) << 1)) = *(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*(i + 1) + j) << 1));
+						*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*i + j) << 1) + 1) = *(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*(i + 1) + j) << 1) + 1);
 					}
 				}
 			}
@@ -423,8 +450,8 @@ void fputc(uint8_t c) {
 		}
 		window->screen[((NUM_COLS*(window->cy) + (window->cx)) << 1)] = c;
 		window->screen[((NUM_COLS*(window->cy) + (window->cx)) << 1) + 1] = ATTRIB;
-		*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*window->cy + window->cx) << 1)) = c;
-		*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*window->cy + window->cx) << 1) + 1) = ATTRIB;
+		*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*window->cy + window->cx) << 1)) = c;
+		*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*window->cy + window->cx) << 1) + 1) = ATTRIB;
 		window->cx++;
 		if (window->cx == window->r) {
 			window->cx = window->l;
@@ -434,16 +461,13 @@ void fputc(uint8_t c) {
 	}
 }
 
-
-
-
-void putspecial(uint8_t c) {
-
-}
-
-
-
-void backspace_put(int key_idx)
+/*
+* void backspace_put(int32_t key_idx);
+*   Inputs: int32_t key_idx = index of current cursor
+*   Return Value: void
+*	Function: Removes character from console
+*/
+void backspace_put(int32_t key_idx)
 {
 	window_t* window = get_window(get_proc());
 	if ((window->cx - 1) < window->l && window->cy > window->t) {		//adjust y
@@ -460,7 +484,13 @@ void backspace_put(int key_idx)
 	update_cursor(window->cy, window->cx);
 }
 
-void fbackspace_put(int key_idx)
+/*
+* void fbackspace_put(int32_t key_idx);
+*   Inputs: int32_t key_idx = index of current cursor
+*   Return Value: void
+*	Function: Removes character from console of active terminal
+*/
+void fbackspace_put(int32_t key_idx)
 {
 	window_t* window = get_window(get_term_proc(get_active()));
 	if ((window->cx - 1) < window->l && window->cy > window->t) {		//adjust y
@@ -472,30 +502,42 @@ void fbackspace_put(int key_idx)
 
 	window->screen[((NUM_COLS*(window->cy) + (window->cx)) << 1)] = ' ';
 	window->screen[((NUM_COLS*(window->cy) + (window->cx)) << 1) + 1] = ATTRIB;
-	*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*window->cy + window->cx) << 1)) = ' ';
-	*(uint8_t *)(-0x1000 + video_mem + ((NUM_COLS*window->cy + window->cx) << 1) + 1) = ATTRIB;
+	*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*window->cy + window->cx) << 1)) = ' ';
+	*(uint8_t *)(TRUE_VIDEO_OFFSET + video_mem + ((NUM_COLS*window->cy + window->cx) << 1) + 1) = ATTRIB;
 	fupdate_cursor(window->cy, window->cx);
 }
 
-void enter_put(void)
-{
-	//window->cy++;
-	//window->cx = 0;
-}
-
+/*
+* void move_cursor_left();
+*   Inputs: none
+*   Return Value: void
+*	Function: Moves cursor one position to the left
+*/
 void move_cursor_left(){
 	/* left arrow pressed */
 	window_t* window = get_window(get_term_proc(get_active()));
 	update_cursor(window->cy, --window->cx);
 }
 
+/*
+* void move_cursor_right();
+*   Inputs: none
+*   Return Value: void
+*	Function: Moves cursor one position to the right
+*/
 void move_cursor_right(){
 	/* right arrow pressed */
 	window_t* window = get_window(get_term_proc(get_active()));
 	update_cursor(window->cy, ++window->cx);
 }
 
-void update_cursor(int row, int col)
+/*
+* void update_cursor(int32_t row, int32_t col);
+*   Inputs: int32_t row = row to change to, col = column to change to
+*   Return Value: void
+*	Function: Moves cursor to specified position
+*/
+void update_cursor(int32_t row, int32_t col)
 {
 	window_t* window = get_window(get_proc());
 	window->cx = col;
@@ -504,28 +546,34 @@ void update_cursor(int row, int col)
 	if (get_active() != get_proc_term())
 		return;
 
-	unsigned short pos = (row * NUM_COLS) + col;
+	uint16_t pos = (row * NUM_COLS) + col;
 
 	outb(0x0F, 0x3D4);
-	outb((unsigned char)(pos & 0xFF), 0x3D5);
+	outb((uint8_t)(pos & 0xFF), 0x3D5);
 
 	outb(0x0E, 0x3D4);
-	outb((unsigned char)((pos >> 8) & 0xFF), 0x3D5);
+	outb((uint8_t)((pos >> 8) & 0xFF), 0x3D5);
 }
 
-void fupdate_cursor(int row, int col)
+/*
+* void fupdate_cursor(int32_t row, int32_t col);
+*   Inputs: int32_t row = row to change to, col = column to change to
+*   Return Value: void
+*	Function: Moves cursor to specified position on active terminal
+*/
+void fupdate_cursor(int32_t row, int32_t col)
 {
 	window_t* window = get_window(get_term_proc(get_active()));
 	window->cx = col;
 	window->cy = row;
 
-	unsigned short pos = (row * NUM_COLS) + col;
+	uint16_t pos = (row * NUM_COLS) + col;
 
 	outb(0x0F, 0x3D4);
-	outb((unsigned char)(pos & 0xFF), 0x3D5);
+	outb((uint8_t)(pos & 0xFF), 0x3D5);
 
 	outb(0x0E, 0x3D4);
-	outb((unsigned char)((pos >> 8) & 0xFF), 0x3D5);
+	outb((uint8_t)((pos >> 8) & 0xFF), 0x3D5);
 }
 
 /*

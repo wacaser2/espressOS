@@ -176,7 +176,7 @@ void keyboard_handler()
 					move_cursor_left();
 
 				/* case where we're changing prompt after hitting RETURN */
-				if (block->updown_idx == write_idx) {
+				if (block->updown_idx == -1) {
 					i = block->leftright_idx;
 					for (i = 0; i < block->key_idx; ++i)
 						temp[i] = key_buf[i];
@@ -220,17 +220,21 @@ void keyboard_handler()
 
 			/* change the updown_idx */
 			if (scancode == UP_KEY) {
-				if (buf_size != MAX_COMMANDS && block->updown_idx == 0) {}
-				else if ((buf_size + block->updown_idx - 1) % buf_size != write_idx) block->updown_idx = (buf_size + block->updown_idx - 1) % buf_size;
+				if (buf_size > 0 && block->updown_idx == -1)
+					block->updown_idx = (MAX_COMMANDS + write_idx - 1) % MAX_COMMANDS;
+				else if (buf_size == 0 && block->updown_idx == -1) {}
+				else if (buf_size != MAX_COMMANDS && block->updown_idx == 0) {}
+				else if ((MAX_COMMANDS + block->updown_idx - 1) % MAX_COMMANDS != write_idx) block->updown_idx = (MAX_COMMANDS + block->updown_idx - 1) % MAX_COMMANDS;
 				else block->updown_idx = (write_idx + 1) % MAX_COMMANDS;
 			}
 			else if (scancode == DOWN_KEY) {
-				if (block->updown_idx != write_idx) block->updown_idx = (buf_size + block->updown_idx + 1) % buf_size;
-				else block->updown_idx = write_idx;
+				if (block->updown_idx == -1) {}
+				else if (block->updown_idx != (MAX_COMMANDS + write_idx - 1) % MAX_COMMANDS) block->updown_idx = (MAX_COMMANDS + block->updown_idx + 1) % MAX_COMMANDS;
+				else block->updown_idx = -1;
 			}
 
 			/* change key_idx to updown value */
-			if (block->updown_idx == write_idx) block->key_idx = block->temp_size;
+			if (block->updown_idx == -1) block->key_idx = block->temp_size;
 			else block->key_idx = buf_hist_cmd_size[block->updown_idx];
 
 			/* left and right value updated when up/down pressed */
@@ -238,7 +242,7 @@ void keyboard_handler()
 
 			/* print the command at the updown_idx */
 			for (i = 0; i < block->key_idx; ++i) {
-				if (block->updown_idx == write_idx) key_buf[i] = temp[i];
+				if (block->updown_idx == -1) key_buf[i] = temp[i];
 				else key_buf[i] = buf_hist[block->updown_idx][i];
 				fputc(key_buf[i]);
 			}
@@ -247,25 +251,27 @@ void keyboard_handler()
 		{
 			/* works only when command is entered */
 			if (block->key_idx != 0) {
-				/* case where we are at the same place where we're writing */
-				if (block->updown_idx == write_idx) {
-					for (i = 0; i < block->temp_size; ++i)
-						buf_hist[write_idx][i] = temp[i];
-					buf_hist_cmd_size[write_idx] = block->temp_size;
+				if (password_being_entered == SUCCESS) {
+					/* case where we are at the same place where we're writing */
+					if (block->updown_idx == -1) {
+						for (i = 0; i < block->temp_size; ++i)
+							buf_hist[write_idx][i] = temp[i];
+						buf_hist_cmd_size[write_idx] = block->temp_size;
+					}
+					else {
+						/* handling history of commands */
+						for (i = 0; i < block->key_idx; ++i)
+							buf_hist[write_idx][i] = key_buf[i];
+						buf_hist_cmd_size[write_idx] = block->key_idx;
+					}
+					/* change write idx and buf_size */
+					if (buf_size < MAX_COMMANDS) buf_size++;
+					write_idx = (write_idx + 1) % MAX_COMMANDS;
+					/* also clear the size in buf_hist_cmd_size */
+					buf_hist_cmd_size[write_idx] = 0;
 				}
-				else {
-					/* handling history of commands */
-					for (i = 0; i < block->key_idx; ++i)
-						buf_hist[write_idx][i] = key_buf[i];
-					buf_hist_cmd_size[write_idx] = block->key_idx;
-				}
-				/* change write idx and buf_size */
-				if (buf_size < MAX_COMMANDS) buf_size++;
-				write_idx = (write_idx + 1) % MAX_COMMANDS;
-				/* also clear the size in buf_hist_cmd_size */
-				buf_hist_cmd_size[write_idx] = 0;
 				/* set up_down index to current index value */
-				block->updown_idx = write_idx;
+				block->updown_idx = -1;
 				block->temp_size = 0;
 			}
 
@@ -334,7 +340,7 @@ void keyboard_handler()
 				key_buf[block->leftright_idx] = temp_char;
 				++(block->key_idx);
 
-				if (block->updown_idx == write_idx) {
+				if (block->updown_idx == -1) {
 					for (i = 0; i < block->key_idx; ++i)
 						temp[i] = key_buf[i];
 					++(block->temp_size);

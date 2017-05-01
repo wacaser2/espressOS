@@ -197,6 +197,7 @@ int32_t execute(const uint8_t* command) {
 	strcpy(block->temp, "");
 	block->temp_size = 0;
 	block->leftright_idx = 0;
+	block->updown_idx = -1;
 	block->key_idx = 0;
 	block->cycles = 0;
 	if (parent_proc == -1)			// first process, so set parent to itself

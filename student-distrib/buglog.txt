@@ -2,7 +2,6 @@ Bug Log:
 
 Checkpoint 1-
 
-IDT - 
 PIC - We had problems with initializing the PIC (whether we needed to clear interrupts or not) and sending the EOI to the slave PIC. 
 Keyboard - Recognising when the shift key was pressed
 RTC - Finding the correct registers to send to the port
@@ -10,6 +9,9 @@ RTC - Finding the correct registers to send to the port
 
 Checkpoint 2-
 
+File system - 
+Keyboard - 
+RTC - 
 
 
 Checkpoint 3-

@@ -52,9 +52,9 @@ char* exception_messages[32] = {
 void fault_handler(isr_stack_t *s){
 	if(s->int_no < 32){
 		printf("%s : %d\n", exception_messages[s->int_no], s->err_code);		//print error
-		setlinecolor(0x10);
+		setlinecolor(0x14);
 		//setcolor(0x17);	//make screen blue
-		halt(0);
+		halt(255);
 	}
 }
 
@@ -100,7 +100,9 @@ void isrs_install(){
 	SET_IDT_ENTRY(idt[29], (unsigned)isr29, 0);
 	SET_IDT_ENTRY(idt[30], (unsigned)isr30, 0);
 	SET_IDT_ENTRY(idt[31], (unsigned)isr31, 0);
+	SET_IDT_ENTRY(idt[0x20], (unsigned)pit_handler_wrapper, 0);
 	SET_IDT_ENTRY(idt[0x21], (unsigned)keyboard_handler_wrapper, 0);
 	SET_IDT_ENTRY(idt[0x28], (unsigned)rtc_handler_wrapper, 0);
+	SET_IDT_ENTRY(idt[0x2C], (unsigned)mouse_handler_wrapper, 0);
 	SET_IDT_ENTRY(idt[0x80], (unsigned)sys_call, 3);
 }

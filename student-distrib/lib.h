@@ -6,12 +6,21 @@
 #define _LIB_H
 
 #define VIDEO 0xB8000
+#define TRUE_VIDEO_OFFSET -0x1000
 #define NUM_COLS 80
 #define NUM_ROWS 25
-#define ATTRIB 0xf
+#define PROMPT_SIZE 7 //change if you change prompt
+#define ATTRIB 0x0f
+#define BROWN 0x76
 #include "types.h"
 
 int32_t printf(int8_t *format, ...);
+void placec(int32_t x, int32_t y, int8_t a, int8_t c);
+void fplacec(int32_t x, int32_t y, int8_t a, int8_t c);
+void vplacec(int32_t x, int32_t y, int8_t a, int8_t c);
+void fputc(uint8_t c);
+void placecolor(int32_t x, int32_t y, int8_t a);
+int8_t getcolor(int32_t x, int32_t y);
 void putc(uint8_t c);
 void setcolor(uint8_t c);
 void setlinecolor(uint8_t c);
@@ -20,10 +29,18 @@ int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);
 int8_t *strrev(int8_t* s);
 uint32_t strlen(const int8_t* s);
 void clear(void);
+void fclear(void);
+
 void test_interrupts();
-void backspace_put(int key_idx);
-void enter_put(void);
-void update_cursor(int row, int col);
+void backspace_put(int32_t key_idx);
+void fbackspace_put(int32_t key_idx);
+void update_cursor(int32_t row, int32_t col);
+void fupdate_cursor(int32_t row, int32_t col);
+
+/* functions for implementing left and right func */
+void move_cursor_left();
+void move_cursor_right();
+
 
 void* memset(void* s, int32_t c, uint32_t n);
 void* memset_word(void* s, int32_t c, uint32_t n);

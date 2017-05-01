@@ -1,0 +1,323 @@
+gcc -Wall -nostdlib -ffreestanding -c -o ece391cat.o ece391cat.c
+gcc -Wall -nostdlib -ffreestanding -c -Wall -o ece391syscall.o ece391syscall.S
+gcc -Wall -nostdlib -ffreestanding -c -o ece391support.o ece391support.c
+gcc -nostdlib -ffreestanding -o cat.exe ece391cat.o ece391syscall.o ece391support.o
+../elfconvert cat.exe
+e_entry    : 0x08048294
+e_phoff    : 0x00000034
+e_shoff    : 0x000005dc
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000008
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x00000503
+p_memsz : 0x00000503
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x00000520
+p_vaddr : 0x08049520
+p_paddr : 0x08049520
+p_filesz: 0x00000025
+p_memsz : 0x00000025
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv cat.exe.converted to_fsdir/cat
+gcc -Wall -nostdlib -ffreestanding -c -o ece391grep.o ece391grep.c
+gcc -nostdlib -ffreestanding -o grep.exe ece391grep.o ece391syscall.o ece391support.o
+../elfconvert grep.exe
+e_entry    : 0x08048504
+e_phoff    : 0x00000034
+e_shoff    : 0x0000089c
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000008
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x000007c1
+p_memsz : 0x000007c1
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x000007e0
+p_vaddr : 0x080497e0
+p_paddr : 0x080497e0
+p_filesz: 0x00000025
+p_memsz : 0x00000025
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv grep.exe.converted to_fsdir/grep
+gcc -Wall -nostdlib -ffreestanding -c -o ece391hello.o ece391hello.c
+gcc -nostdlib -ffreestanding -o hello.exe ece391hello.o ece391syscall.o ece391support.o
+../elfconvert hello.exe
+e_entry    : 0x08048234
+e_phoff    : 0x00000034
+e_shoff    : 0x0000057c
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000008
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x000004a8
+p_memsz : 0x000004a8
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x000004c0
+p_vaddr : 0x080494c0
+p_paddr : 0x080494c0
+p_filesz: 0x00000025
+p_memsz : 0x00000025
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv hello.exe.converted to_fsdir/hello
+gcc -Wall -nostdlib -ffreestanding -c -o ece391ls.o ece391ls.c
+gcc -nostdlib -ffreestanding -o ls.exe ece391ls.o ece391syscall.o ece391support.o
+../elfconvert ls.exe
+e_entry    : 0x08048248
+e_phoff    : 0x00000034
+e_shoff    : 0x0000057c
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000008
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x000004b1
+p_memsz : 0x000004b1
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x000004c0
+p_vaddr : 0x080494c0
+p_paddr : 0x080494c0
+p_filesz: 0x00000025
+p_memsz : 0x00000025
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv ls.exe.converted to_fsdir/ls
+gcc -Wall -nostdlib -ffreestanding -c -o ece391pingpong.o ece391pingpong.c
+gcc -nostdlib -ffreestanding -o pingpong.exe ece391pingpong.o ece391syscall.o ece391support.o
+../elfconvert pingpong.exe
+e_entry    : 0x080482e4
+e_phoff    : 0x00000034
+e_shoff    : 0x000005dc
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000008
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x0000051b
+p_memsz : 0x0000051b
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x00000520
+p_vaddr : 0x08049520
+p_paddr : 0x08049520
+p_filesz: 0x00000025
+p_memsz : 0x00000025
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv pingpong.exe.converted to_fsdir/pingpong
+gcc -Wall -nostdlib -ffreestanding -c -o ece391counter.o ece391counter.c
+gcc -nostdlib -ffreestanding -o counter.exe ece391counter.o ece391syscall.o ece391support.o
+../elfconvert counter.exe
+e_entry    : 0x08048318
+e_phoff    : 0x00000034
+e_shoff    : 0x0000067c
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000008
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x000005bf
+p_memsz : 0x000005bf
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x000005c0
+p_vaddr : 0x080495c0
+p_paddr : 0x080495c0
+p_filesz: 0x00000025
+p_memsz : 0x00000025
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv counter.exe.converted to_fsdir/counter
+gcc -Wall -nostdlib -ffreestanding -c -o ece391shell.o ece391shell.c
+gcc -nostdlib -ffreestanding -o shell.exe ece391shell.o ece391syscall.o ece391support.o
+../elfconvert shell.exe
+e_entry    : 0x080482e8
+e_phoff    : 0x00000034
+e_shoff    : 0x0000067c
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000008
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x000005b3
+p_memsz : 0x000005b3
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x000005c0
+p_vaddr : 0x080495c0
+p_paddr : 0x080495c0
+p_filesz: 0x00000025
+p_memsz : 0x00000025
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv shell.exe.converted to_fsdir/shell
+gcc -Wall -nostdlib -ffreestanding -c -o ece391sigtest.o ece391sigtest.c
+gcc -nostdlib -ffreestanding -o sigtest.exe ece391sigtest.o ece391syscall.o ece391support.o
+../elfconvert sigtest.exe
+e_entry    : 0x080484c8
+e_phoff    : 0x00000034
+e_shoff    : 0x000008e0
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000009
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x0000081e
+p_memsz : 0x0000081e
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x00000820
+p_vaddr : 0x08049820
+p_paddr : 0x08049820
+p_filesz: 0x00000025
+p_memsz : 0x00000030
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv sigtest.exe.converted to_fsdir/sigtest
+gcc -Wall -nostdlib -ffreestanding -c -o ece391testprint.o ece391testprint.c
+gcc -nostdlib -ffreestanding -o testprint.exe ece391testprint.o ece391syscall.o ece391support.o
+../elfconvert testprint.exe
+e_entry    : 0x080481a4
+e_phoff    : 0x00000034
+e_shoff    : 0x000004dc
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000008
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x0000040b
+p_memsz : 0x0000040b
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x00000420
+p_vaddr : 0x08049420
+p_paddr : 0x08049420
+p_filesz: 0x00000025
+p_memsz : 0x00000025
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv testprint.exe.converted to_fsdir/testprint
+gcc -Wall -nostdlib -ffreestanding -c -o ece391syserr.o ece391syserr.c
+gcc -nostdlib -ffreestanding -o syserr.exe ece391syserr.o ece391syscall.o ece391support.o
+../elfconvert syserr.exe
+e_entry    : 0x080489bc
+e_phoff    : 0x00000034
+e_shoff    : 0x00000ffc
+e_flags    : 0x00000000
+e_ehsize   : 0x00000034
+e_phentsize: 0x00000020
+e_phnum    : 0x00000003
+e_shentsize: 0x00000028
+e_shnum    : 0x00000008
+
+p_type  : 0x00000001
+p_offset: 0x00000000
+p_vaddr : 0x08048000
+p_paddr : 0x08048000
+p_filesz: 0x00000f34
+p_memsz : 0x00000f34
+p_flags : 0x00000005
+p_align : 0x00001000
+
+p_type  : 0x00000001
+p_offset: 0x00000f40
+p_vaddr : 0x08049f40
+p_paddr : 0x08049f40
+p_filesz: 0x00000025
+p_memsz : 0x00000025
+p_flags : 0x00000006
+p_align : 0x00001000
+
+mv syserr.exe.converted to_fsdir/syserr
+rm testprint.exe ece391pingpong.o pingpong.exe ece391sigtest.o ece391ls.o cat.exe ece391syscall.o ls.exe syserr.exe ece391cat.o shell.exe ece391grep.o grep.exe ece391testprint.o ece391syserr.o counter.exe ece391shell.o hello.exe sigtest.exe ece391support.o ece391hello.o ece391counter.o

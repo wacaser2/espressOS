@@ -3,9 +3,15 @@
 #include "x86_desc.h"
 #include "syscalls.h"
 #include "paging.h"
+#include "window.h"
+#include "bootup.h"
 
 uint8_t process_num[6] = { 0, 0, 0, 0, 0, 0 };
-volatile int process = -1;
+volatile int32_t process = -1;
+int32_t process_term = -1;
+int32_t active = -1;
+int32_t terminal_process[3] = { -1,-1,-1 };
+int32_t reload = 0;
 
 fops_tbl_t stdin_ops = { (void*)null_ops, terminal_read, (void*)null_ops, (void*)null_ops };
 fops_tbl_t stdout_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, terminal_write, (void*)null_ops };
@@ -14,34 +20,109 @@ fops_tbl_t file_ops = (fops_tbl_t) { file_open, file_read, file_write, file_clos
 fops_tbl_t dir_ops = (fops_tbl_t) { dir_open, dir_read, dir_write, dir_close };
 fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*)null_ops, (void*)null_ops };
 
+void switch_active(int32_t term) {
+	cli();
+	process_term = active = term;
+	reload = 1;
+	switch_process(term);
+}
+
+void switch_process(int32_t term) {
+	cli();
+	/*store current*/
+	if (process != -1) {
+		pcb_t* block = get_pcb(get_proc());
+		asm volatile(
+			"movl %%ebp, %0 \n"
+			"movl %%esp, %1 \n"
+			: "=r" (block->kbp), "=r" (block->ksp)
+			);
+	}
+
+	process = terminal_process[term];
+	process_term = term;
+	if (active == term) {
+		videoPage((void*)VIDEO);
+		if (reload)
+		{
+			updateWindow(get_window(terminal_process[term]));
+			reload = 0;
+		}
+	}
+	else
+		videoPage((void*)get_window(process));
+
+	if (process == -1) {
+		execute((uint8_t*)"shell");
+	}
+
+	/*restore other*/
+	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
+	pcb_t* block = get_pcb(process);
+	tss.esp0 = eightMB - (process * eightKB) - 4;
+	/* Context Switch */
+	//asm volatile (
+	//	"pushl $0x2B; \n"
+	//	"pushl %0; \n"
+	//	"pushfl; \n"
+	//	"popl %%ecx; \n"
+	//	"orl $0x0200, %%ecx; \n"
+	//	"pushl %%ecx; \n"
+	//	"pushl $0x23; \n"
+	//	"pushl %1; \n"
+	//	"iret; \n"
+	//	: /* outputs */ : "r" (PROG_STACK_START), "r" (entry_point) /* inputs  */ : "ecx" // clobbers
+	//	);
+	asm volatile(
+		"movl %0, %%ebp \n"
+		"movl %1, %%esp \n"
+		: : "r" (block->kbp), "r" (block->ksp)
+		);
+	//sti();
+}
+
+
 /* System Calls*/
 
 int32_t halt(uint8_t status) {
+	cli();
+	/* Close all files associated */
+	pcb_t * block = get_pcb(process);
+	int32_t i;
+	for (i = 2; i < MAXFILES; i++) {
+		block->fdarray[i].fops_tbl_pointer->close(i);
+	}
+	/* Clear out fdarray */
+	for (i = 0; i < MAXFILES; i++) {
+		block->fdarray[i].fops_tbl_pointer = (void*)null_ops;
+		block->fdarray[i].flags = ZERO;
+	}
 
 	/* Clear this program's process number */
 	process_num[process] = ZERO;
 
 	/* If this process is the top shell, restart */
-	if (process == 0) {
+	if (block->parent_id == -1) {
 		clear();
+		login_screen();
+		terminal_process[process_term] = -1;
+		process = -1;
 		execute((uint8_t *)"shell");
 	}
-	/* Reset process to parent */
-	pcb_t * block = get_pcb();
-	process = block->parent_block->process_id;
 
+	if (!strncmp((int8_t*)block->name, (int8_t*)"shell", NAME_SIZE))
+		window_exit(process);
+
+	/* Reset process to parent */
+	//block = get_pcb(process);
+	process = block->parent_id;
+	terminal_process[process_term] = process;
 	/* Reset page mapping to parent process */
 	VtoPmap(onetwentyeightMB, (eightMB + ((process)* fourMB)));
 
 	/* Update tss */
-	tss.esp0 = block->parent_ksp;
+	tss.esp0 = eightMB - (process * eightKB) - 4; //block->parent_ksp;
 
-	/* Clear out fdarray */
-	int32_t i;
-	for (i = 0; i < MAXFILES; i++) {
-		block->fdarray[i].fops_tbl_pointer = (void*)null_ops;
-		block->fdarray[i].flags = ZERO;
-	}
 	int32_t ret_val;
 	if (status == 255)
 		ret_val = EXCEPTION_CODE;
@@ -55,6 +136,7 @@ int32_t halt(uint8_t status) {
 		"movl %0, %%eax \n"
 		"movl %1, %%ebp \n"
 		"movl %2, %%esp \n"
+		"sti \n"
 		"leave \n"
 		"ret \n"
 		: : "r" (ret_val), "r" (block->parent_kbp), "r" (block->parent_ksp)
@@ -63,7 +145,7 @@ int32_t halt(uint8_t status) {
 }
 
 int32_t execute(const uint8_t* command) {
-
+	cli();
 
 	/* Extract name */
 	int32_t start = 0;
@@ -82,6 +164,8 @@ int32_t execute(const uint8_t* command) {
 		return -1;
 
 	/* Check for executable */
+	if (dentry.file_type != 2)
+		return -1;
 	int8_t buffer[INT_BYTES];
 	int8_t magic_number[INT_BYTES] = { 0x7f, 0x45, 0x4c, 0x46 };		// DEL, E, L, F
 	read_data(dentry.inode_index, 0, (uint8_t*)buffer, INT_BYTES);
@@ -89,6 +173,7 @@ int32_t execute(const uint8_t* command) {
 		return -1;
 
 	/* Find process number */
+	int32_t parent_proc = process;
 	process = -1;
 	int32_t i;
 	for (i = 0; i < MAXPROCESSES; i++) {
@@ -99,18 +184,26 @@ int32_t execute(const uint8_t* command) {
 		}
 	}
 	if (process < 0) {
-		process = MAXPROCESSES - 1;	// so it doesnt exceed 
+		process = parent_proc;	// so it doesnt exceed 
 		puts("Maximum number of processess running\n");
 		return 0;
 	}
 
 	/* Set up PCB */
-	pcb_t * block = get_pcb();	// top of the 8KB stack
+	pcb_t * block = get_pcb(process);	// top of the 8KB stack
 	block->process_id = process;
-	if (process == 0)			// first process, so set parent to itself
+	block->parent_id = parent_proc;
+	strcpy(block->command, "");
+	strcpy(block->temp, "");
+	block->temp_size = 0;
+	block->leftright_idx = 0;
+	block->key_idx = 0;
+	block->cycles = 0;
+	if (parent_proc == -1)			// first process, so set parent to itself
 		block->parent_block = block;
 	else
-		block->parent_block = (pcb_t *)(eightMB - process * eightKB);
+		block->parent_block = get_pcb(parent_proc);
+	terminal_process[process_term] = process;
 	/* STDIN */
 	block->fdarray[ZERO].fops_tbl_pointer = &stdin_ops;
 	block->fdarray[ZERO].inode = -1;					// or 0?
@@ -130,6 +223,9 @@ int32_t execute(const uint8_t* command) {
 		block->fdarray[i].flags = ZERO;					// not in use
 	}
 
+	/* Save name */
+	strncpy((int8_t*)block->name, (int8_t*)name, NAME_SIZE);
+
 	/* Extract args */
 	start = end;
 	while (command[start] == ' ')
@@ -142,6 +238,13 @@ int32_t execute(const uint8_t* command) {
 
 	/* Set up paging */
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
+	if (!strncmp((int8_t*)name, (int8_t*)"shell", NAME_SIZE)) {
+		block->window_id = process;
+		window_init(process);
+	}
+	else {
+		block->window_id = block->parent_block->window_id;
+	}
 
 	/* Find entry point to program */
 	uint32_t entry_point;									// entry point to read from
@@ -183,7 +286,7 @@ int32_t read(int32_t fd, void* buf, int32_t nbytes) {
 	/* Check invalid fd */
 	if (fd < 0 || fd >= MAXFILES || buf == NULL)
 		return -1;
-	pcb_t * block = get_pcb();
+	pcb_t * block = get_pcb(process);
 	if (block->fdarray[fd].flags == ZERO)
 		return -1;
 
@@ -196,7 +299,7 @@ int32_t write(int32_t fd, const void* buf, int32_t nbytes) {
 	/* Check invalid fd */
 	if (fd < 0 || fd >= MAXFILES || buf == NULL)
 		return -1;
-	pcb_t * block = get_pcb();
+	pcb_t * block = get_pcb(process);
 	if (block->fdarray[fd].flags == ZERO)
 		return -1;
 
@@ -212,7 +315,7 @@ int32_t open(const uint8_t* filename) {
 		return -1;
 
 	/* Find fd number */
-	pcb_t * block = get_pcb();
+	pcb_t * block = get_pcb(process);
 	int32_t i;
 	for (i = 2; i < MAXFILES; i++) {
 		if (block->fdarray[i].flags == ZERO) {
@@ -227,8 +330,10 @@ int32_t open(const uint8_t* filename) {
 
 	/* Open files */
 	block->fdarray[i].file_pos = FILE_START_POS;
-	if (dentry.file_type == RTC_TYPE)
+	if (dentry.file_type == RTC_TYPE) {
 		block->fdarray[i].fops_tbl_pointer = &rtc_ops;
+		block->fdarray[i].file_pos = 512;
+	}
 	else if (dentry.file_type == DIR_TYPE)
 		block->fdarray[i].fops_tbl_pointer = &dir_ops;
 	else if (dentry.file_type == FILE_TYPE) {
@@ -236,14 +341,14 @@ int32_t open(const uint8_t* filename) {
 		block->fdarray[i].inode = dentry.inode_index;
 	}
 
-	//return block->fdarray[i]->fops_tbl_pointer->open(filename);
+	block->fdarray[i].fops_tbl_pointer->open(filename);
 	return i; // file descriptor is returned
 }
 
 int32_t close(int32_t fd) {
 
 	/* Check for fd */
-	pcb_t * block = get_pcb();
+	pcb_t * block = get_pcb(process);
 	if (fd >= 2 && fd < MAXFILES && block->fdarray[fd].flags == ONE)
 		block->fdarray[fd].flags = ZERO;
 	else		// non-existent fd
@@ -255,10 +360,11 @@ int32_t close(int32_t fd) {
 
 int32_t getargs(uint8_t* buf, int32_t nbytes) {
 
-	pcb_t* block = get_pcb();
+	pcb_t* block = get_pcb(process);
 
 	/* Check if enough space in buf */
-	if (nbytes < strlen((int8_t*)block->args))
+	int32_t l = strlen((int8_t*)block->args);
+	if (!l || nbytes < l)
 		return -1;
 
 	/* Copy to buf */
@@ -271,25 +377,45 @@ int32_t vidmap(uint8_t** screen_start) {
 	if (((int32_t)screen_start < onetwentyeightMB) || ((int32_t)screen_start>(onetwentyeightMB + fourMB)))
 		return -1;
 	uint32_t idx = onetwentyeightMB + fourMB;
-	VtoPpage(idx, VIDEO);
+	//VtoPpage(idx, VIDEO);
 	*screen_start = (uint8_t*)idx;
 	return idx;
 }
 
 int32_t set_handler(int32_t signum, void* handler_address) {
-	return 0;
+	return -1;
 }
 
 int32_t sigreturn(void) {
-	return 0;
+	return -1;
 }
 
 int32_t null_ops(void) {
 	return -1;
 }
 
-pcb_t* get_pcb() {
-	return (pcb_t *)(eightMB - (process + 1) * eightKB);
+pcb_t* get_pcb(int32_t proc) {
+	return (pcb_t *)(eightMB - (proc + 1) * eightKB);
+}
+
+pcb_t* get_parent_pcb(int32_t proc) {
+	return get_pcb(proc)->parent_block;
+}
+
+int32_t get_proc() {
+	return process;
+}
+
+int32_t get_term_proc(int32_t term) {
+	return terminal_process[term];
+}
+
+int32_t get_active() {
+	return active;
+}
+
+int32_t get_proc_term() {
+	return process_term;
 }
 
 /* For debugging */

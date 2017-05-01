@@ -13,9 +13,9 @@ void mouse_handler(void);
 
 int32_t mouse_open(void);
 
-unsigned char mouse_read(void);
+uint8_t mouse_read(void);
 
-void mouse_write(unsigned char a_write);
+void mouse_write(uint8_t a_write);
 
 int32_t mouse_close(void);
 

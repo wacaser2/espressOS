@@ -13,7 +13,7 @@
 #define FILE_START_POS		0x0000
 #define ZERO				0x0000
 #define ONE 				0x0001
-#define MAXPROCESSES		10
+#define MAXPROCESSES		12
 #define MAXFILES			8
 #define RTC_TYPE			0
 #define DIR_TYPE			1

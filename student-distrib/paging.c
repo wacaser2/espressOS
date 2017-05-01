@@ -6,6 +6,7 @@
 
 uint32_t page_directory[oneUNIT] __attribute__((aligned(oneUNIT * PAGE_SIZE_MULTIPLIER)));	// 1024 entries. all 4kB aligned
 uint32_t first_page_table[oneUNIT] __attribute__((aligned(oneUNIT * PAGE_SIZE_MULTIPLIER)));
+uint32_t window_page_table[oneUNIT] __attribute__((aligned(oneUNIT * PAGE_SIZE_MULTIPLIER)));
 uint32_t user_page_table[oneUNIT] __attribute__((aligned(oneUNIT * PAGE_SIZE_MULTIPLIER)));
 
 
@@ -26,12 +27,14 @@ paging_init(unsigned long addr) {
 	{
 		page_directory[i] = 0;	// sets not present
 		first_page_table[i] = (i << OFFSET); // setting indexes
+		window_page_table[i] = (2 + MAXPROCESSES)*fourMB + (i << OFFSET); // setting indexes
 	}
 
 	first_page_table[VIDEO >> OFFSET] |= RW | PRESENT;
 	first_page_table[(VIDEO >> OFFSET) - 1] = first_page_table[VIDEO >> OFFSET];
 	page_directory[0] = ((uint32_t)first_page_table) | PRESENT | RW;	// add page table to directory of 4kb pages
 	page_directory[1] = KERNEL_ADDR | PRESENT | fourMBpage | RW;	// 4mb page
+	page_directory[2 + MAXPROCESSES] = ((uint32_t)window_page_table) | PRESENT | RW;	// add page table to directory of 4kb pages
 	first_page_table[(int32_t)page_directory >> OFFSET] |= RW | PRESENT;
 
 	// cr3 - PDBR register, holds page directory location
@@ -53,7 +56,7 @@ paging_init(unsigned long addr) {
 }
 
 void windowPage(int32_t proc) {
-	first_page_table[(VIDEO >> OFFSET) + 1 + proc] |= RW | PRESENT;
+	window_page_table[(proc)] |= RW | PRESENT;
 	clearTLB();
 }
 

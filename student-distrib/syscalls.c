@@ -7,7 +7,7 @@
 #include "bootup.h"
 
 /* Variables to keep track of running processes */
-uint8_t process_num[MAXPROCESSES] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t process_num[MAXPROCESSES] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 volatile int32_t process = -1;
 int32_t process_term = -1;
 int32_t active = -1;

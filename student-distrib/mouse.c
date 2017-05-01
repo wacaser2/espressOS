@@ -1,28 +1,35 @@
 
 #include "mouse.h"
 
+/* Global variables to keep track of mouse state */
 uint8_t cycle = 0;
 uint8_t packet_byte[3];
 int32_t x_pixel = 0;
 int32_t y_pixel = 0;
 int32_t x_text = -1;
 int32_t y_text = -1;
-int32_t old_x_text = 0;
-int32_t old_y_text = 0;
+
+/* Temporary variables */
 int32_t x_temp = 0;
 int32_t y_temp = 0;
 uint8_t prev_y = 0;
 int8_t color = 0;
 
-volatile int left_flag = 0;
-volatile int right_flag = 0;
-volatile int middle_flag = 0;
+/* Flags for mouse status */
+int32_t left_flag = 0;
+int32_t right_flag = 0;
+int32_t middle_flag = 0;
 
-
+/*
+void mouse_init()
+input: none
+output: none
+purpose: initializes the mouse
+*/
 void
 mouse_init(void)
 {
-	unsigned char status;
+	uint8_t status;
 
 	// Enable the auxiliary mouse device
 	//mouse_wait(1);
@@ -52,40 +59,18 @@ mouse_init(void)
   	enable_irq(12);
 }
 
-
+/*
+void mouse_handler()
+input: none
+output: none
+purpose: to handle mouse interrupts
+*/
 void
 mouse_handler(void)
 {
-	//clear();
 	send_eoi(12);
 
-	//printf("%d", cycle);
-	/*if(cycle == 0)
-	{
-		packet_byte[0] = inb(0x60);		// first IRQ
-		cycle++;
-		puts("cycle3\n");
-	}
-	else if(cycle == 1)
-	{
-		packet_byte[1] = inb(0x60);		// second IRQ
-		cycle++;
-		puts("cycle1");
-	}
-	else if(cycle == 2)
-	{
-		packet_byte[2] = inb(0x60);		// third IRQ
-		x_move = packet_byte[1];
-		y_move = packet_byte[2];
-		puts("cycle2");
-		//puts("x_move");
-		cycle = 0;
-	}*/
-
-	placecolor(x_text, y_text, ATTRIB);
-	//placec(x_text, y_text, 0x70, 'M');
-	old_x_text = x_text;
-	old_y_text = y_text;
+	placecolor(x_text, y_text, color);
 
 	packet_byte[cycle] = inb(0x60);
 	if(cycle == 0)
@@ -106,12 +91,12 @@ mouse_handler(void)
 			return; // the mouse only sends information about overflowing, do not care about it and return
 		}
 		  	
-		if (prev_y & 0x20)
+		if (prev_y & 0x20)	//sign extend
 		{
 			y_temp |= (-256); //delta-y is a negative value
 		}
 		  	
-		if (packet_byte[1] & 0x10)
+		if (packet_byte[1] & 0x10)	//sign extend
 		{
 			x_temp |= (-256); //delta-x is a negative value
 		}
@@ -130,17 +115,12 @@ mouse_handler(void)
 		  	//puts("Left button is pressed!n");
 		  	left_flag = 1;
 		}
-		
-		
-		//clear();
-		//puts("ha");
 		x_pixel += x_temp;
 		y_pixel -= y_temp;
 		x_text = (x_pixel >> 2);
 		y_text = (y_pixel >> 3);
 		if(x_text < 0)
 		{
-			//printf("  %d  %d     \n", x_text, y_text);
 			x_text = 0;
 			x_pixel = 0;
 		}
@@ -160,36 +140,31 @@ mouse_handler(void)
 			y_text = 24;
 			y_pixel = (((y_text + 1) << 3) - 1);
 		}
-		//printf("  %d  %d    \n", x_text, y_text);
-		//printf(" %d     %d    %x  \n", x_temp, y_temp, packet_byte[1]);
-		
-
-		//y_text = prev_y;
 		prev_y = packet_byte[1];
 	}
- 	//printf(" %d     %d    %x  \n", x_temp, y_temp, packet_byte[1]);    
 
-    //placec(x_text, y_text, 0x70, 'M');
-    placecolor(old_x_text, old_y_text, color);
     color = getcolor(x_text, y_text);
     placecolor(x_text, y_text, (color ^ 0x88));
-
-    //printf("  %d  %d     ", x_text, y_text);
-    	
-    // do what you want here, just replace the puts's to execute an action for each button
-    // to use the coordinate data, use mouse_bytes[1] for delta-x, and mouse_bytes[2] for delta-y
-
-    //printf("%d  %d     ", x_move, y_move);
 }
 
-
+/*
+int32_t mouse_open()
+input: none
+output: success or failure
+purpose to open the mouse to use
+*/
 int32_t
 mouse_open(void)
 {
-	return 0;
+	return -1;
 }
 
-unsigned char
+/*
+uint8_t mouse_read()
+input: none
+output: uint8_t = one packet from mouse
+*/
+uint8_t
 mouse_read(void)
 {
 	//mouse_wait(0);
@@ -197,7 +172,13 @@ mouse_read(void)
 	return inb(0x60);
 }
 
-void mouse_write(unsigned char a_write)
+/*
+void mouse_write(uint8_t a_write)
+input: uint8_t a_write = byte to write to mouse
+output: none
+purpose: write to the mouse
+*/
+void mouse_write(uint8_t a_write)
 {
   	//Wait to be able to send a command
   	//mouse_wait(1);
@@ -210,36 +191,14 @@ void mouse_write(unsigned char a_write)
   	outb(a_write, 0x60);
 }
 
+/*
+int32_t mouse_close()
+input: none
+output: int32_t = success or failure
+purpose: to close the mouse
+*/
 int32_t
 mouse_close(void)
 {
 	return 0;
 }
-
-
-/*void 
-mouse_wait(unsigned char type)
-{
-  	unsigned int time_out = 100000; //unsigned int
-
-  	if(type == 0)
-  	{
-    	while(time_out--) //Data
-    	{
-    		if((inb(0x64) & 1) == 1)	// make sure that bit 0 is set
-    		{
-        		return;
-      		}
-    	}
-  	}
-  	else if(type == 1)
-  	{	
-    	while(time_out--) //Signal
-    	{	
-      		if((inb(0x64) & 2) == 0)	// make sure that bit 1 is cleared
-      		{
-        		return;
-      		}
-    	}
-  	}
-}*/

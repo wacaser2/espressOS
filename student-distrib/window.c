@@ -20,7 +20,7 @@ void window_init(int32_t proc) {
 		window->b = NUM_ROWS;
 	}
 	else {
-		window_t* prev = get_window(get_parent_pcb(proc)->process_id);
+		window_t* prev = get_parent_window(proc);
 		window->l = prev->l + 1;
 		window->t = prev->t + 1;
 		window->r = prev->r - 1;
@@ -333,7 +333,7 @@ purpose: getter function for the window of a proc
 window_t* get_window(int32_t proc) {
 	if (proc == -1)
 		return (window_t*)VIDEO;
-	return (window_t*)(VIDEO + ((1 + get_pcb(proc)->window_id) << 12));
+	return (window_t*)(fourMB*(2 + MAXPROCESSES) + ((get_pcb(proc)->window_id) << 12));
 }
 
 /*
@@ -345,6 +345,6 @@ purpose: getter function for the parent window of a proc
 window_t* get_parent_window(int32_t proc) {
 	if (proc == -1)
 		return (window_t*)VIDEO;
-	return (window_t*)(VIDEO + ((1 + get_parent_pcb(get_pcb(proc)->window_id)->window_id) << 12));
+	return (window_t*)(fourMB*(2 + MAXPROCESSES) + ((get_parent_pcb(get_pcb(proc)->window_id)->window_id) << 12));
 }
 

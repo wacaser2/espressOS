@@ -21,10 +21,10 @@ void window_init(int32_t proc) {
 	}
 	else {
 		window_t* prev = get_parent_window(proc);
-		window->l = prev->l + 1;
-		window->t = prev->t + 1;
-		window->r = prev->r - 1;
-		window->b = prev->b - 1;
+		window->l = prev->l/* + 1*/;
+		window->t = prev->t/* + 1*/;
+		window->r = prev->r/* - 1*/;
+		window->b = prev->b/* - 1*/;
 	}
 	borderHline(window, window->t - 1);
 	borderHline(window, window->b);

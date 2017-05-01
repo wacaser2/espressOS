@@ -1,28 +1,51 @@
-Bug Log:
+/**************************************************************************************************************************
 
-Checkpoint 1-
+                                                Bug Log for espressOS development:
 
-PIC - We had problems with initializing the PIC (whether we needed to clear interrupts or not) and sending the EOI to the slave PIC. 
-Keyboard - Recognising when the shift key was pressed
-RTC - Finding the correct registers to send to the port
+**************************************************************************************************************************/
 
 
-Checkpoint 2-
-
-File system - 
-Keyboard - 
-RTC - 
-
-
-Checkpoint 3-
+/***************************************
+         Checkpoint 1:
+***************************************/
+PIC         - We had problems with initializing the PIC (whether we needed to clear interrupts or not) and sending the EOI to the slave PIC.
+Keyboard    - Recognizing when the shift key was pressed
+            - while loop was messing handling of keyboard interrupts
+RTC         - Finding the correct registers to send to the port
+Paging      - Writing the correct inline assembly code to setup paging
 
 
 
+/***************************************
+         Checkpoint 2:
+***************************************/
+File system - Directory read was not implemented properly initially but then fixed
 
 
-Checkpoint 4-
+
+/***************************************
+         Checkpoint 3:
+***************************************/
+Execute     - Fopfs table was not initialized properly at first,
+            - Command and arg weren't being parsed properly
+            - KSP and KBP weren't being saved properly
+
+Halt        - We weren't returning back properly, because our KSP and KBP values were initially wrong
+
+Open        - Return value was incorrect and this caused RTC open to not be called
 
 
 
+/***************************************
+         Checkpoint 4:
+***************************************/
+Getargs     - We weren't handling empty args
 
-Checkpoint 5-
+
+
+/***************************************
+         Checkpoint 5:
+***************************************/
+Scheduling
+   Terminal Read  - We weren't getting the correct process number
+   PIT            - was not being initialized to an appropriate frequency at first

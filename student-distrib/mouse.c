@@ -3,11 +3,15 @@
 
 /* Global variables to keep track of mouse state */
 uint8_t cycle = 0;
-uint8_t packet_byte[3];
+int32_t packet_size = 3;
+uint8_t packet_byte[4];
 int32_t x_pixel = 0;
 int32_t y_pixel = 0;
 int32_t x_text = -1;
 int32_t y_text = -1;
+
+uint8_t z = 'N';
+
 
 /* Temporary variables */
 int32_t x_temp = 0;
@@ -33,30 +37,50 @@ mouse_init(void)
 
 	// Enable the auxiliary mouse device
 	//mouse_wait(1);
-	outb(0xA8, 0x64);
+	outb(ENALBE_AUX, MOUSE_PORT_INFO);
 
 	//mouse_wait(1);
-	outb(0x20, 0x64);
+	outb(GET_SB, MOUSE_PORT_INFO);
+
+	// get status byte
 	//mouse_wait(0);
-	status = inb(0x60);		// get status byte
+	status = inb(MOUSE_PORT);
 	status |= 2;
-	//printf("%d\n", status);
-	//status &= 223; 
+	// and resend it to mouse after modifying it
 	//mouse_wait(1);
-	outb(0x60, 0x64);
-	outb(status, 0x60);
+	outb(MOUSE_PORT, MOUSE_PORT_INFO);
+	//mouse_wait(1);
+	outb(status, MOUSE_PORT);
 
 	 //Tell the mouse to use default settings
-  	mouse_write(0xF6);
+  	mouse_write(SET_DEFAUTLS);
   	mouse_read();  //Acknowledge
-  	//printf("Ack1");
-  
-  	//Enable the mouse
-  	mouse_write(0xF4);
-  	mouse_read();  //Acknowledge
-  	//printf("Ack2");
 
-  	enable_irq(12);
+  	//Enable the mouse
+  	mouse_write(ENABLE_DR);
+  	mouse_read();  //Acknowledge
+  	
+  	//
+  	mouse_write(SET_SR);
+  	mouse_write(200);
+  	mouse_write(SET_SR);
+  	mouse_write(100);
+  	mouse_write(SET_SR);
+  	mouse_write(80);
+  	mouse_write(GET_MOUSE_ID);
+  
+  	//if(mouse_read() == MOUSE_ACK)
+	//{
+		mouse_read();
+		z = mouse_read();
+	  	if(z == 0x00)
+	  		packet_size = 3;
+	  	else if(z == 0x03)
+	  		packet_size = 4;
+	//}
+
+
+  	enable_irq(MOUSE_IRQ);
 }
 
 /*
@@ -68,11 +92,12 @@ purpose: to handle mouse interrupts
 void
 mouse_handler(void)
 {
-	send_eoi(12);
+	printf("%x\n", z);
 
 	placecolor(x_text, y_text, color);
+	send_eoi(MOUSE_IRQ);
 
-	packet_byte[cycle] = inb(0x60);
+	packet_byte[cycle] = inb(MOUSE_PORT);
 	if(cycle == 0)
 	{
 		cycle++;
@@ -85,7 +110,7 @@ mouse_handler(void)
 	{
 		x_temp = packet_byte[2];
 		y_temp = packet_byte[0];
-		cycle = 0;
+		
 		if ((packet_byte[1] & 0x80) || (packet_byte[1] & 0x40))
 		{
 			return; // the mouse only sends information about overflowing, do not care about it and return
@@ -141,10 +166,22 @@ mouse_handler(void)
 			y_pixel = (((y_text + 1) << 3) - 1);
 		}
 		prev_y = packet_byte[1];
+
+		if(packet_size == 4)
+			cycle++;
+		else if(packet_size == 3)
+			cycle = 0;
+	}
+	else if(cycle == 3)
+	{
+		if(packet_size == 4)
+			cycle = 0;
+		putc('x');
 	}
 
     color = getcolor(x_text, y_text);
     placecolor(x_text, y_text, (color ^ 0x88));
+
 }
 
 /*
@@ -167,9 +204,7 @@ output: uint8_t = one packet from mouse
 uint8_t
 mouse_read(void)
 {
-	//mouse_wait(0);
-
-	return inb(0x60);
+	return inb(MOUSE_PORT);
 }
 
 /*
@@ -180,15 +215,13 @@ purpose: write to the mouse
 */
 void mouse_write(uint8_t a_write)
 {
-  	//Wait to be able to send a command
+  	// Tell the mouse we are sending a command
   	//mouse_wait(1);
-  	//Tell the mouse we are sending a command
-  	outb(0xD4, 0x64);
-  	//Wait for the final part
+  	outb(XD4_BYTE, MOUSE_PORT_INFO);
+  	
+  	// Write to the mouse
   	//mouse_wait(1);
-  	//Finally write
-  	//printf("%d\n", a_write);
-  	outb(a_write, 0x60);
+  	outb(a_write, MOUSE_PORT);
 }
 
 /*
@@ -201,4 +234,32 @@ int32_t
 mouse_close(void)
 {
 	return 0;
+}
+
+
+void mouse_wait(uint8_t a_type) //unsigned char
+{
+  uint32_t _time_out=100000; //unsigned int
+  if(a_type==0)
+  {
+    while(_time_out--) //Data
+    {
+      if((inb(MOUSE_PORT_INFO) & 1)==1)
+      {
+        return;
+      }
+    }
+    return;
+  }
+  else
+  {
+    while(_time_out--) //Signal
+    {
+      if((inb(MOUSE_PORT_INFO) & 2)==0)
+      {
+        return;
+      }
+    }
+    return;
+  }
 }

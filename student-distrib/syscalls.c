@@ -21,6 +21,7 @@ fops_tbl_t rtc_ops = (fops_tbl_t) { rtc_open, rtc_read, rtc_write, rtc_close };
 fops_tbl_t file_ops = (fops_tbl_t) { file_open, file_read, file_write, file_close };
 fops_tbl_t dir_ops = (fops_tbl_t) { dir_open, dir_read, dir_write, dir_close };
 fops_tbl_t default_ops = (fops_tbl_t) { (void*)null_ops, (void*)null_ops, (void*)null_ops, (void*)null_ops };
+fops_tbl_t mouse_ops = (fops_tbl_t) { mouse_open, mouse_read, mouse_write, mouse_close };
 
 /*
 void switch_active
@@ -225,7 +226,7 @@ int32_t execute(const uint8_t* command) {
 		}
 	}
 	if (process < 0) {
-		process = parent_proc;	// so it doesnt exceed 
+		process = parent_proc;	// so it doesnt exceed
 		puts("Maximum number of processess running\n");
 		return 0;
 	}
@@ -410,6 +411,8 @@ int32_t open(const uint8_t* filename) {
 		block->fdarray[i].fops_tbl_pointer = &file_ops;
 		block->fdarray[i].inode = dentry.inode_index;
 	}
+	else if(dentry.file_type == MOUSE_TYPE)
+		block->fdarray[i].fops_tbl_pointer = &mouse_ops;
 
 	block->fdarray[i].fops_tbl_pointer->open(filename);
 	return i; // file descriptor is returned

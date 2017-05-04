@@ -91,8 +91,8 @@ void login_screen()
 		set_password_being_entered_mode(FAILURE);
 		terminal_read(0, buf2, 20);
 
-		if (strncmp(buf2, PASSWORD, strlen(PASSWORD)) == 0 &&
-			strncmp(buf, USER_NAME, strlen(USER_NAME)) == 0)
+		if(strcmp(buf2, PASSWORD) == 0 &&
+		   strcmp(buf, USER_NAME) == 0)
 		{
 			// successful
 			cli();

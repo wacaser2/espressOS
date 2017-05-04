@@ -5,6 +5,7 @@
 #include "file.h"
 #include "keyboard.h"
 #include "rtc.h"
+#include "mouse.h"
 
 #define onetwentyeightMB	0x8000000
 #define eightMB				0x800000
@@ -18,6 +19,7 @@
 #define RTC_TYPE			0
 #define DIR_TYPE			1
 #define FILE_TYPE			2
+#define MOUSE_TYPE		3
 #define NAME_SIZE			32
 #define ARGBUF_SIZE			128
 #define INT_BYTES			4
@@ -58,7 +60,7 @@ typedef struct pcb_t {
 	uint32_t ksp;					//ksp to return to after context switch
 	uint32_t parent_kbp;			//parent kbp to return to after halt
 	uint32_t parent_ksp;			//parent ksp to return to after halt
-	struct pcb_t * parent_block;	//pcb of parent process	
+	struct pcb_t * parent_block;	//pcb of parent process
 } pcb_t;
 
 void switch_active(int32_t term);

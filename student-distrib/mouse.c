@@ -53,22 +53,22 @@ mouse_init(void)
 	outb(status, MOUSE_PORT);
 
 	 //Tell the mouse to use default settings
-  	mouse_write(SET_DEFAUTLS);
+	mouse_wr(SET_DEFAUTLS);
   	mouse_read();  //Acknowledge
 
   	//Enable the mouse
-  	mouse_write(ENABLE_DR);
-  	mouse_read();  //Acknowledge
-  	
-  	//
-  	mouse_write(SET_SR);
-  	mouse_write(200);
-  	mouse_write(SET_SR);
-  	mouse_write(100);
-  	mouse_write(SET_SR);
-  	mouse_write(80);
-  	mouse_write(GET_MOUSE_ID);
-  
+	mouse_wr(ENABLE_DR);
+  	mouse_read();  //Acknowledge;
+
+	mouse_wr(SET_SR);
+	mouse_wr(200);
+	mouse_wr(SET_SR);
+	mouse_wr(100);
+	mouse_wr(SET_SR);
+	mouse_wr(80);
+	mouse_wr(GET_MOUSE_ID);
+
+
   	//if(mouse_read() == MOUSE_ACK)
 	//{
 		mouse_read();
@@ -110,22 +110,22 @@ mouse_handler(void)
 	{
 		x_temp = packet_byte[2];
 		y_temp = packet_byte[0];
-		
+
 		if ((packet_byte[1] & 0x80) || (packet_byte[1] & 0x40))
 		{
 			return; // the mouse only sends information about overflowing, do not care about it and return
 		}
-		  	
+
 		if (prev_y & 0x20)	//sign extend
 		{
 			y_temp |= (-256); //delta-y is a negative value
 		}
-		  	
+
 		if (packet_byte[1] & 0x10)	//sign extend
 		{
 			x_temp |= (-256); //delta-x is a negative value
 		}
-		  	
+
 		if (packet_byte[1] & 0x4){
 			//puts("Middle button is pressed!n");
 			middle_flag = 1;
@@ -136,7 +136,7 @@ mouse_handler(void)
 			right_flag = 1;
 		}
 		if (packet_byte[1] & 0x1)
-		{   	
+		{
 		  	//puts("Left button is pressed!n");
 		  	left_flag = 1;
 		}
@@ -167,17 +167,17 @@ mouse_handler(void)
 		}
 		prev_y = packet_byte[1];
 
-		if(packet_size == 4)
-			cycle++;
-		else if(packet_size == 3)
+		// if(packet_size == 4)
+		// 	cycle++;
+		// else if(packet_size == 3)
 			cycle = 0;
 	}
-	else if(cycle == 3)
-	{
-		if(packet_size == 4)
-			cycle = 0;
-		putc('x');
-	}
+	// else if(cycle == 3)
+	// {
+	// 	if(packet_size == 4)
+	// 		cycle = 0;
+	// 	putc('x');
+	// }
 
     color = getcolor(x_text, y_text);
     placecolor(x_text, y_text, (color ^ 0x88));
@@ -191,7 +191,7 @@ output: success or failure
 purpose to open the mouse to use
 */
 int32_t
-mouse_open(void)
+mouse_open(const uint8_t* filename)
 {
 	return -1;
 }
@@ -201,8 +201,8 @@ uint8_t mouse_read()
 input: none
 output: uint8_t = one packet from mouse
 */
-uint8_t
-mouse_read(void)
+int32_t
+mouse_read(int32_t fd, void* buf, int32_t nbytes)
 {
 	return inb(MOUSE_PORT);
 }
@@ -213,15 +213,18 @@ input: uint8_t a_write = byte to write to mouse
 output: none
 purpose: write to the mouse
 */
-void mouse_write(uint8_t a_write)
+int32_t
+mouse_write(int32_t fd, const void* buf, int32_t nbytes)
 {
+	if (buf == NULL || nbytes != 1)
+		return -1;
   	// Tell the mouse we are sending a command
   	//mouse_wait(1);
   	outb(XD4_BYTE, MOUSE_PORT_INFO);
-  	
+
   	// Write to the mouse
   	//mouse_wait(1);
-  	outb(a_write, MOUSE_PORT);
+  	outb((uint8_t)*buf, MOUSE_PORT);
 }
 
 /*
@@ -231,13 +234,14 @@ output: int32_t = success or failure
 purpose: to close the mouse
 */
 int32_t
-mouse_close(void)
+mouse_close(int32_t fd)
 {
 	return 0;
 }
 
 
-void mouse_wait(uint8_t a_type) //unsigned char
+void
+mouse_wait(uint8_t a_type) //unsigned char
 {
   uint32_t _time_out=100000; //unsigned int
   if(a_type==0)
@@ -262,4 +266,11 @@ void mouse_wait(uint8_t a_type) //unsigned char
     }
     return;
   }
+}
+
+void
+mouse_wr(uint8_t a_write)
+{
+	outb(XD4_BYTE, MOUSE_PORT_INFO);
+  	outb(a_write, MOUSE_PORT);
 }

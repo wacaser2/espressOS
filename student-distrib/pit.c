@@ -44,16 +44,6 @@ pit_handler(void)
 			}
 		}
 	}
-
-	sti();
-	/* Increment our 'tick count' */
-   //timer_ticks++;
-
-   /* Every current_freq clocks (approximately 1 second becasue default freq is current_freq Hz), we will
-   *  display a message on the screen */
-   // if (timer_ticks % current_freq == 0)
-   //     puts("One second has passed\n");
-
 }
 
 int32_t
@@ -98,8 +88,6 @@ void pit_timer_phase(int32_t freq)
 	outb(SQUARE_WAVE, COM_REG_PORT);             		/* Set our command byte 0x36 */
 	outb(freq_divisor & 0xFF, PIT_PORT);   				/* Set low byte of divisor */
 	outb(freq_divisor >> 8, PIT_PORT);    				/* Set high byte of divisor */
-
-	sti();
 }
 
 

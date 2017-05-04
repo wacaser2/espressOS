@@ -177,7 +177,7 @@ entry(unsigned long magic, unsigned long addr)
 
 	/* Init mouse*/
 	printf("Initializing mouse\n");
-	mouse_init();
+	//mouse_init();
 
 	/* Enable interrupts*/
 	//printf("Enabling Interrupts\n");

@@ -136,7 +136,5 @@ set_freq(int32_t freq)
 	outb(STATUS_REGISTER_A, RTC_PORT);		// reset index to A
 	outb((prev & RATE_MASK) | rate, CMOS_PORT); //write only our rate to A. Note, rate is the bottom 4 bits.
 
-	sti();
-
 	return 0;
 }

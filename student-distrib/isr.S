@@ -182,26 +182,25 @@ isr31 :
 #   RETURN VALUE: none
 #   SIDE EFFECTS: saves all the registers
 isr_common:
-	pusha	# push the user regs
-    push %ds	# push the segment regs, just in case
-    push %es
-    push %fs
-    push %gs
-    mov $KERNEL_CS, %ax	# Load the Kernel Code Segment descriptor, probably already was
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-    mov %esp, %eax   # Push us the stack
-    push %eax
+	pushal	# push the user regs
+    pushl %ds	# push the segment regs, just in case
+    pushl %es
+    pushl %fs
+    pushl %gs
+    movl $KERNEL_CS, %eax	# Load the Kernel Code Segment descriptor, probably already was
+    movl %eax, %ds
+    movl %eax, %es
+    movl %eax, %fs
+    movl %eax, %gs
+    pushl %esp
     call fault_handler	# call the fault handler
-	pop %eax	# pop all of the segment regs
-    pop %gs
-    pop %fs
-    pop %es
-    pop %ds
-    popa	# pop all the user regs
-    add $8, %esp     # Cleans up the pushed error code and pushed ISR number
+	popl %eax	# pop all of the segment regs
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    popal	# pop all the user regs
+    addl $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
 
 
@@ -214,25 +213,27 @@ isr_common:
 #   SIDE EFFECTS: Calls keyboard_handler so anything that does
 pit_handler_wrapper:
 	cli
-	pusha
-    push %ds
-    push %es
-    push %fs
-    push %gs
-    mov $KERNEL_CS, %ax	# Load the Kernel Data Segment descriptor!
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-    mov %esp, %eax   # Push us the stack
-    push %eax
+	pushl %eax
+	pushl %eax
+	pushal	# push the user regs
+    pushl %ds	# push the segment regs, just in case
+    pushl %es
+    pushl %fs
+    pushl %gs
+    movl $KERNEL_CS, %eax	# Load the Kernel Code Segment descriptor, probably already was
+    movl %eax, %ds
+    movl %eax, %es
+    movl %eax, %fs
+    movl %eax, %gs
+    pushl %esp
     call pit_handler
-    pop %eax
-    pop %gs
-    pop %fs
-    pop %es
-    pop %ds
-    popa
+	popl %eax	# pop all of the segment regs
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    popal	# pop all the user regs
+    addl $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!	
 
 # mouse_handler_wrapper
@@ -243,25 +244,27 @@ pit_handler_wrapper:
 #   SIDE EFFECTS: Calls mouse_handler so anything that does
 mouse_handler_wrapper:
 	cli
-	pusha
-    push %ds
-    push %es
-    push %fs
-    push %gs
-    mov $KERNEL_CS, %ax	# Load the Kernel Data Segment descriptor!
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-    mov %esp, %eax   # Push us the stack
-    push %eax
+	pushl %eax
+	pushl %eax
+	pushal	# push the user regs
+    pushl %ds	# push the segment regs, just in case
+    pushl %es
+    pushl %fs
+    pushl %gs
+    movl $KERNEL_CS, %eax	# Load the Kernel Code Segment descriptor, probably already was
+    movl %eax, %ds
+    movl %eax, %es
+    movl %eax, %fs
+    movl %eax, %gs
+    pushl %esp
     call mouse_handler
-    pop %eax
-    pop %gs
-    pop %fs
-    pop %es
-    pop %ds
-    popa
+	popl %eax	# pop all of the segment regs
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    popal	# pop all the user regs
+    addl $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!	
 	
 # keyboard_handler_wrapper
@@ -272,25 +275,27 @@ mouse_handler_wrapper:
 #   SIDE EFFECTS: Calls keyboard_handler so anything that does
 keyboard_handler_wrapper:
 	cli
-	pusha
-    push %ds
-    push %es
-    push %fs
-    push %gs
-    mov $KERNEL_CS, %ax	# Load the Kernel Data Segment descriptor!
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-    mov %esp, %eax   # Push us the stack
-    push %eax
+	pushl %eax
+	pushl %eax
+	pushal	# push the user regs
+    pushl %ds	# push the segment regs, just in case
+    pushl %es
+    pushl %fs
+    pushl %gs
+    movl $KERNEL_CS, %eax	# Load the Kernel Code Segment descriptor, probably already was
+    movl %eax, %ds
+    movl %eax, %es
+    movl %eax, %fs
+    movl %eax, %gs
+    pushl %esp
     call keyboard_handler
-    pop %eax
-    pop %gs
-    pop %fs
-    pop %es
-    pop %ds
-    popa
+	popl %eax	# pop all of the segment regs
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    popal	# pop all the user regs
+    addl $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret
 
 # rtc_handler_wrapper
@@ -301,25 +306,27 @@ keyboard_handler_wrapper:
 #   SIDE EFFECTS: Calls rtc_handler so anything that does
 rtc_handler_wrapper:
 	cli
-	pusha
-    push %ds
-    push %es
-    push %fs
-    push %gs
-    mov $KERNEL_CS, %ax	# Load the Kernel Data Segment descriptor!
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-    mov %esp, %eax   # Push us the stack
-    push %eax
+	pushl %eax
+	pushl %eax
+	pushal	# push the user regs
+    pushl %ds	# push the segment regs, just in case
+    pushl %es
+    pushl %fs
+    pushl %gs
+    movl $KERNEL_CS, %eax	# Load the Kernel Code Segment descriptor, probably already was
+    movl %eax, %ds
+    movl %eax, %es
+    movl %eax, %fs
+    movl %eax, %gs
+    pushl %esp
     call rtc_handler
-    pop %eax
-    pop %gs
-    pop %fs
-    pop %es
-    pop %ds
-    popa
+	popl %eax	# pop all of the segment regs
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    popal	# pop all the user regs
+    addl $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
 
 
@@ -331,11 +338,22 @@ rtc_handler_wrapper:
 #   RETURN VALUE: -1 for an error, 0 else
 #   SIDE EFFECTS: Calls system calls, so anything from system halt to opening a file
 sys_call:
-	pusha
-    push %ds
-    push %es
-    push %fs
-    push %gs
+	cli
+	pushl %eax
+	pushl %eax
+	pushal	# push the user regs
+    pushl %ds	# push the segment regs, just in case
+    pushl %es
+    pushl %fs
+    pushl %gs
+	pushl %eax
+    movl $KERNEL_CS, %eax	# Load the Kernel Code Segment descriptor, probably already was
+    movl %eax, %ds
+    movl %eax, %es
+    movl %eax, %fs
+    movl %eax, %gs
+    popl %eax
+	pushl %esp
 	subl $1, %eax	# zero index
 	cmpl $10, %eax
 	jae sys_call_err # 0 or above 10 return error
@@ -344,29 +362,30 @@ sys_call:
 	pushl %ebx
 	# sti # enable interrupts
 	call *sys_call_jmp_table(,%eax,4)
-	addl $12, %esp
+	addl $16, %esp
 
 sys_call_ret:
     mov %eax, return_value
-    pop %gs
-    pop %fs
-    pop %es
-    pop %ds
-    popa
-    # xorl %eax, %eax	# return 0
-	mov return_value, %eax
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    popal	# pop all the user regs
+    addl $8, %esp     # Cleans up the pushed error code and pushed ISR number
+	movl return_value, %eax
 	iret
 
 return_value:
 	.long	0
 
 sys_call_err:
-    # pop %eax
-    pop %gs
-    pop %fs
-    pop %es
-    pop %ds
-    popa
+	popl %eax	# pop all of the segment regs
+    popl %gs
+    popl %fs
+    popl %es
+    popl %ds
+    popal	# pop all the user regs
+    addl $8, %esp     # Cleans up the pushed error code and pushed ISR number
 	movl $-1, %eax
 	iret
 

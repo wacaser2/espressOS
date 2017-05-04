@@ -7,7 +7,7 @@
 #include "bootup.h"
 
 /* Variables to keep track of running processes */
-uint8_t process_num[MAXPROCESSES] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t process_num[MAXPROCESSES] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 volatile int32_t process = -1;
 int32_t process_term = -1;
 int32_t active = -1;
@@ -73,12 +73,42 @@ void switch_process(int32_t term) {
 	/*restore other*/
 	VtoPmap(onetwentyeightMB, (eightMB + (process * fourMB)));
 	pcb_t* block = get_pcb(process);
+	/* return */
 	tss.esp0 = eightMB - (process * eightKB) - 4;
 	asm volatile(
 		"movl %0, %%ebp \n"
 		"movl %1, %%esp \n"
 		: : "r" (block->kbp), "r" (block->ksp)
 		);
+
+	if (block->signals_flags != 0) {
+		isr_stack_t* stack;
+		asm volatile(
+			"movl (%%ebp), %%ecx \n"
+			"movl 8(%%ecx), %0 \n"
+			: "=r"(stack)
+			);
+		if (block->signals_flags & 0x01) {
+			block->signals_flags &= 0xFE;
+			set_signal(0, stack);
+		}
+		else if (block->signals_flags & 0x02) {
+			block->signals_flags &= 0xFD;
+			set_signal(1, stack);
+		}
+		else if (block->signals_flags & 0x04) {
+			block->signals_flags &= 0xFB;
+			set_signal(2, stack);
+		}
+		else if (block->signals_flags & 0x08) {
+			block->signals_flags &= 0xF7;
+			set_signal(3, stack);
+		}
+		else if (block->signals_flags & 0x10) {
+			block->signals_flags &= 0xEF;
+			set_signal(4, stack);
+		}
+	}
 }
 
 
@@ -211,6 +241,12 @@ int32_t execute(const uint8_t* command) {
 	block->updown_idx = -1;
 	block->key_idx = 0;
 	block->cycles = 0;
+	block->signals_flags = 0;
+	block->sig_handler[0] = (int32_t)halt;
+	block->sig_handler[1] = (int32_t)halt;
+	block->sig_handler[2] = (int32_t)halt;
+	block->sig_handler[3] = (int32_t)null_ops;
+	block->sig_handler[4] = (int32_t)null_ops;
 	if (parent_proc == -1)			// first process, so set parent to itself
 		block->parent_block = block;
 	else
@@ -443,7 +479,12 @@ output: success or failure, 0, -1
 purpose: set the handler for a particular signal
 */
 int32_t set_handler(int32_t signum, void* handler_address) {
-	return -1;
+	if ((signum < 0) || NUM_SIGS <= signum)
+		return -1;
+	else {
+		get_pcb(get_proc())->sig_handler[signum] = (int32_t)handler_address;
+		return 0;
+	}
 }
 
 /*
@@ -453,7 +494,34 @@ output: int32_t = success or failure, 0, -1
 purpose: return from a signal
 */
 int32_t sigreturn(void) {
-	return -1;
+	isr_stack_t* stack1;
+	isr_stack_t* stack2;
+	asm volatile (
+		"movl 16(%%ebp), %0 \n"
+		:"=r"(stack1)
+		);
+	stack2 = (isr_stack_t*)(stack1->useresp + 8);
+	stack1->gs = stack2->gs;
+	stack1->fs = stack2->fs;
+	stack1->es = stack2->es;
+	stack1->ds = stack2->ds;
+	stack1->edi = stack2->edi;
+	stack1->esi = stack2->esi;
+	stack1->ebp = stack2->ebp;
+	stack1->esp = stack2->esp;
+	stack1->ebx = stack2->ebx;
+	stack1->edx = stack2->edx;
+	stack1->ecx = stack2->ecx;
+	stack1->eax = stack2->eax;
+	stack1->int_no = stack2->int_no;
+	stack1->err_code = stack2->err_code;
+	stack1->eip = stack2->eip;
+	stack1->cs = stack2->cs;
+	stack1->eflags = stack2->eflags;
+	stack1->useresp = stack2->useresp;
+	stack1->ss = stack2->ss;
+
+	return stack1->eax;
 }
 
 /*
@@ -464,6 +532,60 @@ purpose: to do nothing and return -1
 */
 int32_t null_ops(void) {
 	return -1;
+}
+
+/*
+
+*/
+void flag_signal(int32_t signum, int32_t proc) {
+	get_pcb(proc)->signals_flags |= (1 << signum);
+}
+
+/*
+
+*/
+void set_signal(int32_t signum, isr_stack_t* stack) {
+	pcb_t* block = get_pcb(get_proc());
+	asm volatile(
+		"movl %0, %%ecx \n"
+		"movl %1, %%edx \n"
+		"movl sigret_exec, %%ebx \n"
+		"movl %%ebx, -16(%%ecx) \n"
+		"movl sigret_exec+4, %%ebx \n"
+		"movl %%ebx, -12(%%ecx) \n"
+		"movl sigret_exec+8, %%ebx \n"
+		"movl %%ebx, -8(%%ecx) \n"
+		"movl sigret_exec+12, %%ebx \n"
+		"movl %%ebx, -4(%%ecx) \n"
+		"subl $16, %%ecx \n"
+		"movl %%ecx, set_sig_tmp \n"
+		"subl $4, %%ecx \n"
+		"movl $19, %%eax \n"
+		"set_sig_loop: \n"
+		"movl (%%edx), %%ebx \n"
+		"movl %%ebx, (%%ecx) \n"
+		"subl $4, %%ecx \n"
+		"subl $4, %%edx \n"
+		"subl $1, %%eax \n"
+		"testl %%eax, %%eax \n"
+		"ja set_sig_loop \n"
+		"movl %2, (%%ecx) \n"
+		"subl $4, %%ecx \n"
+		"movl set_sig_tmp, %%eax \n"
+		"movl %%eax, (%%ecx) \n"
+		"pushl %3 \n"
+		"pushl %%ecx \n"
+		"pushl $0x200 \n"
+		"pushl %4 \n"
+		"pushl %5 \n"
+		"iret \n"
+		"set_sig_tmp: .long 0 \n"
+		"sigret_exec: \n"
+		"movl $10, %%eax \n"
+		"int $0x80 \n"
+		: : "r"(stack->useresp), "r"(&(stack->ss)), "r"(signum), "r"(stack->ss), "r"(stack->cs), "r"(block->sig_handler[signum])
+		/*"%%eax", "%%ebx", "%%ecx", "%%edx"*/
+		);
 }
 
 /*

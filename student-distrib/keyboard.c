@@ -121,7 +121,7 @@ void keyboard_init()
 *   Return Value: void
 *	Function: Handles a keyboard interrupt by outputting the char
 */
-void keyboard_handler()
+void keyboard_handler(isr_stack_t* stack)
 {
 	cli();
 	uint8_t scancode = 0;
@@ -352,10 +352,11 @@ void keyboard_handler()
 				fclear();  // clear the screen
 				block->key_idx = 0; // reset buffer as everything on screen was cleared
 			}
-			// else if (ctrl_flag == 1 && (key[scancode] == 'c' || shift_key[scancode] == 'C')) {	//halt current program
-			// 	fputc('\n');
-			// 	halt(0);
-			// }
+			else if (ctrl_flag == 1 && (key[scancode] == 'c' || shift_key[scancode] == 'C')) {	//halt current program
+				flag_signal(2, get_term_proc(get_active()));
+				fputc('\n');
+				switch_process(get_active());
+			}
 			else if (ctrl_flag == 1 && scancode == LEFT_ARROW && (login_mode == SUCCESS))
 				sizeWindow(LEFT);
 			else if (ctrl_flag == 1 && scancode == RIGHT_ARROW && (login_mode == SUCCESS))
@@ -380,7 +381,7 @@ void keyboard_handler()
 				switch_active(2);
 		}
 	}
-	sti();
+	//sti();
 }
 
 /*
@@ -460,7 +461,7 @@ int32_t terminal_write(int32_t fd, const void * buf, int32_t nbytes)
 
 /*
 * void terminal_read()
-*   Inputs: int32_t fd = file descriptor 
+*   Inputs: int32_t fd = file descriptor
 *   Return Value: 0 or -1 for failure
 *	Function: Doesn't really do anything
 */

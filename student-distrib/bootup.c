@@ -13,8 +13,8 @@ void bootup_sequence_1()
 	clear();
 
 	char message[] = "\n                                                   ____   _____\n                                                  / __ \\ / ____|\n                 ___  ___ _ __  _ __ ___  ___ ___| |  | | (___  \n                / _ \\/ __| '_ \\| '__/ _ \\/ __/ __| |  | |\\___ \\ \n               |  __/\\__ \\ |_) | | |  __/\\__ \\__ \\ |__| |____) |\n                \\___||___/ .__/|_|  \\___||___/___/\\____/|_____/ \n                         | |                                    \n                         |_|                                    \n\0";
-	char message2[] = "\n\n\n\n                                _____________\n                               <_____________> ___\n                               |             |/ _ \\\n                               |               | | |\n                               |               |_| |\n                            ___|             |\\___/\n                           /    \\___________/    \\\n                           \\_____________________/\n\0";	
-	
+	char message2[] = "\n\n\n\n                                _____________\n                               <_____________> ___\n                               |             |/ _ \\\n                               |               | | |\n                               |               |_| |\n                            ___|             |\\___/\n                           /    \\___________/    \\\n                           \\_____________________/\n\0";
+
 	int32_t ctr;
 	for(ctr=0; message[ctr]!='\0'; ctr++)
 		fputc(message[ctr]);
@@ -31,7 +31,7 @@ void bootup_sequence_1()
 
 	 	int32_t x,x1,x2;
 	for(x2=0; x2<100; x2++)
-	{	
+	{
 		for(x1=0; x1<10000; x1++)
 		{
 			for(x=0; x<30; x++)
@@ -40,7 +40,7 @@ void bootup_sequence_1()
 				{
 					view_flag = !view_flag;
 					fplacec(yc[py % 5], xc[x / 10], TEXT, '(');
-					py++;			
+					py++;
 				}
 				else if(x1 % 20 ==0)
 				{
@@ -48,13 +48,13 @@ void bootup_sequence_1()
 					fplacec(yc[py % 5], xc[x / 10], TEXT, '}');
 					py++;
 				}
-			}	
+			}
 			py = 0;
 		}
 	}
 
 
-	clear(); 
+	clear();
 }
 
 /*
@@ -78,19 +78,19 @@ void login_screen()
 	while(login == FAILURE)
 	{
 		puts(message);
-		
+
 		// user entry
 		char buf[20], buf2[20];
 		terminal_read(0, buf, 20);
 		setlinecolor(0xB);
-		
+
 		puts("\n\n");
 		puts(message2);
 		set_password_being_entered_mode(FAILURE);
-		terminal_read(0, buf2, 20);		
-		
-		if(strncmp(buf2, PASSWORD, strlen(PASSWORD)) == 0 && 
-		   strncmp(buf, USER_NAME, strlen(USER_NAME)) == 0)
+		terminal_read(0, buf2, 20);
+
+		if(strcmp(buf2, PASSWORD) == 0 &&
+		   strcmp(buf, USER_NAME) == 0)
 		{
 			// successful
 			cli();
@@ -115,6 +115,6 @@ void login_screen()
 		set_password_being_entered_mode(SUCCESS);
 
 	}
-		
-	clear();	
+
+	clear();
 }

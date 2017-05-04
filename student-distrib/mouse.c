@@ -60,24 +60,24 @@ mouse_init(void)
 	mouse_wr(ENABLE_DR);
   	mouse_read();  //Acknowledge;
 
-	mouse_wr(SET_SR);
-	mouse_wr(200);
-	mouse_wr(SET_SR);
-	mouse_wr(100);
-	mouse_wr(SET_SR);
-	mouse_wr(80);
-	mouse_wr(GET_MOUSE_ID);
-
-
-  	//if(mouse_read() == MOUSE_ACK)
-	//{
-		mouse_read();
-		z = mouse_read();
-	  	if(z == 0x00)
-	  		packet_size = 3;
-	  	else if(z == 0x03)
-	  		packet_size = 4;
-	//}
+	// mouse_wr(SET_SR);
+	// mouse_wr(200);
+	// mouse_wr(SET_SR);
+	// mouse_wr(100);
+	// mouse_wr(SET_SR);
+	// mouse_wr(80);
+	// mouse_wr(GET_MOUSE_ID);
+	//
+	//
+ //  	//if(mouse_read() == MOUSE_ACK)
+	// //{
+	// 	mouse_read();
+	// 	z = mouse_read();
+	//   	if(z == 0x00)
+	//   		packet_size = 3;
+	//   	else if(z == 0x03)
+	//   		packet_size = 4;
+	// //}
 
 
   	enable_irq(MOUSE_IRQ);
@@ -92,7 +92,7 @@ purpose: to handle mouse interrupts
 void
 mouse_handler(void)
 {
-	printf("%x\n", z);
+	//printf("%x\n", z);
 
 	placecolor(x_text, y_text, color);
 	send_eoi(MOUSE_IRQ);
